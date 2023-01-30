@@ -1,0 +1,4 @@
+repository "Majhong@wechat_os_qy0z-7zpawpqxnqculz4nvhli_unity@cloud.cn"
+  path "/"
+    br "/main"
+    co "/main"
