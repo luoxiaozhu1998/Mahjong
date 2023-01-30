@@ -1,5 +1,4 @@
-﻿using Controller;
-using UnityEngine;
+﻿using UnityEngine;
 using RootMotion.FinalIK;
 using Photon.Pun;
 using ExitGames.Client.Photon;
