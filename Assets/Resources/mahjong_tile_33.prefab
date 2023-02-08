@@ -118,6 +118,8 @@ MonoBehaviour:
   id: 0
   num: 0
   canPlay: 1
+  parentTrans: {fileID: 0}
+  isSet: 0
 --- !u!54 &3771258462047183758
 Rigidbody:
   m_ObjectHideFlags: 0

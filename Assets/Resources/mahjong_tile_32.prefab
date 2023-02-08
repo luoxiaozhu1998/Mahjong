@@ -288,3 +288,5 @@ MonoBehaviour:
   id: 0
   num: 0
   canPlay: 1
+  parentTrans: {fileID: 0}
+  isSet: 0
