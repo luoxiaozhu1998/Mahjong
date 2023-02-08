@@ -63,8 +63,7 @@ public class HandPoserMapping : MonoBehaviour
         {
             //if (_poser.poseRoot == null) _poser.weight = 0f;
 
-            if (target != null) _poser.poseRoot = target.transform;
-            else _poser.poseRoot = null;
+            _poser.poseRoot = target != null ? target.transform : null;
 
             _poser.AutoMapping();
             //poser.UpdateManual();

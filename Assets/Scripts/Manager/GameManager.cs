@@ -433,13 +433,12 @@ namespace Manager
 
         public void CreateRoom()
         {
-            if (string.IsNullOrEmpty(roomNameInputField.text) ||
-                (withHonorToggle.isOn == false && withoutHonorToggle.isOn == false))
+            if (string.IsNullOrEmpty(roomNameInputField.text))
             {
                 return;
             }
 
-            PhotonNetwork.CreateRoom(roomNameInputField.text, new RoomOptions {MaxPlayers = 4 });
+            PhotonNetwork.CreateRoom(roomNameInputField.text, new RoomOptions {MaxPlayers = 4});
             OpenMenu("LoadingMenu");
             _resourceManager.LoadMahjong();
         }
@@ -477,7 +476,6 @@ namespace Manager
 
         public override void OnLeftRoom()
         {
-            
             OpenMenu("TitleMenu");
         }
 
@@ -512,13 +510,14 @@ namespace Manager
                 photonView.RPC(nameof(SendMaxId), RpcTarget.Others, Constants.MaxId);
             }
         }
-        
+
 
         [PunRPC]
         private void SendMaxId(int id)
         {
             Constants.MaxId = id;
         }
+
         public void StartGame()
         {
             OpenMenu("LoadingMenu");
@@ -532,6 +531,7 @@ namespace Manager
             {
                 _resourceManager.LoadMahjong();
             }
+
             startRoomButton.SetActive(PhotonNetwork.IsMasterClient);
         }
 
@@ -544,7 +544,6 @@ namespace Manager
 
         public void SetMaxIndexWithoutHonor()
         {
-            
             withHonorToggle.isOn = false;
             Constants.MaxId = 27;
         }
