@@ -9,15 +9,15 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Facebook.WitAi.CallbackHandlers;
-using Facebook.WitAi.Configuration;
-using Facebook.WitAi.Data;
-using Facebook.WitAi.Lib;
+using Meta.WitAi.CallbackHandlers;
+using Meta.WitAi.Configuration;
+using Meta.WitAi.Data;
+using Meta.WitAi.Json;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace Facebook.WitAi.Windows
+namespace Meta.WitAi.Windows
 {
     public class WitUnderstandingViewer : WitConfigurationWindow
     {
@@ -224,7 +224,7 @@ namespace Facebook.WitAi.Windows
                     return;
                 }
                 // Check client access token
-                string clientAccessToken = witConfiguration.clientAccessToken;
+                string clientAccessToken = witConfiguration.GetClientAccessToken();
                 if (string.IsNullOrEmpty(clientAccessToken))
                 {
                     WitEditorUI.LayoutErrorLabel(WitTexts.Texts.UnderstandingViewerMissingClientTokenLabel);
@@ -342,7 +342,7 @@ namespace Facebook.WitAi.Windows
                 _status = WitTexts.Texts.UnderstandingViewerLoadingLabel;
                 _responseText = _status;
                 _submitStart = System.DateTime.Now;
-                _request = witConfiguration.MessageRequest(_utterance, new WitRequestOptions());
+                _request = witConfiguration.CreateMessageRequest(_utterance, new WitRequestOptions());
                 _request.onResponse += (r) => OnResponse(r?.ResponseData);
                 _request.Request();
             }
@@ -648,36 +648,36 @@ namespace Facebook.WitAi.Windows
             AddVoiceListeners(service);
         }
         // Remove listeners
-        private void RemoveVoiceListeners(VoiceService v)
+        private void RemoveVoiceListeners(VoiceService voiceService)
         {
             // Ignore
-            if (v == null)
+            if (voiceService == null)
             {
                 return;
             }
             // Remove delegates
-            v.events.OnRequestCreated.RemoveListener(OnRequestCreated);
-            v.events.OnError.RemoveListener(OnError);
-            v.events.OnResponse.RemoveListener(OnResponse);
-            v.events.OnFullTranscription.RemoveListener(ShowTranscription);
-            v.events.OnPartialTranscription.RemoveListener(ShowTranscription);
-            v.events.OnStoppedListening.RemoveListener(ResetStartTime);
+            voiceService.VoiceEvents.OnRequestCreated.RemoveListener(OnRequestCreated);
+            voiceService.VoiceEvents.OnError.RemoveListener(OnError);
+            voiceService.VoiceEvents.OnResponse.RemoveListener(OnResponse);
+            voiceService.VoiceEvents.OnFullTranscription.RemoveListener(ShowTranscription);
+            voiceService.VoiceEvents.OnPartialTranscription.RemoveListener(ShowTranscription);
+            voiceService.VoiceEvents.OnStoppedListening.RemoveListener(ResetStartTime);
         }
         // Add listeners
-        private void AddVoiceListeners(VoiceService v)
+        private void AddVoiceListeners(VoiceService voiceService)
         {
             // Ignore
-            if (v == null)
+            if (voiceService == null)
             {
                 return;
             }
             // Add delegates
-            v.events.OnRequestCreated.AddListener(OnRequestCreated);
-            v.events.OnError.AddListener(OnError);
-            v.events.OnResponse.AddListener(OnResponse);
-            v.events.OnPartialTranscription.AddListener(ShowTranscription);
-            v.events.OnFullTranscription.AddListener(ShowTranscription);
-            v.events.OnStoppedListening.AddListener(ResetStartTime);
+            voiceService.VoiceEvents.OnRequestCreated.AddListener(OnRequestCreated);
+            voiceService.VoiceEvents.OnError.AddListener(OnError);
+            voiceService.VoiceEvents.OnResponse.AddListener(OnResponse);
+            voiceService.VoiceEvents.OnPartialTranscription.AddListener(ShowTranscription);
+            voiceService.VoiceEvents.OnFullTranscription.AddListener(ShowTranscription);
+            voiceService.VoiceEvents.OnStoppedListening.AddListener(ResetStartTime);
         }
         #endregion
     }

@@ -21,7 +21,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Assertions;
 
 namespace Oculus.Interaction
 {
@@ -56,6 +55,7 @@ namespace Oculus.Interaction
         protected virtual void DoNormalUpdate() { }
         protected virtual void DoHoverUpdate() { }
         protected virtual void DoSelectUpdate() { }
+        protected virtual void DoPostprocess() { }
 
         public virtual bool ShouldHover
         {
@@ -250,8 +250,6 @@ namespace Oculus.Interaction
             _whenInteractableUnselected.Invoke(interactable);
         }
 
-        protected virtual void DoPostprocess() { }
-
         private UniqueIdentifier _identifier;
         public int Identifier => _identifier.ID;
 
@@ -272,10 +270,8 @@ namespace Oculus.Interaction
         protected virtual void Start()
         {
             this.BeginStart(ref _started);
-            foreach (IGameObjectFilter filter in InteractableFilters)
-            {
-                Assert.IsNotNull(filter);
-            }
+
+            this.AssertCollectionItems(InteractableFilters, nameof(InteractableFilters));
 
             if (Data == null)
             {

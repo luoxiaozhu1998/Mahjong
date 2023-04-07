@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+
 using System;
 using UnityEngine;
 using System.Collections.Generic;
@@ -141,6 +142,31 @@ public class OVRSceneManager : MonoBehaviour
         public const string Other = "OTHER";
 
         /// <summary>
+        /// Represents an <see cref="OVRSceneAnchor"/> that is classified as a storage (e.g., cabinet, shelf).
+        /// </summary>
+        public const string Storage = "STORAGE";
+
+        /// <summary>
+        /// Represents an <see cref="OVRSceneAnchor"/> that is classified as a bed.
+        /// </summary>
+        public const string Bed = "BED";
+
+        /// <summary>
+        /// Represents an <see cref="OVRSceneAnchor"/> that is classified as a screen (e.g., TV, computer monitor).
+        /// </summary>
+        public const string Screen = "SCREEN";
+
+        /// <summary>
+        /// Represents an <see cref="OVRSceneAnchor"/> that is classified as a lamp.
+        /// </summary>
+        public const string Lamp = "LAMP";
+
+        /// <summary>
+        /// Represents an <see cref="OVRSceneAnchor"/> that is classified as a plant.
+        /// </summary>
+        public const string Plant = "PLANT";
+
+        /// <summary>
         /// The list of possible semantic labels.
         /// </summary>
         public static IReadOnlyList<string> List { get; } = new[]
@@ -152,7 +178,12 @@ public class OVRSceneManager : MonoBehaviour
             Couch,
             DoorFrame,
             WindowFrame,
-            Other
+            Other,
+            Storage,
+            Bed,
+            Screen,
+            Lamp,
+            Plant
         };
     }
 
@@ -323,10 +354,38 @@ public class OVRSceneManager : MonoBehaviour
     /// Requests scene capture from the Guardian.
     /// </summary>
     /// <returns>Returns true if scene capture succeeded, otherwise false.</returns>
-    public bool RequestSceneCapture()
+    public bool RequestSceneCapture() => RequestSceneCapture("");
+
+    /// <summary>
+    /// Requests scene capture with specified types of <see cref="OVRSceneAnchor"/> from the Guardian.
+    /// </summary>
+    /// <param name="requestedAnchorClassifications">A list of <see cref="OVRSceneManager.Classification"/>.</param>
+    /// <returns>Returns true if scene capture succeeded, otherwise false.</returns>
+    public bool RequestSceneCapture(IEnumerable<string> requestedAnchorClassifications)
+    {
+        if(requestedAnchorClassifications == null)
+        {
+            throw new ArgumentNullException(nameof(requestedAnchorClassifications));
+        }
+
+        var anchorClassifications = requestedAnchorClassifications.ToList();
+        foreach (var classification in anchorClassifications)
+        {
+            if (!Classification.List.Contains(classification))
+            {
+                throw new ArgumentException(
+                    $"{nameof(requestedAnchorClassifications)} contains invalid anchor {nameof(Classification)} {nameof(classification)}.");
+            }
+        }
+
+        return RequestSceneCapture(String.Join(",", anchorClassifications));
+    }
+
+    #region Private Methods
+
+    private bool RequestSceneCapture(string requestString)
     {
 #if !UNITY_EDITOR
-        var requestString = "";
         return OVRPlugin.RequestSceneCapture(requestString, out _sceneCaptureRequestId);
 #elif UNITY_EDITOR_WIN
         Development.LogWarning(nameof(OVRSceneManager),
@@ -336,8 +395,6 @@ public class OVRSceneManager : MonoBehaviour
         return false;
 #endif
     }
-
-    #region Private Methods
 
     private void OnEnable()
     {
@@ -410,6 +467,7 @@ public class OVRSceneManager : MonoBehaviour
             if (_currentQueryMode == QueryMode.QueryAllRoomLayoutEnabledForAllEntitiesInside ||
                 _currentQueryMode == QueryMode.QueryAllRoomLayoutEnabledForRoomBox)
             {
+                options.MaxResults = 1;
                 options.ComponentFilter = OVRSpaceQuery.ComponentType.RoomLayout;
             }
             else
@@ -535,6 +593,10 @@ public class OVRSceneManager : MonoBehaviour
         var plane = sceneAnchor.GetComponent<OVRScenePlane>();
         if (plane)
         {
+            if (RoomLayout == null)
+            {
+                RoomLayout = new RoomLayoutInformation();
+            }
             // Populate RoomLayoutInformation
             foreach (var label in labels)
             {
@@ -707,12 +769,6 @@ public class OVRSceneManager : MonoBehaviour
                 return;
             }
 
-            // Ignoring this anchor because it has been destroyed.
-            if (OVRSceneAnchor.DestroyedSceneAnchors.Contains(uuid))
-            {
-                return;
-            }
-
             InstantiateSceneAnchor(space, uuid, bounded2dEnabled ? PlanePrefab : VolumePrefab);
         }
         else if (roomLayoutEnabled)
@@ -782,3 +838,4 @@ public class OVRSceneManager : MonoBehaviour
 
     #endregion
 }
+

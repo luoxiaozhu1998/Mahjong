@@ -906,6 +906,16 @@ namespace Oculus.Platform
     [DllImport(DLL_NAME, CallingConvention=CallingConvention.Cdecl, EntryPoint="ovr_Colocation_ShareMap")]
     private static extern ulong ovr_Colocation_ShareMap_Native(IntPtr uuid);
 
+    public static ulong ovr_DeviceApplicationIntegrity_GetAttestationToken(string challenge_nonce) {
+      IntPtr challenge_nonce_native = StringToNative(challenge_nonce);
+      var result = (ovr_DeviceApplicationIntegrity_GetAttestationToken_Native(challenge_nonce_native));
+      Marshal.FreeCoTaskMem(challenge_nonce_native);
+      return result;
+    }
+
+    [DllImport(DLL_NAME, CallingConvention=CallingConvention.Cdecl, EntryPoint="ovr_DeviceApplicationIntegrity_GetAttestationToken")]
+    private static extern ulong ovr_DeviceApplicationIntegrity_GetAttestationToken_Native(IntPtr challenge_nonce);
+
     [DllImport(DLL_NAME, CallingConvention=CallingConvention.Cdecl)]
     public static extern ulong ovr_Entitlement_GetIsViewerEntitled();
 
@@ -1073,7 +1083,7 @@ namespace Oculus.Platform
     public static extern ulong ovr_IAP_GetProductsBySKU(string[] skus, int count);
 
     [DllImport(DLL_NAME, CallingConvention=CallingConvention.Cdecl)]
-    public static extern ulong ovr_IAP_GetViewerPurchases(bool fetchDeveloperPayload);
+    public static extern ulong ovr_IAP_GetViewerPurchases();
 
     [DllImport(DLL_NAME, CallingConvention=CallingConvention.Cdecl)]
     public static extern ulong ovr_IAP_GetViewerPurchasesDurableCache();

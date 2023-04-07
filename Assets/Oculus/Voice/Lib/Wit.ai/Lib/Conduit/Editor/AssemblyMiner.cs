@@ -11,7 +11,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using UnityEngine;
+using Meta.WitAi;
+using Meta.WitAi.Data.Info;
 
 namespace Meta.Conduit.Editor
 {
@@ -24,7 +25,7 @@ namespace Meta.Conduit.Editor
         /// Validates that parameters are compatible.
         /// </summary>
         private readonly IParameterValidator _parameterValidator;
-
+        
         /// <summary>
         /// Set to true once the miner is initialized. No interactions with the class should be allowed before then.
         /// </summary>
@@ -40,6 +41,7 @@ namespace Meta.Conduit.Editor
         /// Initializes the class with a target assembly.
         /// </summary>
         /// <param name="parameterValidator">The parameter validator.</param>
+        /// <param name="parameterFilter">The parameter filter.</param>
         public AssemblyMiner(IParameterValidator parameterValidator)
         {
             this._parameterValidator = parameterValidator;
@@ -62,11 +64,9 @@ namespace Meta.Conduit.Editor
             }
 
             var entities = new List<ManifestEntity>();
-
             var enums = assembly.GetEnumTypes();
             foreach (var enumType in enums)
             {
-                var enumUnderlyingType = Enum.GetUnderlyingType(enumType);
                 Array enumValues;
                 try
                 {
@@ -80,23 +80,40 @@ namespace Meta.Conduit.Editor
                 }
                 catch (Exception e)
                 {
-                    Debug.LogWarning($"Failed to get enumeration values. {e}");
+                    VLog.W($"Failed to get enumeration values.\nEnum: {enumType}\n{e}");
                     continue;
                 }
 
                 var entity = new ManifestEntity
                 {
-                    ID = $"{enumType.Name}",
+                    ID = enumType.Name,
                     Type = "Enum",
-                    Name = $"{enumType.Name}"
+                    Namespace = enumType.Namespace,
+                    Name = enumType.Name,
+                    Assembly = assembly.FullName
                 };
 
-                var values = new List<string>();
+                var values = new List<WitKeyword>();
 
                 foreach (var enumValue in enumValues)
                 {
-                    object underlyingValue = Convert.ChangeType(enumValue, enumUnderlyingType);
-                    values.Add(enumValue.ToString() ?? string.Empty);
+                    var synonyms = new List<string>();
+                    var attribute = GetAttribute<ConduitValueAttribute>(enumValue);
+                    if (attribute != null)
+                    {
+                        foreach (var alias in attribute.Aliases)
+                        {
+                            synonyms.Add(alias);
+                        }
+                    }
+
+                    if (enumValue == null)
+                    {
+                        VLog.E("Unexpected null enum value");
+                        continue;
+                    }
+                    
+                    values.Add(new WitKeyword(enumValue.ToString(), synonyms));
                 }
 
                 entity.Values = values;
@@ -104,6 +121,23 @@ namespace Meta.Conduit.Editor
             }
 
             return entities;
+        }
+        
+        private static T GetAttribute<T>(object enumValue) where T:Attribute
+        {
+            var type = enumValue.GetType();
+            var memberInfos = type.GetMember(enumValue.ToString());
+            if (memberInfos.Length == 0)
+            {
+                return null;
+            }
+            var attributes = memberInfos.First().GetCustomAttributes(typeof(ConduitValueAttribute), false);
+            if (attributes.Length == 0)
+            {
+                return null;
+            }
+
+            return attributes.First() as T;
         }
 
         /// <inheritdoc/>
@@ -153,14 +187,15 @@ namespace Meta.Conduit.Editor
                 foreach (var parameter in method.GetParameters())
                 {
                     var supported = _parameterValidator.IsSupportedParameterType(parameter.ParameterType);
-
                     if (!supported)
                     {
                         compatibleParameters = false;
+                        VLog.W($"Conduit does not currently support parameter type: {parameter.ParameterType}");
                         continue;
                     }
-
+                    
                     List<string> aliases;
+                    List<string> examples;
 
                     if (parameter.GetCustomAttributes(typeof(ConduitParameterAttribute), false).Length > 0)
                     {
@@ -168,10 +203,12 @@ namespace Meta.Conduit.Editor
                             parameter.GetCustomAttributes(typeof(ConduitParameterAttribute), false).First() as
                                 ConduitParameterAttribute;
                         aliases = parameterAttribute.Aliases;
+                        examples = parameterAttribute.Examples;
                     }
                     else
                     {
                         aliases = new List<string>();
+                        examples = new List<string>();
                     }
 
                     var snakeCaseName= ConduitUtilities.DelimitWithUnderscores(parameter.Name).ToLower().TrimStart('_');
@@ -179,11 +216,12 @@ namespace Meta.Conduit.Editor
 
                     var manifestParameter = new ManifestParameter
                     {
-                        Name = parameter.Name,
+                        Name = ConduitUtilities.SanitizeName(parameter.Name),
                         InternalName = parameter.Name,
                         QualifiedTypeName = parameter.ParameterType.FullName,
                         TypeAssembly = parameter.ParameterType.Assembly.FullName,
                         Aliases = aliases,
+                        Examples = examples,
                         QualifiedName = $"{snakeCaseAction}_{snakeCaseName}"
                     };
 
@@ -197,7 +235,7 @@ namespace Meta.Conduit.Editor
                 }
                 else
                 {
-                    Debug.LogWarning($"{method} has Conduit-incompatible parameters");
+                    VLog.W($"{method} has Conduit-Incompatible Parameters");
                     IncompatibleSignatureFrequency.TryGetValue(signature, out currentFrequency);
                     IncompatibleSignatureFrequency[signature] = currentFrequency + 1;
                 }

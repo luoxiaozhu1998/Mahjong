@@ -20,8 +20,8 @@
 
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Assertions;
 using Oculus.Interaction.Surfaces;
+using System;
 using UnityEngine.Serialization;
 
 namespace Oculus.Interaction
@@ -33,6 +33,66 @@ namespace Oculus.Interaction
     /// </summary>
     public class PokeInteractor : PointerInteractor<PokeInteractor, PokeInteractable>
     {
+        private class SurfaceHitCache
+        {
+            private readonly struct HitInfo
+            {
+                public readonly bool IsValid;
+                public readonly SurfaceHit Hit;
+
+                public HitInfo(bool isValid, SurfaceHit hit)
+                {
+                    IsValid = isValid;
+                    Hit = hit;
+                }
+            }
+
+            private Dictionary<PokeInteractable, HitInfo> _surfacePatchHitCache;
+            private Dictionary<PokeInteractable, HitInfo> _backingSurfaceHitCache;
+            private Vector3 _origin;
+
+            public bool GetPatchHit(PokeInteractable interactable, out SurfaceHit hit)
+            {
+                if (!_surfacePatchHitCache.ContainsKey(interactable))
+                {
+                    bool isValid = interactable.SurfacePatch
+                        .ClosestSurfacePoint(_origin, out SurfaceHit patchHit);
+                    HitInfo info = new HitInfo(isValid, patchHit);
+                    _surfacePatchHitCache.Add(interactable, info);
+                }
+
+                hit = _surfacePatchHitCache[interactable].Hit;
+                return _surfacePatchHitCache[interactable].IsValid;
+            }
+
+            public bool GetBackingHit(PokeInteractable interactable, out SurfaceHit hit)
+            {
+                if (!_backingSurfaceHitCache.ContainsKey(interactable))
+                {
+                    bool isValid = interactable.SurfacePatch.BackingSurface
+                        .ClosestSurfacePoint(_origin, out SurfaceHit backingHit);
+                    HitInfo info = new HitInfo(isValid, backingHit);
+                    _backingSurfaceHitCache.Add(interactable, info);
+                }
+
+                hit = _backingSurfaceHitCache[interactable].Hit;
+                return _backingSurfaceHitCache[interactable].IsValid;
+            }
+
+            public SurfaceHitCache()
+            {
+                _surfacePatchHitCache = new Dictionary<PokeInteractable, HitInfo>();
+                _backingSurfaceHitCache = new Dictionary<PokeInteractable, HitInfo>();
+            }
+
+            public void Reset(Vector3 origin)
+            {
+                _origin = origin;
+                _surfacePatchHitCache.Clear();
+                _backingSurfaceHitCache.Clear();
+            }
+        }
+
         [SerializeField]
         [Tooltip("The poke origin tracks the provided transform.")]
         private Transform _pointTransform;
@@ -49,7 +109,7 @@ namespace Oculus.Interaction
         [FormerlySerializedAs("_zThreshold")]
         [SerializeField]
         [Tooltip("(Meters, World) The threshold below which distances to a surface " +
-                 "are treated as equal for the purposes of ranking.")]
+                 "will use tiebreaker score to decide candidate.")]
         private float _equalDistanceThreshold = 0.001f;
 
         public Vector3 ClosestPoint { get; private set; }
@@ -65,6 +125,7 @@ namespace Oculus.Interaction
 
         private PokeInteractable _previousCandidate = null;
         private PokeInteractable _hitInteractable = null;
+        private PokeInteractable _recoilInteractable = null;
 
         private Vector3 _previousSurfacePointLocal;
         private Vector3 _firstTouchPointLocal;
@@ -76,14 +137,39 @@ namespace Oculus.Interaction
         private Vector3 _dragCompareSurfacePointLocal;
         private float _maxDistanceFromFirstTouchPoint;
 
+        private float _selectMaxDepth;
+        private float _reEnterDepth;
+
+        private bool _isPassedSurface;
+        public bool IsPassedSurface
+        {
+            get
+            {
+                return _isPassedSurface;
+            }
+            set
+            {
+                bool previousValue = _isPassedSurface;
+                _isPassedSurface = value;
+                if (value != previousValue)
+                {
+                    WhenPassedSurfaceChanged.Invoke(value);
+                }
+            }
+        }
+
+        public Action<bool> WhenPassedSurfaceChanged = delegate {};
+        private SurfaceHitCache _hitCache;
+
         private Dictionary<PokeInteractable, Matrix4x4> _previousSurfaceTransformMap;
         private float _previousProgress;
 
         protected override void Start()
         {
             base.Start();
-            Assert.IsNotNull(_pointTransform);
+            this.AssertField(_pointTransform, nameof(_pointTransform));
             _dragEaseCurve = new ProgressCurve();
+            _hitCache = new SurfaceHitCache();
             _previousSurfaceTransformMap = new Dictionary<PokeInteractable, Matrix4x4>();
         }
 
@@ -92,6 +178,7 @@ namespace Oculus.Interaction
             base.DoPreprocess();
             _previousPokeOrigin = Origin;
             Origin = _pointTransform.position;
+            _hitCache.Reset(Origin);
         }
 
         protected override void DoPostprocess()
@@ -101,12 +188,19 @@ namespace Oculus.Interaction
             foreach (PokeInteractable interactable in interactables)
             {
                 _previousSurfaceTransformMap[interactable] =
-                    interactable.Surface.Transform.worldToLocalMatrix;
+                    interactable.SurfacePatch.BackingSurface.Transform.worldToLocalMatrix;
             }
         }
 
         protected override bool ComputeShouldSelect()
         {
+            if (_recoilInteractable != null)
+            {
+                float depth = ComputeDepth(_recoilInteractable, Origin);
+                _reEnterDepth = Mathf.Min(depth + _recoilInteractable.RecoilAssist.ReEnterDistance, _reEnterDepth);
+                _hitInteractable = depth > _reEnterDepth ? _recoilInteractable : null;
+            }
+
             return _hitInteractable != null;
         }
 
@@ -115,17 +209,74 @@ namespace Oculus.Interaction
             return _hitInteractable == null;
         }
 
+        private bool GetBackingHit(PokeInteractable interactable, out SurfaceHit hit)
+        {
+            return _hitCache.GetBackingHit(interactable, out hit);
+        }
+
+        private bool GetPatchHit(PokeInteractable interactable, out SurfaceHit hit)
+        {
+            return _hitCache.GetPatchHit(interactable, out hit);
+        }
+
+        private bool InteractableInRange(PokeInteractable interactable)
+        {
+            if (!_previousSurfaceTransformMap.ContainsKey(interactable))
+            {
+                return true; // Cannot determine without previous surface data
+            }
+
+            Vector3 previousLocalPokeOrigin = _previousSurfaceTransformMap[interactable]
+                .MultiplyPoint(_previousPokeOrigin);
+            Vector3 adjustedPokeOrigin = interactable.SurfacePatch.BackingSurface.Transform
+                .TransformPoint(previousLocalPokeOrigin);
+
+            float moveDistance = Vector3.Distance(Origin, adjustedPokeOrigin);
+            float maxDistance = moveDistance + Radius +
+                    Mathf.Max(interactable.EnterHoverTangent, interactable.EnterHoverNormal) +
+                    _equalDistanceThreshold + interactable.CloseDistanceThreshold;
+
+            return interactable.SurfacePatch.ClosestSurfacePoint(Origin, out _, maxDistance);
+        }
+
         protected override void DoHoverUpdate()
         {
-            if (_interactable != null)
+            if (_interactable != null &&
+                GetBackingHit(_interactable, out SurfaceHit backingHit))
             {
-                TouchPoint = _interactable.ComputeClosestPoint(Origin);
-                TouchNormal = _interactable.ClosestSurfaceNormal(TouchPoint);
+                TouchPoint = backingHit.Point;
+                TouchNormal = backingHit.Normal;
+            }
+
+            if (_recoilInteractable != null)
+            {
+                bool withinSurface = SurfaceUpdate(_recoilInteractable);
+                if (!withinSurface)
+                {
+                    _recoilInteractable = null;
+                    IsPassedSurface = false;
+                    return;
+                }
+
+                if (ShouldCancel(_recoilInteractable))
+                {
+                    GeneratePointerEvent(PointerEventType.Cancel, _recoilInteractable);
+                    _previousPokeOrigin = Origin;
+                    _previousCandidate = null;
+                    _hitInteractable = null;
+                    _recoilInteractable = null;
+                    IsPassedSurface = false;
+                }
             }
         }
 
         protected override PokeInteractable ComputeCandidate()
         {
+            if (_recoilInteractable != null)
+            {
+                return _recoilInteractable;
+            }
+
             if (_hitInteractable != null)
             {
                 return _hitInteractable;
@@ -143,7 +294,7 @@ namespace Oculus.Interaction
 
             // Otherwise we have no active interactable, so we do a proximity-only check for
             // closest hovered interactable (above the surface)
-            closestInteractable = ComputeBestHoverInteractable();
+            closestInteractable = ComputeHoverCandidate();
             _previousCandidate = closestInteractable;
 
             return closestInteractable;
@@ -152,8 +303,8 @@ namespace Oculus.Interaction
         private PokeInteractable ComputeSelectCandidate()
         {
             PokeInteractable closestInteractable = null;
-            float closestDist = float.MaxValue;
-            float minNormalProject = float.MaxValue;
+            float closestNormalDistance = float.MaxValue;
+            float closestTangentDistance = float.MaxValue;
 
             var interactables = PokeInteractable.Registry.List(this);
 
@@ -162,14 +313,21 @@ namespace Oculus.Interaction
             // to happen only in one direction
             foreach (PokeInteractable interactable in interactables)
             {
+                if (!InteractableInRange(interactable) ||
+                    !GetBackingHit(interactable, out SurfaceHit backingHit) ||
+                    !GetPatchHit(interactable, out SurfaceHit patchHit))
+                {
+                    continue;
+                }
+
                 Matrix4x4 previousSurfaceMatrix =
                     _previousSurfaceTransformMap.ContainsKey(interactable)
                         ? _previousSurfaceTransformMap[interactable]
-                        : interactable.Surface.Transform.worldToLocalMatrix;
+                        : interactable.SurfacePatch.BackingSurface.Transform.worldToLocalMatrix;
 
                 Vector3 localPokeOrigin = previousSurfaceMatrix.MultiplyPoint(_previousPokeOrigin);
                 Vector3 adjustedPokeOrigin =
-                    interactable.Surface.Transform.TransformPoint(localPokeOrigin);
+                    interactable.SurfacePatch.BackingSurface.Transform.TransformPoint(localPokeOrigin);
 
                 if (!PassesEnterHoverDistanceCheck(adjustedPokeOrigin, interactable))
                 {
@@ -180,13 +338,13 @@ namespace Oculus.Interaction
                 float magnitude = moveDirection.magnitude;
                 if (magnitude == 0f)
                 {
-                    return null;
+                    continue;
                 }
 
                 moveDirection /= magnitude;
                 Ray ray = new Ray(adjustedPokeOrigin, moveDirection);
 
-                Vector3 closestSurfaceNormal = interactable.ClosestSurfaceNormal(Origin);
+                Vector3 closestSurfaceNormal = backingHit.Normal;
 
                 // First check that we are moving towards the surface by checking
                 // the direction of our position delta with the forward direction of the surface normal.
@@ -196,7 +354,7 @@ namespace Oculus.Interaction
                 if (Vector3.Dot(moveDirection, closestSurfaceNormal) < 0f)
                 {
                     // Then do a raycast against the surface
-                    bool hit = interactable.Surface.Raycast(ray, out SurfaceHit surfaceHit);
+                    bool hit = interactable.SurfacePatch.BackingSurface.Raycast(ray, out SurfaceHit surfaceHit);
                     hit = hit && surfaceHit.Distance <= magnitude;
 
                     if (!hit)
@@ -205,12 +363,12 @@ namespace Oculus.Interaction
                         float distance = ComputeDistanceAbove(interactable, Origin);
                         if (distance <= 0)
                         {
-                            Vector3 closestSurfacePointToOrigin = interactable.ClosestSurfacePoint(Origin);
+                            Vector3 closestSurfacePointToOrigin = backingHit.Point;
                             hit = true;
                             surfaceHit = new SurfaceHit()
                             {
                                 Point = closestSurfacePointToOrigin,
-                                Normal = interactable.ClosestSurfaceNormal(Origin),
+                                Normal = backingHit.Normal,
                                 Distance = distance
                             };
                         }
@@ -218,18 +376,14 @@ namespace Oculus.Interaction
 
                     if (hit)
                     {
-                        // Check if our collision lies outside of the optional volume mask
-                        if (interactable.VolumeMask != null &&
-                            !Collisions.IsPointWithinCollider(surfaceHit.Point, interactable.VolumeMask))
-                        {
-                            continue;
-                        }
-
-                        float distanceFromEdge =
-                            ComputeDistanceFrom(interactable, surfaceHit.Point);
+                        float tangentDistance =
+                            ComputeTangentDistance(interactable, surfaceHit.Point);
 
                         // Check if our collision lies outside of the max distance in the proximityfield
-                        if(distanceFromEdge > interactable.MaxDistance)
+                        if (tangentDistance >
+                           (interactable != _previousCandidate ?
+                               interactable.EnterHoverTangent :
+                               interactable.ExitHoverTangent))
                         {
                             continue;
                         }
@@ -239,20 +393,37 @@ namespace Oculus.Interaction
 
                         // First we rank by normal distance traveled,
                         // and secondly by closer proximity
-                        float normalProjection = Vector3.Dot(adjustedPokeOrigin - surfaceHit.Point, surfaceHit.Normal);
-                        bool normalDistanceEqual = Mathf.Abs(normalProjection - minNormalProject) < _equalDistanceThreshold;
-                        bool checkEdgeDistance = !normalDistanceEqual ||
-                                                 interactable.TiebreakerScore ==
-                                                 closestInteractable.TiebreakerScore;
-                        // Check if the point is either closer along the normal or
-                        // the normal delta with the best point so far is within the zThreshold and
-                        // is closer to the surface intersection point
-                        if ((!normalDistanceEqual && normalProjection < minNormalProject) ||
-                            (normalDistanceEqual && interactable.TiebreakerScore > closestInteractable.TiebreakerScore) ||
-                            (checkEdgeDistance && distanceFromEdge < closestDist))
+                        float normalDistance = Vector3.Dot(adjustedPokeOrigin - surfaceHit.Point, surfaceHit.Normal);
+                        bool normalDistanceEqual = Mathf.Abs(normalDistance - closestNormalDistance) < _equalDistanceThreshold;
+
+                        if (normalDistanceEqual)
                         {
-                            minNormalProject = normalProjection;
-                            closestDist = distanceFromEdge;
+                            if (interactable.TiebreakerScore > closestInteractable.TiebreakerScore)
+                            {
+                                closestNormalDistance = normalDistance;
+                                closestTangentDistance = tangentDistance;
+                                closestInteractable = interactable;
+                                continue;
+                            }
+                        }
+
+                        if (normalDistance > closestNormalDistance + interactable.CloseDistanceThreshold)
+                        {
+                            continue;
+                        }
+
+                        if (normalDistance < closestNormalDistance - interactable.CloseDistanceThreshold)
+                        {
+                            closestNormalDistance = normalDistance;
+                            closestTangentDistance = tangentDistance;
+                            closestInteractable = interactable;
+                            continue;
+                        }
+
+                        if(tangentDistance < closestTangentDistance)
+                        {
+                            closestNormalDistance = normalDistance;
+                            closestTangentDistance = tangentDistance;
                             closestInteractable = interactable;
                         }
                     }
@@ -261,9 +432,85 @@ namespace Oculus.Interaction
 
             if (closestInteractable != null)
             {
-                ClosestPoint = closestInteractable.ComputeClosestPoint(Origin);
-                TouchPoint = ClosestPoint;
-                TouchNormal = closestInteractable.ClosestSurfaceNormal(TouchPoint);
+                GetBackingHit(closestInteractable, out SurfaceHit backingHitClosest);
+                GetPatchHit(closestInteractable, out SurfaceHit patchHitClosest);
+
+                ClosestPoint = patchHitClosest.Point;
+                TouchPoint = backingHitClosest.Point;
+                TouchNormal = backingHitClosest.Normal;
+
+                // Once we have a select interactable, we need to check for the existence
+                // of better future select candidates that are within our close distance threshold
+                // If they exist, then this select interactable should be ignored.
+
+                // We again run through all the other interactables
+                foreach (PokeInteractable interactable in interactables)
+                {
+                    if (interactable == closestInteractable)
+                    {
+                        continue;
+                    }
+
+                    if (!InteractableInRange(interactable) ||
+                        !GetBackingHit(interactable, out SurfaceHit backingHit) ||
+                        !GetPatchHit(interactable, out SurfaceHit patchHit))
+                    {
+                        continue;
+                    }
+
+                    Matrix4x4 previousSurfaceMatrix =
+                        _previousSurfaceTransformMap.ContainsKey(interactable)
+                            ? _previousSurfaceTransformMap[interactable]
+                            : interactable.SurfacePatch.BackingSurface.Transform.worldToLocalMatrix;
+
+                    Vector3 localPokeOrigin =
+                        previousSurfaceMatrix.MultiplyPoint(_previousPokeOrigin);
+                    Vector3 adjustedPokeOrigin =
+                        interactable.SurfacePatch.BackingSurface.Transform.TransformPoint(
+                            localPokeOrigin);
+
+                    if (!PassesEnterHoverDistanceCheck(adjustedPokeOrigin, interactable))
+                    {
+                        continue;
+                    }
+
+                    // Check the distance from the backingHit point to the touchpoint
+                    // projected onto the interactable normal to see if its not within
+                    // the close distance threshold
+                    Vector3 backingToTouchPoint = TouchPoint - backingHit.Point;
+                    float normalDistance = Vector3.Dot(backingToTouchPoint, backingHit.Normal);
+
+                    if (Mathf.Abs(normalDistance) < _equalDistanceThreshold)
+                    {
+                        if (closestInteractable.TiebreakerScore > interactable.TiebreakerScore)
+                        {
+                            continue;
+                        }
+                    }
+
+                    if (normalDistance <= 0 || normalDistance > interactable.CloseDistanceThreshold)
+                    {
+                        continue;
+                    }
+
+                    float tangentDistance = ComputeTangentDistance(interactable, TouchPoint);
+
+                    // Compute the tangent distance from the backing hit point
+                    // to check if its not within the hover tangent distance
+                    if (tangentDistance > interactable.EnterHoverTangent)
+                    {
+                        continue;
+                    }
+
+                    // Check that the tangent distance is not larger than the selected closest dist
+                    if (tangentDistance > closestTangentDistance)
+                    {
+                        continue;
+                    }
+
+                    // This is a closer interactable, clear the select interactable
+                    return null;
+                }
             }
 
             return closestInteractable;
@@ -276,13 +523,34 @@ namespace Oculus.Interaction
                 return true;
             }
 
-            return ComputeDistanceAbove(interactable, position) > interactable.EnterHoverDistance;
+            float distanceThreshold = 0f;
+            if (interactable.MinThresholds.Enabled)
+            {
+                distanceThreshold = Mathf.Min(interactable.MinThresholds.MinNormal,
+                    MinPokeDepth(interactable));
+            }
+
+            return ComputeDistanceAbove(interactable, position) > distanceThreshold;
         }
 
-        private PokeInteractable ComputeBestHoverInteractable()
+        public float MinPokeDepth(PokeInteractable interactable)
+        {
+            float minDepth = interactable.ExitHoverNormal;
+            foreach (PokeInteractor pokeInteractor in interactable.Interactors)
+            {
+                // Scalar project the poke interactor's position onto the button base's normal vector
+                float normalDistance = ComputeDepth(interactable, pokeInteractor.Origin);
+                minDepth = Mathf.Min(normalDistance, minDepth);
+            }
+
+            return minDepth;
+        }
+
+        private PokeInteractable ComputeHoverCandidate()
         {
             PokeInteractable closestInteractable = null;
-            float closestDistance = float.MaxValue;
+            float closestNormalDistance = float.MaxValue;
+            float closestTangentDistance = float.MaxValue;
 
             var interactables = PokeInteractable.Registry.List(this);
 
@@ -290,17 +558,24 @@ namespace Oculus.Interaction
             // care about hovers that originate below the surface
             foreach (PokeInteractable interactable in interactables)
             {
-                // Hover if between EnterHover and MaxDistance
-                // Or if above EnterHover last frame and within MaxDistance this frame:
-                // eg. if EnterHover and MaxDistance are the same, still want to hover in one frame
+                if (!InteractableInRange(interactable) ||
+                    !GetBackingHit(interactable, out SurfaceHit backingHit) ||
+                    !GetPatchHit(interactable, out SurfaceHit patchHit))
+                {
+                    continue;
+                }
+
+                // First check that above EnterHover and within HoverZThreshold
+                // Or if above EnterHover last frame and within HoverZThreshold this frame:
+                // eg. if EnterHover and HoverZThreshold are equal, still want to hover in one frame
                 if (!PassesEnterHoverDistanceCheck(Origin, interactable) &&
                     !PassesEnterHoverDistanceCheck(_previousPokeOrigin, interactable))
                 {
                     continue;
                 }
 
-                Vector3 closestSurfacePoint = interactable.ClosestSurfacePoint(Origin);
-                Vector3 closestSurfaceNormal = interactable.ClosestSurfaceNormal(Origin);
+                Vector3 closestSurfacePoint = backingHit.Point;
+                Vector3 closestSurfaceNormal = backingHit.Normal;
 
                 Vector3 surfaceToPoint = Origin - closestSurfacePoint;
                 float magnitude = surfaceToPoint.magnitude;
@@ -309,9 +584,20 @@ namespace Oculus.Interaction
                     // Check if our position is above the surface
                     if (Vector3.Dot(surfaceToPoint, closestSurfaceNormal) > 0f)
                     {
-                        // Check if our position lies outside of the optional volume mask
-                        if (interactable.VolumeMask != null &&
-                            !Collisions.IsPointWithinCollider(Origin, interactable.VolumeMask))
+                        float normalDistance = ComputeDistanceAbove(interactable, Origin);
+                        if (normalDistance >
+                            (_previousCandidate != interactable ?
+                                interactable.EnterHoverNormal :
+                                interactable.ExitHoverNormal))
+                        {
+                            continue;
+                        }
+
+                        float tangentDistance = ComputeTangentDistance(interactable, Origin);
+                        if (tangentDistance >
+                            (_previousCandidate != interactable ?
+                                interactable.EnterHoverTangent :
+                                interactable.ExitHoverTangent))
                         {
                             continue;
                         }
@@ -319,18 +605,49 @@ namespace Oculus.Interaction
                         // We're above the surface so now we must rank this
                         // interactable versus others that also pass this test this frame
                         // but may be at a closer proximity.
-                        float distanceFromSurfacePoint = ComputeDistanceFrom(interactable, Origin);
-                        if(distanceFromSurfacePoint > interactable.MaxDistance)
+
+                        bool normalDistanceEqual = Mathf.Abs(normalDistance - closestNormalDistance) < _equalDistanceThreshold;
+
+                        // If within the equal distance threshold
+                        if (normalDistanceEqual)
+                        {
+                            // Select this interactable if its tiebreakerscore is highest
+                            if (closestInteractable != null && interactable.TiebreakerScore >
+                                closestInteractable.TiebreakerScore)
+                            {
+                                closestInteractable = interactable;
+                                closestNormalDistance = normalDistance;
+                                closestTangentDistance = tangentDistance;
+                                continue;
+                            }
+                        }
+
+                        float closeThreshold = interactable.CloseDistanceThreshold;
+                        bool normalDistanceClose =
+                            Mathf.Abs(normalDistance - closestNormalDistance) < closeThreshold;
+
+                        // If normal distance is greater than closest normal distance by over closeDistanceThreshold
+                        if (normalDistance > closestNormalDistance + closeThreshold)
                         {
                             continue;
                         }
 
-                        if (distanceFromSurfacePoint < closestDistance ||
-                            Mathf.Abs(distanceFromSurfacePoint - closestDistance) < _equalDistanceThreshold
-                            && interactable.TiebreakerScore > closestInteractable.TiebreakerScore)
+                        // If normal distance is less than closest normal distance by over closeDistanceThreshold
+                        if(normalDistance < closestNormalDistance - closeThreshold)
                         {
-                            closestDistance = distanceFromSurfacePoint;
                             closestInteractable = interactable;
+                            closestNormalDistance = normalDistance;
+                            closestTangentDistance = tangentDistance;
+                            continue;
+                        }
+
+                        // Normal distance is within closeDistanceThreshold of the closestNormalDistance
+                        // Pick the candidate based on tangent distance
+                        if (tangentDistance < closestTangentDistance)
+                        {
+                            closestInteractable = interactable;
+                            closestNormalDistance = normalDistance;
+                            closestTangentDistance = tangentDistance;
                         }
                     }
                 }
@@ -338,9 +655,12 @@ namespace Oculus.Interaction
 
             if (closestInteractable != null)
             {
-                ClosestPoint = closestInteractable.ComputeClosestPoint(Origin);
-                TouchPoint = ClosestPoint;
-                TouchNormal = closestInteractable.ClosestSurfaceNormal(TouchPoint);
+                GetBackingHit(closestInteractable, out SurfaceHit backingHitClosest);
+                GetPatchHit(closestInteractable, out SurfaceHit patchHitClosest);
+
+                ClosestPoint = patchHitClosest.Point;
+                TouchPoint = backingHitClosest.Point;
+                TouchNormal = backingHitClosest.Normal;
             }
 
             return closestInteractable;
@@ -348,22 +668,24 @@ namespace Oculus.Interaction
 
         protected override void InteractableSelected(PokeInteractable interactable)
         {
-            if (interactable != null)
+            if (interactable != null && GetBackingHit(interactable, out SurfaceHit backingHit))
             {
                 _previousSurfacePointLocal =
                 _firstTouchPointLocal =
                 _easeTouchPointLocal =
                 _targetTouchPointLocal =
-                interactable.Surface.Transform.InverseTransformPoint(TouchPoint);
+                interactable.SurfacePatch.BackingSurface.Transform.InverseTransformPoint(TouchPoint);
 
-                Vector3 lateralComparePoint = interactable.ClosestSurfacePoint(Origin);
-                _dragCompareSurfacePointLocal = interactable.Surface.Transform.InverseTransformPoint(lateralComparePoint);
-                _dragEaseCurve.Copy(interactable.DragThresholding.DragEaseCurve);
+                Vector3 lateralComparePoint = backingHit.Point;
+                _dragCompareSurfacePointLocal = interactable.SurfacePatch.BackingSurface.Transform.InverseTransformPoint(lateralComparePoint);
+                _dragEaseCurve.Copy(interactable.DragThresholds.DragEaseCurve);
                 _isDragging = false;
 
                 _maxDistanceFromFirstTouchPoint = 0;
+                _selectMaxDepth = 0;
             }
 
+            IsPassedSurface = true;
             base.InteractableSelected(interactable);
         }
 
@@ -380,24 +702,25 @@ namespace Oculus.Interaction
                 return Pose.identity;
             }
 
-            return new Pose(
-                TouchPoint,
-                Quaternion.LookRotation(Interactable.ClosestSurfaceNormal(TouchPoint))
-            );
+            if (!Interactable.ClosestBackingSurfaceHit(TouchPoint, out SurfaceHit hit))
+            {
+                return Pose.identity;
+            }
+
+            return new Pose(TouchPoint, Quaternion.LookRotation(hit.Normal));
         }
 
         // The distance above a surface along the closest normal.
         // Returns 0 for where the sphere touches the surface along the normal.
         private float ComputeDistanceAbove(PokeInteractable interactable, Vector3 point)
         {
-            Vector3 closestSurfacePoint = interactable.ClosestSurfacePoint(point);
-            Vector3 closestSurfaceNormal = interactable.ClosestSurfaceNormal(point);
-            Vector3 surfaceToPoint = point - closestSurfacePoint;
-            return Vector3.Dot(surfaceToPoint, closestSurfaceNormal) - _radius;
+            interactable.ClosestBackingSurfaceHit(point, out SurfaceHit hit);
+            Vector3 surfaceToPoint = point - hit.Point;
+            return Vector3.Dot(surfaceToPoint, hit.Normal) - _radius;
         }
 
         // The distance below a surface along the closest normal. Always positive.
-        private float ComputeDepth(PokeInteractable interactable, Vector3 point)
+        public float ComputeDepth(PokeInteractable interactable, Vector3 point)
         {
             return Mathf.Max(0f, -ComputeDistanceAbove(interactable, point));
         }
@@ -406,42 +729,56 @@ namespace Oculus.Interaction
         // Returns the distance to the point without taking into account the surface normal.
         private float ComputeDistanceFrom(PokeInteractable interactable, Vector3 point)
         {
-            Vector3 closestSurfacePoint = interactable.ComputeClosestPoint(point);
-            Vector3 surfaceToPoint = point - closestSurfacePoint;
+            interactable.ClosestSurfacePatchHit(point, out SurfaceHit hit);
+            Vector3 surfaceToPoint = point - hit.Point;
             return surfaceToPoint.magnitude - _radius;
         }
 
-        protected override void DoSelectUpdate()
+        private float ComputeTangentDistance(PokeInteractable interactable, Vector3 point)
         {
-            PokeInteractable interactable = _selectedInteractable;
+            interactable.ClosestSurfacePatchHit(point, out SurfaceHit patchHit);
+            interactable.ClosestBackingSurfaceHit(point, out SurfaceHit backingHit);
+            Vector3 proximityToPoint = point - patchHit.Point;
+            Vector3 projOnNormal = Vector3.Dot(proximityToPoint, backingHit.Normal) *
+                backingHit.Normal;
+            Vector3 lateralVec = proximityToPoint - projOnNormal;
+            return Mathf.Max(lateralVec.magnitude - _radius, 0f);
+        }
+
+        // Returns if poke origin is still considered to be within the surface.
+        protected virtual bool SurfaceUpdate(PokeInteractable interactable)
+        {
             if (interactable == null)
             {
-                _hitInteractable = null;
-                return;
+                return false;
+            }
+
+            if (!GetBackingHit(interactable, out SurfaceHit backingHit))
+            {
+                return false;
             }
 
             // Unselect if the interactor is above the surface by at least _touchReleaseThreshold
-            if(ComputeDistanceAbove(interactable, Origin) > _touchReleaseThreshold)
+            if (ComputeDistanceAbove(interactable, Origin) > _touchReleaseThreshold)
             {
-                _hitInteractable = null;
-                return;
+                return false;
             }
 
-            Vector3 closestSurfacePointWorld = interactable.ClosestSurfacePoint(Origin);
+            Vector3 closestSurfacePoint = backingHit.Point;
 
             Vector3 positionOnSurfaceLocal =
-                interactable.Surface.Transform.InverseTransformPoint(closestSurfacePointWorld);
+                interactable.SurfacePatch.BackingSurface.Transform.InverseTransformPoint(closestSurfacePoint);
 
-            if (interactable.DragThresholding.Enabled)
+            if (interactable.DragThresholds.Enabled)
             {
                 float worldDepthDelta = Mathf.Abs(ComputeDepth(interactable, Origin) -
                                               ComputeDepth(interactable, _previousPokeOrigin));
                 Vector3 positionDeltaLocal = positionOnSurfaceLocal - _previousSurfacePointLocal;
                 Vector3 positionDeltaWorld =
-                    interactable.Surface.Transform.TransformVector(positionDeltaLocal);
+                    interactable.SurfacePatch.BackingSurface.Transform.TransformVector(positionDeltaLocal);
 
                 bool isZMotion = worldDepthDelta > positionDeltaWorld.magnitude &&
-                                 worldDepthDelta > interactable.DragThresholding.ZThreshold;
+                                 worldDepthDelta > interactable.DragThresholds.DragNormal;
 
                 if (isZMotion)
                 {
@@ -455,9 +792,9 @@ namespace Oculus.Interaction
                         Vector3 surfaceDeltaLocal =
                             positionOnSurfaceLocal - _dragCompareSurfacePointLocal;
                         Vector3 surfaceDeltaWorld =
-                            interactable.Surface.Transform.TransformVector(surfaceDeltaLocal);
+                            interactable.SurfacePatch.BackingSurface.Transform.TransformVector(surfaceDeltaLocal);
                         if (surfaceDeltaWorld.magnitude >
-                            interactable.DragThresholding.SurfaceThreshold)
+                            interactable.DragThresholds.DragTangent)
                         {
                             _isDragging = true;
                             _dragEaseCurve.Start();
@@ -484,17 +821,17 @@ namespace Oculus.Interaction
             }
 
             Vector3 pinnedTouchPointLocal = _targetTouchPointLocal;
-            if (SelectedInteractable.PositionPinning.Enabled)
+            if (interactable.PositionPinning.Enabled)
             {
                 Vector3 deltaFromCaptureLocal = pinnedTouchPointLocal - _firstTouchPointLocal;
                 Vector3 deltaFromCaptureWorld =
-                    interactable.Surface.Transform.TransformVector(deltaFromCaptureLocal);
+                    interactable.SurfacePatch.BackingSurface.Transform.TransformVector(deltaFromCaptureLocal);
                 _maxDistanceFromFirstTouchPoint = Mathf.Max(deltaFromCaptureWorld.magnitude, _maxDistanceFromFirstTouchPoint);
 
                 float deltaAsPercent = 1;
-                if (SelectedInteractable.PositionPinning.MaxPinDistance != 0f)
+                if (interactable.PositionPinning.MaxPinDistance != 0f)
                 {
-                    deltaAsPercent = Mathf.Clamp01(_maxDistanceFromFirstTouchPoint / SelectedInteractable.PositionPinning.MaxPinDistance);
+                    deltaAsPercent = Mathf.Clamp01(_maxDistanceFromFirstTouchPoint / interactable.PositionPinning.MaxPinDistance);
                 }
 
                 pinnedTouchPointLocal = _firstTouchPointLocal + deltaFromCaptureLocal * deltaAsPercent;
@@ -515,20 +852,75 @@ namespace Oculus.Interaction
             }
 
             TouchPoint =
-                interactable.Surface.Transform.TransformPoint(_easeTouchPointLocal);
-            TouchNormal = interactable.ClosestSurfaceNormal(TouchPoint);
+                interactable.SurfacePatch.BackingSurface.Transform.TransformPoint(_easeTouchPointLocal);
+            interactable.ClosestBackingSurfaceHit(TouchPoint, out SurfaceHit hit);
+            TouchNormal = hit.Normal;
 
             _previousSurfacePointLocal = positionOnSurfaceLocal;
 
-            if (interactable.ReleaseDistance > 0.0f)
+            return true;
+        }
+
+        protected virtual bool ShouldCancel(PokeInteractable interactable)
+        {
+            if ((interactable.CancelSelectNormal > 0.0f &&
+                ComputeDepth(interactable, Origin) >
+                interactable.CancelSelectNormal) ||
+                (interactable.CancelSelectTangent > 0.0f &&
+                ComputeTangentDistance(interactable, Origin) >
+                interactable.CancelSelectTangent))
             {
-                if(ComputeDistanceFrom(interactable, Origin) > interactable.ReleaseDistance)
+                return true;
+            }
+
+            return false;
+        }
+
+        protected virtual bool ShouldRecoil(PokeInteractable interactable)
+        {
+            if (interactable.RecoilAssist.Enabled)
+            {
+                float depth = ComputeDepth(interactable, Origin);
+                if (depth > _selectMaxDepth)
                 {
-                    GeneratePointerEvent(PointerEventType.Cancel, interactable);
-                    _previousPokeOrigin = Origin;
-                    _previousCandidate = null;
-                    _hitInteractable = null;
+                    _selectMaxDepth = depth;
                 }
+                else if (depth < _selectMaxDepth - interactable.RecoilAssist.ExitDistance)
+                {
+                    _reEnterDepth = depth + interactable.RecoilAssist.ReEnterDistance;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        protected override void DoSelectUpdate()
+        {
+            bool withinSurface = SurfaceUpdate(_selectedInteractable);
+            if (!withinSurface)
+            {
+                _hitInteractable = null;
+                IsPassedSurface = _recoilInteractable != null;
+                return;
+            }
+
+            if (ShouldCancel(_selectedInteractable))
+            {
+                GeneratePointerEvent(PointerEventType.Cancel, _selectedInteractable);
+                _previousPokeOrigin = Origin;
+                _previousCandidate = null;
+                _hitInteractable = null;
+                _recoilInteractable = null;
+                IsPassedSurface = false;
+                return;
+            }
+
+            if (ShouldRecoil(_selectedInteractable))
+            {
+                _hitInteractable = null;
+                _recoilInteractable = _selectedInteractable;
+                _selectMaxDepth = 0;
             }
         }
 

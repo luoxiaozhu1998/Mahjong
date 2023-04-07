@@ -63,11 +63,11 @@ namespace Oculus.Interaction.DistanceReticles
         protected override void Start()
         {
             this.BeginStart(ref _started, () => base.Start());
-            Assert.IsNotNull(HandGrabber, "Associated HandGrabber Hand can not be null");
-            Assert.IsNotNull(Interactor, "Associated Interactor Hand can not be null");
-            Assert.IsNotNull(HandGrabSource, "Associated HandGrabSource can not be null");
-            Assert.IsNotNull(HandVisual, "Associated Visual Hand can not be null");
-            Assert.IsNotNull(_syntheticHand, "Associated Synthetic hand can not be null");
+            this.AssertField(HandGrabber, nameof(HandGrabber));
+            this.AssertField(Interactor, nameof(Interactor));
+            this.AssertField(HandGrabSource, nameof(HandGrabSource));
+            this.AssertField(HandVisual, nameof(HandVisual));
+            this.AssertField(_syntheticHand, nameof(_syntheticHand));
             Transformer = _syntheticHand.GetData().Config.TrackingToWorldTransformer;
             this.EndStart(ref _started);
         }

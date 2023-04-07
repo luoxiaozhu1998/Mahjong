@@ -76,8 +76,8 @@ namespace Oculus.Interaction
         protected override void Start()
         {
             base.Start();
-            Assert.IsNotNull(Selector);
-            Assert.IsNotNull(_rayOrigin);
+            this.AssertField(Selector, nameof(Selector));
+            this.AssertField(_rayOrigin, nameof(_rayOrigin));
         }
 
         protected override void DoPreprocess()

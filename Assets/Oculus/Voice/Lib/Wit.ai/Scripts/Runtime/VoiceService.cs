@@ -7,21 +7,20 @@
  */
 
 using System;
-using System.Text;
 using System.Collections.Generic;
-using System.Diagnostics;
 using Meta.Conduit;
-using Facebook.WitAi.Configuration;
-using Facebook.WitAi.Data;
-using Facebook.WitAi.Data.Configuration;
-using Facebook.WitAi.Data.Intents;
-using Facebook.WitAi.Events;
-using Facebook.WitAi.Events.UnityEventListeners;
-using Facebook.WitAi.Interfaces;
-using Facebook.WitAi.Lib;
+using Meta.WitAi.Configuration;
+using Meta.WitAi.Data;
+using Meta.WitAi.Data.Configuration;
+using Meta.WitAi.Data.Intents;
+using Meta.WitAi.Events;
+using Meta.WitAi.Events.UnityEventListeners;
+using Meta.WitAi.Interfaces;
+using Meta.WitAi.Json;
 using UnityEngine;
+using Meta.WitAi;
 
-namespace Facebook.WitAi
+namespace Meta.WitAi
 {
     public abstract class VoiceService : MonoBehaviour, IVoiceService, IInstanceResolver, IAudioEventProvider
     {
@@ -35,10 +34,17 @@ namespace Facebook.WitAi
         /// </summary>
         private WitConfiguration _witConfiguration;
 
-        private readonly IParameterProvider conduitParameterProvider = new WitConduitParameterProvider();
+        /// <summary>
+        /// The Conduit parameter provider.
+        /// </summary>
+        private readonly IParameterProvider _conduitParameterProvider = new ParameterProvider();
 
+        /// <summary>
+        /// This field should not be accessed outside the Wit-Unity library. If you need access
+        /// to events you should be using the VoiceService.VoiceEvents property instead.
+        /// </summary>
         [Tooltip("Events that will fire before, during and after an activation")] [SerializeField]
-        public VoiceEvents events = new VoiceEvents();
+        protected VoiceEvents events = new VoiceEvents();
 
         /// <summary>
         /// Returns true if this voice service is currently active and listening with the mic
@@ -92,7 +98,9 @@ namespace Facebook.WitAi
         /// </summary>
         protected VoiceService()
         {
-            var conduitDispatcherFactory = new ConduitDispatcherFactory(this, this.conduitParameterProvider);
+            _conduitParameterProvider.SetSpecializedParameter(ParameterProvider.WitResponseNodeReservedName, typeof(WitResponseNode));
+            _conduitParameterProvider.SetSpecializedParameter(ParameterProvider.VoiceSessionReservedName, typeof(VoiceSession));
+            var conduitDispatcherFactory = new ConduitDispatcherFactory(this);
             ConduitDispatcher = conduitDispatcherFactory.GetDispatcher();
         }
 
@@ -182,7 +190,19 @@ namespace Facebook.WitAi
         {
             if (UseConduit)
             {
-                ConduitDispatcher.Initialize(_witConfiguration.manifestLocalPath);
+                ConduitDispatcher.Initialize(_witConfiguration.ManifestLocalPath);
+                if (_witConfiguration.relaxedResolution)
+                {
+                    if (!ConduitDispatcher.Manifest.ResolveEntities())
+                    {
+                        VLog.E("Failed to resolve Conduit entities");
+                    }
+
+                    foreach (var entity in ConduitDispatcher.Manifest.CustomEntityTypes)
+                    {
+                        _conduitParameterProvider.AddCustomType(entity.Key, entity.Value);
+                    }
+                }
             }
             VoiceEvents.OnPartialResponse.AddListener(ValidateShortResponse);
             VoiceEvents.OnResponse.AddListener(HandleResponse);
@@ -194,15 +214,22 @@ namespace Facebook.WitAi
             VoiceEvents.OnResponse.RemoveListener(HandleResponse);
         }
 
+        private VoiceSession GetVoiceSession(WitResponseNode response)
+        {
+            return new VoiceSession
+            {
+                service = this,
+                response = response,
+                validResponse = false
+            };
+        }
+
         protected virtual void ValidateShortResponse(WitResponseNode response)
         {
             if (VoiceEvents.OnValidatePartialResponse != null)
             {
                 // Create short response data
-                VoiceSession validationData = new VoiceSession();
-                validationData.service = this;
-                validationData.response = response;
-                validationData.validResponse = false;
+                VoiceSession validationData = GetVoiceSession(response);
 
                 // Call short response
                 VoiceEvents.OnValidatePartialResponse.Invoke(validationData);
@@ -214,9 +241,11 @@ namespace Facebook.WitAi
                     WitIntentData intent = response.GetFirstIntentData();
                     if (intent != null)
                     {
-                        Dictionary<string, object> parameters = GetConduitResponseParameters(response);
-                        parameters[WitConduitParameterProvider.VoiceSessionReservedName] = validationData;
-                        ConduitDispatcher.InvokeAction(intent.name, parameters, intent.confidence, true);
+                        _conduitParameterProvider.PopulateParametersFromNode(response);
+                        _conduitParameterProvider.AddParameter(ParameterProvider.VoiceSessionReservedName,
+                            validationData);
+                        _conduitParameterProvider.AddParameter(ParameterProvider.WitResponseNodeReservedName, response);
+                        ConduitDispatcher.InvokeAction(_conduitParameterProvider, intent.name, _witConfiguration.relaxedResolution, intent.confidence, true);
                     }
                 }
 
@@ -250,7 +279,10 @@ namespace Facebook.WitAi
         {
             if (UseConduit)
             {
-                ConduitDispatcher.InvokeAction(intent.name, GetConduitResponseParameters(response), intent.confidence, false);
+                _conduitParameterProvider.PopulateParametersFromNode(response);
+                _conduitParameterProvider.AddParameter(ParameterProvider.WitResponseNodeReservedName, response);
+                ConduitDispatcher.InvokeAction(_conduitParameterProvider, intent.name,
+                    _witConfiguration.relaxedResolution, intent.confidence, false);
             }
             else
             {
@@ -262,19 +294,7 @@ namespace Facebook.WitAi
             }
         }
 
-        // Handle conduit response parameters
-        private Dictionary<string, object> GetConduitResponseParameters(WitResponseNode response)
-        {
-            var parameters = new Dictionary<string, object>();
-            foreach (var entity in response.AsObject["entities"].Childs)
-            {
-                var parameterName = entity[0]["role"].Value;
-                var parameterValue = entity[0]["value"].Value;
-                parameters.Add(parameterName, parameterValue);
-            }
-            parameters.Add(WitConduitParameterProvider.WitResponseNodeReservedName, response);
-            return parameters;
-        }
+
 
         private void ExecuteRegisteredMatch(RegisteredMatchIntent registeredMethod,
             WitIntentData intent, WitResponseNode response)
@@ -347,198 +367,5 @@ namespace Facebook.WitAi
         /// Stop listening and abort any requests that may be active without waiting for a response.
         /// </summary>
         void DeactivateAndAbortRequest();
-    }
-
-    public static class VLog
-    {
-        #if UNITY_EDITOR
-        /// <summary>
-        /// Ignores logs in editor if less than log level (Error = 0, Warning = 2, Log = 3)
-        /// </summary>
-        public static LogType EditorLogLevel
-        {
-            get
-            {
-                if (_editorLogLevel == (LogType) (-1))
-                {
-                    string editorLogLevel = UnityEditor.EditorPrefs.GetString(EDITOR_LOG_LEVEL_KEY, EDITOR_LOG_LEVEL_DEFAULT.ToString());
-                    if (!Enum.TryParse(editorLogLevel, out _editorLogLevel))
-                    {
-                        _editorLogLevel = EDITOR_LOG_LEVEL_DEFAULT;
-                    }
-                }
-                return _editorLogLevel;
-            }
-            set
-            {
-                _editorLogLevel = value;
-                UnityEditor.EditorPrefs.SetString(EDITOR_LOG_LEVEL_KEY, _editorLogLevel.ToString());
-            }
-        }
-        private static LogType _editorLogLevel = (LogType)(-1);
-        private const string EDITOR_LOG_LEVEL_KEY = "VSDK_EDITOR_LOG_LEVEL";
-        private const LogType EDITOR_LOG_LEVEL_DEFAULT = LogType.Warning;
-        #endif
-
-        /// <summary>
-        /// Event for appending custom data to a log before logging to console
-        /// </summary>
-        public static event Action<StringBuilder, string, LogType> OnPreLog;
-
-        /// <summary>
-        /// Performs a Debug.Log with custom categorization and using the global log level
-        /// </summary>
-        /// <param name="log">The text to be debugged</param>
-        /// <param name="logCategory">The category of the log</param>
-        public static void D(string log) => Log(LogType.Log, null, log);
-        public static void D(string logCategory, string log) => Log(LogType.Log, logCategory, log);
-
-        /// <summary>
-        /// Performs a Debug.LogWarning with custom categorization and using the global log level
-        /// </summary>
-        /// <param name="log">The text to be debugged</param>
-        /// <param name="logCategory">The category of the log</param>
-        public static void W(string log) => Log(LogType.Warning, null, log);
-        public static void W(string logCategory, string log) => Log(LogType.Warning, logCategory, log);
-
-        /// <summary>
-        /// Performs a Debug.LogError with custom categorization and using the global log level
-        /// </summary>
-        /// <param name="log">The text to be debugged</param>
-        /// <param name="logCategory">The category of the log</param>
-        public static void E(string log) => Log(LogType.Error, null, log);
-        public static void E(string logCategory, string log) => Log(LogType.Error, logCategory, log);
-
-        /// <summary>
-        /// Filters out unwanted logs, appends category information
-        /// and performs UnityEngine.Debug.Log as desired
-        /// </summary>
-        /// <param name="logType"></param>
-        /// <param name="log"></param>
-        /// <param name="category"></param>
-        private static void Log(LogType logType, string logCategory, string log)
-        {
-            #if UNITY_EDITOR
-            // Skip logs with higher log type then global log level
-            if ((int) logType > (int)EditorLogLevel)
-            {
-                return;
-            }
-            #endif
-
-            // Use calling category if null
-            string category = logCategory;
-            if (string.IsNullOrEmpty(category))
-            {
-                category = GetCallingCategory();
-            }
-
-            // String builder
-            StringBuilder result = new StringBuilder();
-
-            #if !UNITY_EDITOR && !UNITY_ANDROID
-            {
-                // Start with datetime if not done so automatically
-                DateTime now = DateTime.Now;
-                result.Append($"[{now.ToShortDateString()} {now.ToShortTimeString()}] ");
-            }
-            #endif
-
-            // Insert log type
-            int start = result.Length;
-            result.Append($"[{logType.ToString().ToUpper()}] ");
-            WrapWithLogColor(result, start, logType);
-
-            // Append VDSK & Category
-            start = result.Length;
-            result.Append("[VSDK");
-            if (!string.IsNullOrEmpty(category))
-            {
-                result.Append($" {category}");
-            }
-            result.Append("] ");
-            WrapWithCallingLink(result, start);
-
-            // Append the actual log
-            result.Append(log);
-
-            // Final log append
-            OnPreLog?.Invoke(result, logCategory, logType);
-
-            // Log
-            switch (logType)
-            {
-                case LogType.Error:
-                    UnityEngine.Debug.LogError(result);
-                    break;
-                case LogType.Warning:
-                    UnityEngine.Debug.LogWarning(result);
-                    break;
-                default:
-                    UnityEngine.Debug.Log(result);
-                    break;
-            }
-        }
-
-        /// <summary>
-        /// Determines a category from the script name that called the previous method
-        /// </summary>
-        /// <returns>Assembly name</returns>
-        private static string GetCallingCategory()
-        {
-            StackTrace stackTrace = new StackTrace();
-            string path = stackTrace.GetFrame(3).GetMethod().DeclaringType.ToString();
-            int index = path.LastIndexOf('.');
-            if (index != -1)
-            {
-                path = path.Substring(index + 1);
-            }
-            index = path.IndexOf("+<");
-            if (index != -1)
-            {
-                path = path.Substring(0, index);
-            }
-            return path;
-        }
-
-        /// <summary>
-        /// Determines a category from the script name that called the previous method
-        /// </summary>
-        /// <returns>Assembly name</returns>
-        private static void WrapWithCallingLink(StringBuilder builder, int startIndex)
-        {
-            #if UNITY_EDITOR && UNITY_2021_2_OR_NEWER
-            StackTrace stackTrace = new StackTrace(true);
-            StackFrame stackFrame = stackTrace.GetFrame(3);
-            string callingFileName = stackFrame.GetFileName().Replace('\\', '/');
-            int callingFileLine = stackFrame.GetFileLineNumber();
-            builder.Insert(startIndex, $"<a href=\"{callingFileName}\" line=\"{callingFileLine}\">");
-            builder.Append("</a>");
-            #endif
-        }
-
-        /// <summary>
-        /// Get hex value for each log type
-        /// </summary>
-        private static void WrapWithLogColor(StringBuilder builder, int startIndex, LogType logType)
-        {
-            #if UNITY_EDITOR
-            string hex;
-            switch (logType)
-            {
-                case LogType.Error:
-                    hex = "FF0000";
-                    break;
-                case LogType.Warning:
-                    hex = "FFFF00";
-                    break;
-                default:
-                    hex = "00FF00";
-                    break;
-            }
-            builder.Insert(startIndex, $"<color=\"#{hex}\">");
-            builder.Append("</color>");
-            #endif
-        }
     }
 }

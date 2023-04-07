@@ -11,7 +11,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace Facebook.WitAi
+namespace Meta.WitAi
 {
     public static class WitEditorUI
     {
@@ -82,6 +82,18 @@ namespace Facebook.WitAi
             float width = WitStyles.TextButton.CalcSize(content).x + WitStyles.TextButtonPadding * 2f;
             return LayoutButton(content, WitStyles.TextButton, new GUILayoutOption[] { GUILayout.Width(width) });
         }
+
+        public static bool LayoutTextLink(string text)
+        {
+            GUIContent content = new GUIContent(text);
+#if UNITY_2021_3_OR_NEWER
+            return EditorGUILayout.LinkButton(content);
+#else
+            var style = GUI.skin.GetStyle("Label");
+            return LayoutButton(content, style, new GUILayoutOption[] {});
+#endif
+        }
+
         public static bool LayoutIconButton(GUIContent icon)
         {
             return LayoutButton(icon, WitStyles.IconButton, null);
@@ -313,7 +325,7 @@ namespace Facebook.WitAi
         }
         #endregion
 
-        #region MISCELANEOUS
+        #region MISCELLANEOUS
         public static void LayoutToggle(GUIContent key, ref bool toggleValue, ref bool isUpdated)
         {
             // Simple layout

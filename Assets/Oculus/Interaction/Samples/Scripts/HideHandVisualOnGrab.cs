@@ -41,7 +41,7 @@ namespace Oculus.Interaction.Samples
 
         protected virtual void Start()
         {
-            Assert.IsNotNull(HandVisual);
+            this.AssertField(HandVisual, nameof(HandVisual));
         }
 
         protected virtual void Update()

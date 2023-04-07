@@ -51,7 +51,8 @@ public class OVRPluginUpdater : IOVRPluginInfoSupplier
 		Win,
 		Win64,
 		Win64OpenXR,
-    }
+		MetaXRSimulator,
+	}
 	class PluginPackage
 	{
 		public string RootPath;
@@ -274,7 +275,8 @@ public class OVRPluginUpdater : IOVRPluginInfoSupplier
 				{ PluginPlatform.Win,              rootPath + GetPluginBuildTargetSubPath(PluginPlatform.Win)              },
 				{ PluginPlatform.Win64,            rootPath + GetPluginBuildTargetSubPath(PluginPlatform.Win64)            },
 				{ PluginPlatform.Win64OpenXR,      rootPath + GetPluginBuildTargetSubPath(PluginPlatform.Win64OpenXR)      },
-            }
+				{ PluginPlatform.MetaXRSimulator,  rootPath + GetPluginBuildTargetSubPath(PluginPlatform.MetaXRSimulator)  },
+			}
 		};
 	}
 
@@ -346,7 +348,10 @@ public class OVRPluginUpdater : IOVRPluginInfoSupplier
 			case PluginPlatform.Win64OpenXR:
 				path = @"/Win64OpenXR/OVRPlugin.dll";
 				break;
-            default:
+			case PluginPlatform.MetaXRSimulator:
+				path = @"/MetaXRSimulator/SIMULATOR.dll";
+				break;
+			default:
 				throw new ArgumentException("Attempted GetPluginBuildTargetSubPath() for unsupported BuildTarget: " + target);
 		}
 
@@ -402,6 +407,19 @@ public class OVRPluginUpdater : IOVRPluginInfoSupplier
 		return isVersionValid ? version.ToString() : "(Unknown)";
 	}
 
+	public static string GetEnabledUtilsPluginRootPath()
+	{
+		PluginPackage package = GetEnabledUtilsPluginPkg();
+		if (package == null)
+		{
+			return null;
+		}
+		else
+		{
+			return package.RootPath;
+		}
+	}
+
 	private static bool ShouldAttemptPluginUpdate()
 	{
 		if (unityRunningInBatchmode || OVRPluginInfo.IsInsidePackageDistribution())
@@ -448,7 +466,7 @@ public class OVRPluginUpdater : IOVRPluginInfoSupplier
 			{
 				// display a dialog to prompt developer to confirm if they want to proceed with OpenXR backend
 				int result = EditorUtility.DisplayDialogComplex("OpenXR Backend",
-					"OpenXR is now fully supported by Oculus. However, some of the functionalities are not supported in the baseline OpenXR spec, which would be provided in our future releases.\n\nIf you depend on the following features in your project, please click Cancel to continue using the legacy backend:\n\n  * Mixed Reality Capture on Rift\n\nNew features, such as Passthrough API, are only supported through the OpenXR backend.\n\nPlease check our release notes for more details.\n\nReminder: you can switch the legacy and OpenXR backends at any time from Oculus > Tools > OpenXR menu options.", "Use OpenXR", "Cancel", "Release Notes");
+					"OpenXR is now fully supported by Oculus. \n\nNew features, such as Passthrough API, are only supported through the OpenXR backend.\n\nPlease check our release notes for more details.\n\nReminder: you can switch the legacy and OpenXR backends at any time from Oculus > Tools > OpenXR menu options.", "Use OpenXR", "Use Legacy", "Release Notes");
 				if (result == 0)
 					break;
 				else if (result == 1)
@@ -574,7 +592,10 @@ public class OVRPluginUpdater : IOVRPluginInfoSupplier
 							pi.SetPlatformData("Editor", "OS", "Windows");
 						}
 						break;
-                    default:
+					case PluginPlatform.MetaXRSimulator:
+						// not enable for any platform
+						break;
+					default:
 						throw new ArgumentException("Attempted EnablePluginPackage() for unsupported BuildTarget: " + platform);
 				}
 
@@ -1043,7 +1064,7 @@ public class OVRPluginUpdater : IOVRPluginInfoSupplier
 		}
 	}
 
-    public static bool IsOVRPluginLegacyAPIActivated()
+	public static bool IsOVRPluginLegacyAPIActivated()
 	{
 		PluginPackage enabledUtilsPluginPkg = GetEnabledUtilsPluginPkg();
 
@@ -1055,7 +1076,7 @@ public class OVRPluginUpdater : IOVRPluginInfoSupplier
 		return enabledUtilsPluginPkg.IsAndroidUniversalEnabled();
 	}
 
-    // Separate entry point needed since "-executeMethod" does not support parameters or default parameter values
+	// Separate entry point needed since "-executeMethod" does not support parameters or default parameter values
 	private static void BatchmodePluginUpdate()
 	{
 		OnDelayCall(); // manually invoke when running editor in batchmode
@@ -1233,29 +1254,29 @@ public class OVRPluginUpdater : IOVRPluginInfoSupplier
 		}
 	}
 
-    #region IOVRPluginInfoSupplier Implementation
+	#region IOVRPluginInfoSupplier Implementation
 
-    // Test if the OVRPlugin/OpenXR plugin is currently activated, used by other editor utilities
-    public bool IsOVRPluginOpenXRActivated() => IsOVRPluginOpenXRActivatedInternal();
+	// Test if the OVRPlugin/OpenXR plugin is currently activated, used by other editor utilities
+	public bool IsOVRPluginOpenXRActivated() => IsOVRPluginOpenXRActivatedInternal();
 
-    private static bool IsOVRPluginOpenXRActivatedInternal()
-    {
-        if (!unityVersionSupportsAndroidUniversal) // sanity check
-        {
-            return false;
-        }
+	private static bool IsOVRPluginOpenXRActivatedInternal()
+	{
+		if (!unityVersionSupportsAndroidUniversal) // sanity check
+		{
+			return false;
+		}
 
-        PluginPackage enabledUtilsPluginPkg = GetEnabledUtilsPluginPkg();
-        return enabledUtilsPluginPkg != null && enabledUtilsPluginPkg.IsAndroidOpenXREnabled();
-    }
+		PluginPackage enabledUtilsPluginPkg = GetEnabledUtilsPluginPkg();
+		return enabledUtilsPluginPkg != null && enabledUtilsPluginPkg.IsAndroidOpenXREnabled();
+	}
 
-    public bool IsOVRPluginUnityProvidedActivated()
-    {
-        PluginPackage enabledUtilsPluginPkg = GetEnabledUtilsPluginPkg();
-        return enabledUtilsPluginPkg != null && enabledUtilsPluginPkg.IsBundledPluginPackage();
-    }
+	public bool IsOVRPluginUnityProvidedActivated()
+	{
+		PluginPackage enabledUtilsPluginPkg = GetEnabledUtilsPluginPkg();
+		return enabledUtilsPluginPkg != null && enabledUtilsPluginPkg.IsBundledPluginPackage();
+	}
 
-    #endregion
+	#endregion
 }
 
 #endif

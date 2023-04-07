@@ -12,12 +12,12 @@ using System.Text;
 using System.Security.Cryptography;
 using System.Collections.Generic;
 using UnityEngine;
-using Facebook.WitAi.TTS.Data;
-using Facebook.WitAi.TTS.Events;
-using Facebook.WitAi.TTS.Interfaces;
-using Facebook.WitAi.Utilities;
+using Meta.WitAi.TTS.Data;
+using Meta.WitAi.TTS.Events;
+using Meta.WitAi.TTS.Interfaces;
+using Meta.WitAi;
 
-namespace Facebook.WitAi.TTS
+namespace Meta.WitAi.TTS
 {
     public abstract class TTSService : MonoBehaviour
     {
@@ -507,13 +507,13 @@ namespace Facebook.WitAi.TTS
 
             // Now loaded
             SetClipLoadState(clipData, TTSClipLoadState.Loaded);
+            VLog.D(GetClipLog($"{(fromDisk ? "Disk" : "Web")} Stream Ready", clipData));
 
             // Invoke playback is ready
             clipData.onPlaybackReady?.Invoke(string.Empty);
             clipData.onPlaybackReady = null;
 
             // Callback delegate
-            VLog.D(GetClipLog($"{(fromDisk ? "Disk" : "Web")} Stream Ready", clipData));
             Events?.Stream?.OnStreamReady?.Invoke(clipData);
         }
         // Handle cancel of disk cache streaming

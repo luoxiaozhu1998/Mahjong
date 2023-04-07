@@ -66,7 +66,7 @@ namespace Oculus.Interaction.Input
 
         protected virtual void Start()
         {
-            Assert.IsNotNull(CameraRigRef);
+            this.AssertField(CameraRigRef, nameof(CameraRigRef));
         }
 
         #region Inject

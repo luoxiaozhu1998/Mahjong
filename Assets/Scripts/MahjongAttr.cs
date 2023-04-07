@@ -27,7 +27,7 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
         GetComponent<XRGrabInteractable>().hoverEntered.AddListener(_ => { OnHover(); });
         GetComponent<XRGrabInteractable>().hoverExited.AddListener(_ => { OnHoverExit(); });
         GetComponent<XRGrabInteractable>().activated.AddListener(_ => { OnTrigger(); });
-        GetComponent<XRGrabInteractable>().firstSelectEntered.AddListener(_ => { OnGrab(); });
+        //GetComponent<XRGrabInteractable>().firstSelectEntered.AddListener(_ => { OnGrab(); });
     }
 
     private void OnHover()

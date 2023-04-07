@@ -237,7 +237,7 @@ public static class OVREditorUtil {
 	{
 		SetupPopupField(target, new GUIContent(name), ref selectedIndex, options, ref modified);
 	}
-	
+
 	[Conditional("UNITY_EDITOR_WIN"), Conditional("UNITY_STANDALONE_WIN"), Conditional("UNITY_ANDROID")]
 	public static void SetupPopupField(Object target, GUIContent name, ref int selectedIndex, GUIContent[] options, ref bool modified)
 	{

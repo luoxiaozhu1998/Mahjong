@@ -81,7 +81,7 @@ namespace Oculus.Interaction.Input
 
         protected override void UpdateData()
         {
-            Assert.IsNotNull(HandSkeletonProvider);
+            this.AssertField(HandSkeletonProvider, nameof(HandSkeletonProvider));
 
             _handDataAsset.IsDataValid = true;
             _handDataAsset.IsConnected = true;

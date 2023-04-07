@@ -46,7 +46,6 @@ public class SpatialAnchorLoader : MonoBehaviour
 
         Load(new OVRSpatialAnchor.LoadOptions
         {
-            MaxAnchorCount = 100,
             Timeout = 0,
             StorageLocation = OVRSpace.StorageLocation.Local,
             Uuids = uuids

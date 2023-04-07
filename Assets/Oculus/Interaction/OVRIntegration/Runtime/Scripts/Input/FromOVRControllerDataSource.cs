@@ -105,10 +105,6 @@ namespace Oculus.Interaction.Input
         private MonoBehaviour _trackingToWorldTransformer;
         private ITrackingToWorldTransformer TrackingToWorldTransformer;
 
-        [SerializeField, Interface(typeof(IDataSource<HmdDataAsset>))]
-        private MonoBehaviour _hmdData;
-        private IDataSource<HmdDataAsset> HmdData;
-
         public bool ProcessLateUpdates
         {
             get
@@ -154,7 +150,6 @@ namespace Oculus.Interaction.Input
         protected void Awake()
         {
             TrackingToWorldTransformer = _trackingToWorldTransformer as ITrackingToWorldTransformer;
-            HmdData = _hmdData as IDataSource<HmdDataAsset>;
             CameraRigRef = _cameraRigRef as IOVRCameraRigRef;
 
             UpdateConfig();
@@ -163,18 +158,17 @@ namespace Oculus.Interaction.Input
         protected override void Start()
         {
             this.BeginStart(ref _started, () => base.Start());
-            Assert.IsNotNull(CameraRigRef);
-            Assert.IsNotNull(TrackingToWorldTransformer);
-            Assert.IsNotNull(HmdData);
+            this.AssertField(CameraRigRef, nameof(CameraRigRef));
+            this.AssertField(TrackingToWorldTransformer, nameof(TrackingToWorldTransformer));
             if (_handedness == Handedness.Left)
             {
-                Assert.IsNotNull(CameraRigRef.LeftController);
+                this.AssertField(CameraRigRef.LeftController, nameof(CameraRigRef.LeftController));
                 _ovrControllerAnchor = CameraRigRef.LeftController;
                 _ovrController = OVRInput.Controller.LTouch;
             }
             else
             {
-                Assert.IsNotNull(CameraRigRef.RightController);
+                this.AssertField(CameraRigRef.RightController, nameof(CameraRigRef.RightController));
                 _ovrControllerAnchor = CameraRigRef.RightController;
                 _ovrController = OVRInput.Controller.RTouch;
             }
@@ -234,7 +228,6 @@ namespace Oculus.Interaction.Input
         {
             Config.Handedness = _handedness;
             Config.TrackingToWorldTransformer = TrackingToWorldTransformer;
-            Config.HmdData = HmdData;
         }
 
         protected override void UpdateData()
@@ -269,7 +262,9 @@ namespace Oculus.Interaction.Input
                 }
                 else
                 {
-                    Assert.IsTrue(mapping.IsButton);
+                    this.AssertIsTrue(mapping.IsButton,
+                        $"Element in {AssertUtils.Nicify(nameof(ControllerUsageMappings))} has {AssertUtils.Nicify(nameof(mapping.IsButton))} set to false.");
+
                     usageActive = OVRInput.Get(mapping.Button, controllerMask);
                 }
 
@@ -303,13 +298,11 @@ namespace Oculus.Interaction.Input
         #region Inject
 
         public void InjectAllFromOVRControllerDataSource(UpdateModeFlags updateMode, IDataSource updateAfter,
-            Handedness handedness, ITrackingToWorldTransformer trackingToWorldTransformer,
-            IDataSource<HmdDataAsset> hmdData)
+            Handedness handedness, ITrackingToWorldTransformer trackingToWorldTransformer)
         {
             base.InjectAllDataSource(updateMode, updateAfter);
             InjectHandedness(handedness);
             InjectTrackingToWorldTransformer(trackingToWorldTransformer);
-            InjectHmdData(hmdData);
         }
 
         public void InjectHandedness(Handedness handedness)
@@ -321,12 +314,6 @@ namespace Oculus.Interaction.Input
         {
             _trackingToWorldTransformer = trackingToWorldTransformer as MonoBehaviour;
             TrackingToWorldTransformer = trackingToWorldTransformer;
-        }
-
-        public void InjectHmdData(IDataSource<HmdDataAsset> hmdData)
-        {
-            _hmdData = hmdData as MonoBehaviour;
-            HmdData = hmdData;
         }
 
         #endregion

@@ -11,6 +11,7 @@ using RootMotion.Demos;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.XR.Interaction.Toolkit.Inputs.Simulation;
 
 namespace Controller
 {
@@ -51,12 +52,12 @@ namespace Controller
 
             Instance = this;
             canvas = GameObject.Find("Canvas").transform;
-            
+
             pongButton = canvas.GetChild(0).GetChild(0).GetComponent<Button>();
             kongButton = canvas.GetChild(0).GetChild(1).GetComponent<Button>();
             winButton = canvas.GetChild(0).GetChild(2).GetComponent<Button>();
             skipButton = canvas.GetChild(0).GetChild(3).GetComponent<Button>();
-            addKongButton = canvas.GetChild(0).GetChild(6).GetComponent<Button>();
+            addKongButton = canvas.GetChild(0).GetChild(5).GetComponent<Button>();
             pongButton.gameObject.SetActive(false);
             skipButton.gameObject.SetActive(false);
             kongButton.gameObject.SetActive(false);
@@ -178,6 +179,9 @@ namespace Controller
                 Destroy(GameManager.Instance.gameObject);
                 PhotonNetwork.LeaveRoom();
             });
+            var simulator = FindObjectOfType<XRDeviceSimulator>().gameObject;
+            simulator.SetActive(false);
+            simulator.SetActive(true);
         }
 
         private void SolveKong()
@@ -263,17 +267,21 @@ namespace Controller
         private void GeneratePlayers()
         {
             var players = PhotonNetwork.CurrentRoom.Players;
-            var index = 1 + players.Count(player => player.Key < PhotonNetwork.LocalPlayer.ActorNumber);
-            foreach (var playerController in from player in players where player.Value.IsLocal select GameManager.Instance.GeneratePlayer(index - 1)
+            var index = 1 +
+                        players.Count(player => player.Key < PhotonNetwork.LocalPlayer.ActorNumber);
+            foreach (var playerController in from player in players
+                     where player.Value.IsLocal
+                     select GameManager.Instance.GeneratePlayer(index - 1)
                          .GetComponent<PlayerController>())
             {
                 myPlayerController = playerController;
-                canvas.GetComponent<Canvas>().planeDistance = 5.0f;
+                canvas.GetComponent<Canvas>().planeDistance = 50f;
                 canvas.GetComponent<Canvas>().worldCamera = myPlayerController
                     .GetComponent<VRIK_PUN_Player>().vrRig.GetComponentInChildren<Camera>();
                 myPlayerController.playerID = index;
                 myPlayerController.SetPlayerStrategy();
-                myPlayerController.putPos = GameManager.Instance.GetNewPositions()[myPlayerController.playerID - 1];
+                myPlayerController.putPos =
+                    GameManager.Instance.GetNewPositions()[myPlayerController.playerID - 1];
                 if (!PhotonNetwork.IsMasterClient) continue;
                 GameManager.Instance.MahjongSplit(players.Count);
                 var a = JsonConvert.SerializeObject(GameManager.Instance.GetMahjongList());

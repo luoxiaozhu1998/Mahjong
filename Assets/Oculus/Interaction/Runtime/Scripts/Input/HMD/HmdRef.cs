@@ -46,17 +46,12 @@ namespace Oculus.Interaction.Input
 
         protected virtual void Start()
         {
-            Assert.IsNotNull(Hmd);
+            this.AssertField(Hmd, nameof(Hmd));
         }
 
-        public bool GetRootPose(out Pose pose)
+        public bool TryGetRootPose(out Pose pose)
         {
-            return Hmd.GetRootPose(out pose);
-        }
-
-        public bool TryGetAspect<TAspect>(out TAspect aspect) where TAspect : class
-        {
-            return Hmd.TryGetAspect(out aspect);
+            return Hmd.TryGetRootPose(out pose);
         }
 
         #region Inject

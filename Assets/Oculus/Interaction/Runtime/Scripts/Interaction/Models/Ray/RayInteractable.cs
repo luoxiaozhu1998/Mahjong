@@ -18,14 +18,16 @@
  * limitations under the License.
  */
 
-using UnityEngine;
-using UnityEngine.Assertions;
 using Oculus.Interaction.Surfaces;
+using UnityEngine;
 
 namespace Oculus.Interaction
 {
     public class RayInteractable : PointerInteractable<RayInteractor, RayInteractable>
     {
+        [SerializeField, Interface(typeof(IPointableElement)), Optional]
+        private MonoBehaviour _pointableElement;
+
         [SerializeField, Interface(typeof(ISurface))]
         private MonoBehaviour _surface;
         public ISurface Surface { get; private set; }
@@ -61,20 +63,25 @@ namespace Oculus.Interaction
             Surface = _surface as ISurface;
             SelectSurface = _selectSurface as ISurface;
             MovementProvider = _movementProvider as IMovementProvider;
+            PointableElement = _pointableElement as IPointableElement;
         }
 
         protected override void Start()
         {
             this.BeginStart(ref _started, () => base.Start());
-            Assert.IsNotNull(Surface);
+            this.AssertField(Surface, nameof(Surface));
             if (_selectSurface != null)
             {
-                Assert.IsNotNull(SelectSurface);
+                this.AssertField(SelectSurface, nameof(SelectSurface));
             }
             else
             {
                 SelectSurface = Surface;
                 _selectSurface = SelectSurface as MonoBehaviour;
+            }
+            if (_pointableElement != null)
+            {
+                this.AssertField(PointableElement, nameof(PointableElement));
             }
             this.EndStart(ref _started);
         }
@@ -122,6 +129,13 @@ namespace Oculus.Interaction
             _movementProvider = provider as MonoBehaviour;
             MovementProvider = provider;
         }
+
+        public void InjectOptionalPointableElement(IPointableElement pointableElement)
+        {
+            PointableElement = pointableElement;
+            _pointableElement = pointableElement as MonoBehaviour;
+        }
+
         #endregion
     }
 }

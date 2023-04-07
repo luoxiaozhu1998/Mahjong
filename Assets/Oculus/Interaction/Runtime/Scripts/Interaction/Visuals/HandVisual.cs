@@ -74,8 +74,8 @@ namespace Oculus.Interaction
         protected virtual void Start()
         {
             this.BeginStart(ref _started);
-            Assert.IsNotNull(Hand);
-            Assert.IsNotNull(_skinnedMeshRenderer);
+            this.AssertField(Hand, nameof(Hand));
+            this.AssertField(_skinnedMeshRenderer, nameof(_skinnedMeshRenderer));
             if (_handMaterialPropertyBlockEditor != null)
             {
                 _wristScalePropertyId = Shader.PropertyToID("_WristScale");

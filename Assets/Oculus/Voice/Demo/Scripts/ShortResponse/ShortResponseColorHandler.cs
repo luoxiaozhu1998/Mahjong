@@ -19,9 +19,9 @@
  */
 
 using System;
-using Facebook.WitAi;
-using Facebook.WitAi.Data;
-using Facebook.WitAi.Data.Intents;
+using Meta.WitAi;
+using Meta.WitAi.Data;
+using Meta.WitAi.Data.Configuration;
 using UnityEngine;
 
 namespace Oculus.Voice.Demo
@@ -62,6 +62,15 @@ namespace Oculus.Voice.Demo
         // On enable, find shapes
         private void OnEnable()
         {
+            VoiceService service = GameObject.FindObjectOfType<VoiceService>();
+            if (service != null)
+            {
+                WitConfiguration configuration = service.GetComponent<IWitRuntimeConfigProvider>()?.RuntimeConfiguration?.witConfiguration;
+                if (configuration != null && !configuration.useConduit)
+                {
+                    VLog.E("ShortResponseDemo only works with Conduit!  Please enable Conduit on your wit configuration to try this demo.");
+                }
+            }
             if (_shapeContainer != null)
             {
                 _shapes = _shapeContainer.GetComponentsInChildren<Renderer>(true);

@@ -3795,7 +3795,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -3827,6 +3827,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 3569461360261971778, guid: c19c41429491db84593c8b0858c85f95, type: 3}
+      propertyPath: ipText
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 3569461360261971778, guid: c19c41429491db84593c8b0858c85f95, type: 3}
       propertyPath: errorText
       value: 
       objectReference: {fileID: 711736450}
@@ -3834,6 +3838,10 @@ PrefabInstance:
       propertyPath: roomNameText
       value: 
       objectReference: {fileID: 1047874949}
+    - target: {fileID: 3569461360261971778, guid: c19c41429491db84593c8b0858c85f95, type: 3}
+      propertyPath: serverSettings
+      value: 
+      objectReference: {fileID: 11400000, guid: 1d3a1f5e534661445b0bd003c9682984, type: 2}
     - target: {fileID: 3569461360261971778, guid: c19c41429491db84593c8b0858c85f95, type: 3}
       propertyPath: roomListContent
       value: 
@@ -4023,7 +4031,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -207, y: 40}
+  m_AnchoredPosition: {x: -589, y: 40}
   m_SizeDelta: {x: 500, y: 70}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &1652185792

@@ -20,7 +20,6 @@
 
 using Oculus.Interaction.HandGrab;
 using UnityEngine;
-using UnityEngine.Assertions;
 
 namespace Oculus.Interaction
 {
@@ -31,8 +30,11 @@ namespace Oculus.Interaction
     /// moving it with deltas in its own place or allowing a pull motion, etc.
     /// </summary>
     public class DistanceGrabInteractable : PointerInteractable<DistanceGrabInteractor, DistanceGrabInteractable>,
-        IRigidbodyRef, IDistanceInteractable
+        IRigidbodyRef, IRelativeToRef, ICollidersRef
     {
+        [SerializeField, Interface(typeof(IPointableElement))]
+        private MonoBehaviour _pointableElement;
+
         private Collider[] _colliders;
         public Collider[] Colliders => _colliders;
 
@@ -89,12 +91,13 @@ namespace Oculus.Interaction
         {
             base.Awake();
             MovementProvider = _movementProvider as IMovementProvider;
+            PointableElement = _pointableElement as IPointableElement;
         }
 
         protected override void Start()
         {
             this.BeginStart(ref _started, () => base.Start());
-            Assert.IsNotNull(Rigidbody);
+            this.AssertField(Rigidbody, nameof(Rigidbody));
             _colliders = Rigidbody.GetComponentsInChildren<Collider>();
             if (MovementProvider == null)
             {
@@ -105,6 +108,7 @@ namespace Oculus.Interaction
             {
                 _grabSource = Rigidbody.transform;
             }
+            this.AssertField(PointableElement, nameof(PointableElement));
             this.EndStart(ref _started);
         }
 
@@ -128,14 +132,21 @@ namespace Oculus.Interaction
 
         #region Inject
 
-        public void InjectAllGrabInteractable(Rigidbody rigidbody)
+        public void InjectAllGrabInteractable(Rigidbody rigidbody, IPointableElement pointableElement)
         {
             InjectRigidbody(rigidbody);
+            InjectPointableElement(pointableElement);
         }
 
         public void InjectRigidbody(Rigidbody rigidbody)
         {
             _rigidbody = rigidbody;
+        }
+
+        public void InjectPointableElement(IPointableElement pointableElement)
+        {
+            PointableElement = pointableElement;
+            _pointableElement = pointableElement as MonoBehaviour;
         }
 
         public void InjectOptionalGrabSource(Transform grabSource)
