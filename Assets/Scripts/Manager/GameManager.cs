@@ -25,7 +25,7 @@ namespace Manager
         [SerializeField] private Transform playerListContent;
         [SerializeField] private GameObject roomLIstItemPrefab;
         [SerializeField] private GameObject playerLIstItemPrefab;
-        [SerializeField] private GameObject startRoomButton;
+        [SerializeField] private GameObject startGameButton;
         [SerializeField] private Toggle withHonorToggle;
         [SerializeField] private Toggle withoutHonorToggle;
         public static GameManager Instance { get; private set; }
@@ -434,10 +434,10 @@ namespace Manager
 
         public void CreateRoom()
         {
-            if (string.IsNullOrEmpty(roomNameInputField.text))
-            {
-                return;
-            }
+            // if (string.IsNullOrEmpty(roomNameInputField.text))
+            // {
+            //     return;
+            // }
 
             PhotonNetwork.CreateRoom(roomNameInputField.text, new RoomOptions {MaxPlayers = 4});
             OpenMenu("LoadingMenu");
@@ -460,7 +460,7 @@ namespace Manager
                     .Setup(t);
             }
 
-            startRoomButton.SetActive(PhotonNetwork.IsMasterClient);
+            startGameButton.SetActive(PhotonNetwork.IsMasterClient);
         }
 
         public override void OnJoinRoomFailed(short returnCode, string message)
@@ -527,13 +527,13 @@ namespace Manager
 
         public override void OnMasterClientSwitched(Player newMasterClient)
         {
-            if (startRoomButton == null) return;
+            if (startGameButton == null) return;
             if (PhotonNetwork.IsMasterClient)
             {
                 _resourceManager.LoadMahjong();
             }
 
-            startRoomButton.SetActive(PhotonNetwork.IsMasterClient);
+            startGameButton.SetActive(PhotonNetwork.IsMasterClient);
         }
 
         public void SetMaxIndexWithHonor()
