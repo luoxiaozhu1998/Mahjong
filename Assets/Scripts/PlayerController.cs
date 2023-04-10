@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using Oculus.Avatar2;
 using Photon.Pun;
 using PlayerAttr;
 using UnityEngine;
@@ -18,21 +20,22 @@ public class PlayerController : MonoBehaviour
     private Transform _mainCamera;
     private Transform _xrOriginTransform;
     public PlayTileStrategy PlayTileStrategy;
+    private ulong _userId;
+    private SampleAvatarEntity _sampleAvatarEntity;
+    private bool _beginSync = false;
 
     private void Awake()
     {
         _pv = GetComponent<PhotonView>();
+        _sampleAvatarEntity = GetComponent<SampleAvatarEntity>();
         MyMahjong = new SortedDictionary<int, List<GameObject>>();
-        //_xrOriginTransform = GameObject.Find("XR Rig").transform;
     }
+    
 
-    // private void Update()
-    // {
-    //     if (!_pv.IsMine) return;
-    //     var transform1 = transform;
-    //     _xrOriginTransform.position = transform1.position;
-    //     _xrOriginTransform.rotation = transform1.rotation;
-    // }
+    public void BeginSync()
+    {
+        _beginSync = true;
+    }
 
     public void SetPlayerStrategy()
     {
@@ -49,5 +52,15 @@ public class PlayerController : MonoBehaviour
     public void BackTrace()
     {
         PlayTileStrategy.BackTrace();
+    }
+
+    public void SetUserId(ulong userId)
+    {
+        _userId = userId;
+    }
+
+    public ulong GetUserId()
+    {
+        return _userId;
     }
 }

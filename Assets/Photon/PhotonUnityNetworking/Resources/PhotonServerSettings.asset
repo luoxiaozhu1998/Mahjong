@@ -13,57 +13,59 @@ MonoBehaviour:
   m_Name: PhotonServerSettings
   m_EditorClassIdentifier: 
   AppSettings:
-    AppIdRealtime: 0a25ea5c-3a7f-422a-b52b-cc24c999e9ce
+    AppIdRealtime: b78553b4-1346-442d-a993-2c0a523c17b6
     AppIdFusion: 
     AppIdChat: 
-    AppIdVoice: 
+    AppIdVoice: 1bba8402-4aff-4755-be31-85edd56ce646
     AppVersion: 
-    UseNameServer: 1
+    UseNameServer: 0
     FixedRegion: kr
-    Server: 
-    Port: 0
+    Server: 10.177.74.215
+    Port: 5055
     ProxyServer: 
-    Protocol: 1
-    EnableProtocolFallback: 0
+    Protocol: 0
+    EnableProtocolFallback: 1
     AuthMode: 0
     EnableLobbyStatistics: 0
-    NetworkLogging: 0
+    NetworkLogging: 1
   DevRegion: 
   PunLogging: 0
   EnableSupportLogger: 0
-  RunInBackground: 0
+  RunInBackground: 1
   StartInOfflineMode: 0
   RpcList:
-  - ClickRpc
-  - DestroyRpc
-  - DestroySpaceship
-  - Fire
-  - RespawnSpaceship
-  - SendID
-  - NextTurn
-  - MyTurn
-  - DestroyUnPickMahjong
-  - NotMyTurn
-  - CanNext
-  - PlayTile
-  - Send
-  - SendMyState
-  - CanP
+  - AddKong
+  - ApplyAvatarData
   - CanH
   - CanK
-  - HideButton
-  - StoreTile
-  - DestroyItem
   - CanKAndH
+  - CanNext
+  - CanP
   - CanPAndH
   - CanPAndK
   - CanPAndKAndH
-  - ShowResult
-  - AddKong
+  - CantHearYou
+  - ChangeColour
+  - ClickRpc
+  - DestroyItem
+  - DestroyRpc
+  - DestroySpaceship
+  - Fire
+  - HeresWhy
+  - HideButton
+  - NextTurn
   - NoOneWin
-  - SendList
-  - SetList
+  - NotMyTurn
+  - PlayTile
+  - RespawnSpaceship
+  - Send
   - SendMaxId
+  - SetList
+  - ShowResult
+  - StoreTile
+  - OnGrab
+  - SetKinematic
+  - SetState
   DisableAutoOpenWizard: 1
   ShowSettings: 1
-  DevRegionSetOnce: 1
+  DevRegionSetOnce: 0

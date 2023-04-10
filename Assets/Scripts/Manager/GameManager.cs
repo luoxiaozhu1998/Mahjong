@@ -1,7 +1,8 @@
-﻿using System;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Controller;
+using Oculus.Avatar2;
 using Photon.Pun;
 using Photon.Realtime;
 using TMPro;
@@ -9,7 +10,9 @@ using Tools;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Oculus.Platform;
 using Random = UnityEngine.Random;
+using RoomOptions = Photon.Realtime.RoomOptions;
 
 namespace Manager
 {
@@ -28,6 +31,7 @@ namespace Manager
         [SerializeField] private GameObject startGameButton;
         [SerializeField] private Toggle withHonorToggle;
         [SerializeField] private Toggle withoutHonorToggle;
+        private ulong _userId;
         public static GameManager Instance { get; private set; }
 
         private ResourceManager _resourceManager;
@@ -36,17 +40,74 @@ namespace Manager
 
         private void Awake()
         {
-            if (Instance)
+            if (Instance && Instance != this)
             {
                 Destroy(gameObject);
             }
+            else
+            {
+                Instance = this;
+            }
 
             DontDestroyOnLoad(gameObject);
-            Instance = this;
             _resourceManager = new ResourceManager();
             _menuManager = new MenuManager();
+            try
+            {
+                Core.AsyncInitialize();
+                Entitlements.IsUserEntitledToApplication().OnComplete(EntitlementCallback);
+            }
+            catch (UnityException e)
+            {
+                Debug.LogError("Platform failed to initialize due to exception.");
+                Debug.LogException(e);
+                // Immediately quit the application.
+                UnityEngine.Application.Quit();
+            }
         }
 
+        // Called when the Meta Quest Platform completes the async entitlement check request and a result is available.
+        void EntitlementCallback(Message msg)
+        {
+            if (msg.IsError) // User failed entitlement check
+            {
+                // Implements a default behavior for an entitlement check failure -- log the failure and exit the app.
+                Debug.LogError("You are NOT entitled to use this app.");
+                UnityEngine.Application.Quit();
+            }
+            else // User passed entitlement check
+            {
+                // Log the succeeded entitlement check for debugging.
+                Debug.Log("You are entitled to use this app.");
+                GetTokens();
+            }
+        }
+
+        private void GetTokens()
+        {
+            Users.GetAccessToken().OnComplete(message =>
+            {
+                if (!message.IsError)
+                {
+                    OvrAvatarEntitlement.SetAccessToken(message.Data);
+                    Users.GetLoggedInUser().OnComplete(message =>
+                    {
+                        if (!message.IsError)
+                        {
+                            _userId = message.Data.ID;
+                        }
+                        else
+                        {
+                            var e = message.GetError();
+                        }
+                    });
+                }
+                else
+                {
+                    var e = message.GetError();
+                }
+            });
+        }
 
         public override void OnEnable()
         {
@@ -549,12 +610,17 @@ namespace Manager
             Constants.MaxId = 27;
         }
 
+        public ulong GetUserId()
+        {
+            return _userId;
+        }
+
         public void QuitGame()
         {
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
 #else
-Application.Quit();
+                UnityEngine.Application.Quit();
 #endif
         }
     }

@@ -2,9 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Oculus.Avatar2;
+using Oculus.Interaction.HandGrab;
+using Oculus.Platform;
 using Photon.Pun;
 using Tools;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Manager
 {
@@ -28,6 +32,7 @@ namespace Manager
         // private readonly string _playerControllerPath =
         //     Path.Combine("PhotonPrefabs", "PlayerController");
         private const string PlayerControllerPath = "PUNPlayer";
+        private const string photonVoiceSetupPrefabName = "VoiceSetting";
         private readonly List<Vector3> _bias;
         private readonly List<Vector3> _rotate;
         private readonly List<Vector3> _kongRotate;
@@ -55,22 +60,22 @@ namespace Manager
 
             _bias = new List<Vector3>
             {
-                new(0f, 0f, 3f),
-                new(-3f, 0f, 0f),
-                new(0f, 0f, -3f),
-                new(3f, 0f, 0f)
+                new(0f, 0f, 0.05f),
+                new(-0.05f, 0f, 0f),
+                new(0f, 0f, -0.05f),
+                new(0.05f, 0f, 0f)
             };
             _kongRotate = new List<Vector3>
             {
                 new(0f, 180f, 0f),
-                new(0f, -180f, 0f),
+                new(0f, -180f, 0f)
             };
             _new = new List<Vector3>
             {
                 new(35.0f, 2.0f, 21.0f),
                 new(-21.0f, 2.0f, 35.0f),
                 new(-35.0f, 2.0f, -21.0f),
-                new(21.0f, 2.0f, -35.0f),
+                new(21.0f, 2.0f, -35.0f)
             };
 
             _rotate = new List<Vector3>
@@ -83,18 +88,18 @@ namespace Manager
 
             _playerInitRotations = new List<Vector3>
             {
-                new(10f, -90f, 0f),
-                new(10f, 180f, 0f),
-                new(10f, 90f, 0f),
-                new(10f, 0f, 0f)
+                new(0f, -90f, 0f),
+                new(0f, 180f, 0f),
+                new(0f, 90f, 0f),
+                new(0f, 0f, 0f)
             };
 
             _playerInitPositions = new List<Vector3>
             {
-                new(63f, -55f, 0f),
-                new(0f, -55f, 63f),
-                new(-63f, -55f, 0f),
-                new(0f, -55f, -63f)
+                new(0.8f, 0f, 0f),
+                new(0f, 0f, 0.8f),
+                new(-0.8f, 0f, 0f),
+                new(0f, 0f, -0.8f)
             };
             _playerPutPositions = new List<Vector3>
             {
@@ -224,10 +229,24 @@ namespace Manager
         /// <returns></returns>
         public GameObject GeneratePlayer(int id)
         {
+            object[] objects = {Convert.ToInt64(GameManager.Instance.GetUserId())};
+            var rig = Object.FindObjectOfType<OVRCameraRig>().transform;
+            rig.position = _playerInitPositions[id];
+            rig.rotation = Quaternion.Euler(_playerInitRotations[id]);
             var go = PhotonNetwork.Instantiate(PlayerControllerPath,
-                _playerInitPositions[id],
-                Quaternion.Euler(_playerInitRotations[id]));
-            go.transform.localScale *= 35f;
+                rig.position,
+                rig.rotation, 0, objects);
+            go.transform.SetParent(rig);
+            go.transform.localRotation = Quaternion.identity;
+            go.transform.localPosition = Vector3.zero;
+            var centerEyeAnchor = rig.Find("TrackingSpace/CenterEyeAnchor");
+            var voiceSetup = PhotonNetwork.Instantiate(photonVoiceSetupPrefabName, centerEyeAnchor.position,
+                centerEyeAnchor.rotation);
+            voiceSetup.transform.SetParent(centerEyeAnchor);
+            voiceSetup.transform.localPosition = Vector3.zero;
+            voiceSetup.transform.localRotation = Quaternion.identity;
+            go.GetComponent<StreamingAvatar>().SetLipSync(voiceSetup.GetComponent<OvrAvatarLipSyncContext>());
+            voiceSetup.GetComponent<OvrAvatarLipSyncContext>().CaptureAudio = true;
             return go;
         }
 
@@ -246,8 +265,10 @@ namespace Manager
                 var go = PhotonNetwork.Instantiate(
                     _userMahjongLists[id][i].Name, pos,
                     Quaternion.Euler(_rotate[id]));
-                var script = go.GetComponent<MahjongAttr>();
-                script.id = _userMahjongLists[id][i].ID;
+                // var script = go.GetComponent<MahjongAttr>();
+                // script.id = _userMahjongLists[id][i].ID;
+                var pv = go.GetComponent<PhotonView>();
+                pv.RPC("SetState", RpcTarget.Others, false);
                 pos += _bias[id];
                 if (!ret.ContainsKey(_userMahjongLists[id][i].ID))
                 {
@@ -255,8 +276,8 @@ namespace Manager
                 }
 
                 ret[_userMahjongLists[id][i].ID].Add(go);
-                script.num = i + 1;
-                script.canPlay = true;
+                // script.num = i + 1;
+                // script.canPlay = true;
             }
 
             return ret;
