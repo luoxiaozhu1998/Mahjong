@@ -258,8 +258,8 @@ namespace Manager
 
                     if (GameController.Instance.CheckWin(newScript.id))
                     {
-                        photonView.RPC(nameof(CanH), RpcTarget.All,
-                            GameController.Instance.myPlayerController.playerID);
+                        // photonView.RPC(nameof(CanH), RpcTarget.All,
+                        //     GameController.Instance.myPlayerController.playerID);
                     }
 
                     myMahjong[newScript.id].Add(go);
@@ -280,8 +280,8 @@ namespace Manager
 
                     if (myMahjong[newScript.id].Count == 4)
                     {
-                        photonView.RPC(nameof(AddKong), RpcTarget.All,
-                            GameController.Instance.myPlayerController.playerID, newScript.id);
+                        // photonView.RPC(nameof(AddKong), RpcTarget.All,
+                        //     GameController.Instance.myPlayerController.playerID, newScript.id);
                     }
                 }
             }
@@ -357,94 +357,94 @@ namespace Manager
         /// 可以碰牌的客户端
         /// </summary>
         /// <param name="id">客户端id</param>
-        [PunRPC]
-        public void CanP(int id)
-        {
-            if (id != GameController.Instance.myPlayerController.playerID) return;
-            GameController.Instance.pongButton.gameObject.SetActive(true);
-            GameController.Instance.skipButton.gameObject.SetActive(true);
-        }
-
-        /// <summary>
-        /// 可以杠牌的客户端
-        /// </summary>
-        /// <param name="id">客户端id</param>
-        [PunRPC]
-        public void CanK(int id)
-        {
-            if (id != GameController.Instance.myPlayerController.playerID) return;
-            GameController.Instance.pongButton.gameObject.SetActive(true);
-            GameController.Instance.kongButton.gameObject.SetActive(true);
-            GameController.Instance.skipButton.gameObject.SetActive(true);
-        }
-
-        [PunRPC]
-        public void AddKong(int playerId, int tileId)
-        {
-            if (playerId != GameController.Instance.myPlayerController.playerID) return;
-            GameController.Instance.addKongButton.gameObject.SetActive(true);
-            GameController.Instance.skipButton.gameObject.SetActive(true);
-            GameController.Instance.nowTile = tileId;
-        }
+        // [PunRPC]
+        // public void CanP(int id)
+        // {
+        //     if (id != GameController.Instance.myPlayerController.playerID) return;
+        //     GameController.Instance.pongButton.gameObject.SetActive(true);
+        //     GameController.Instance.skipButton.gameObject.SetActive(true);
+        // }
+        //
+        // /// <summary>
+        // /// 可以杠牌的客户端
+        // /// </summary>
+        // /// <param name="id">客户端id</param>
+        // [PunRPC]
+        // public void CanK(int id)
+        // {
+        //     if (id != GameController.Instance.myPlayerController.playerID) return;
+        //     GameController.Instance.pongButton.gameObject.SetActive(true);
+        //     GameController.Instance.kongButton.gameObject.SetActive(true);
+        //     GameController.Instance.skipButton.gameObject.SetActive(true);
+        // }
+        //
+        // [PunRPC]
+        // public void AddKong(int playerId, int tileId)
+        // {
+        //     if (playerId != GameController.Instance.myPlayerController.playerID) return;
+        //     GameController.Instance.addKongButton.gameObject.SetActive(true);
+        //     GameController.Instance.skipButton.gameObject.SetActive(true);
+        //     GameController.Instance.nowTile = tileId;
+        // }
 
         /// <summary>
         /// 可以胡牌的客户端
         /// </summary>
         /// <param name="id">客户端id</param>
-        [PunRPC]
-        public void CanH(int id)
-        {
-            if (id != GameController.Instance.myPlayerController.playerID) return;
-            GameController.Instance.winButton.gameObject.SetActive(true);
-            GameController.Instance.skipButton.gameObject.SetActive(true);
-        }
-
-        [PunRPC]
-        public void CanPAndK(int id)
-        {
-            if (id != GameController.Instance.myPlayerController.playerID) return;
-            GameController.Instance.pongButton.gameObject.SetActive(true);
-            GameController.Instance.kongButton.gameObject.SetActive(true);
-            GameController.Instance.skipButton.gameObject.SetActive(true);
-        }
-
-        [PunRPC]
-        public void CanPAndH(int id)
-        {
-            if (id != GameController.Instance.myPlayerController.playerID) return;
-            GameController.Instance.pongButton.gameObject.SetActive(true);
-            GameController.Instance.winButton.gameObject.SetActive(true);
-            GameController.Instance.skipButton.gameObject.SetActive(true);
-        }
-
-        [PunRPC]
-        public void CanKAndH(int id)
-        {
-            if (id != GameController.Instance.myPlayerController.playerID) return;
-            GameController.Instance.kongButton.gameObject.SetActive(true);
-            GameController.Instance.winButton.gameObject.SetActive(true);
-            GameController.Instance.skipButton.gameObject.SetActive(true);
-        }
-
-        [PunRPC]
-        public void CanPAndKAndH(int id)
-        {
-            if (id != GameController.Instance.myPlayerController.playerID) return;
-            GameController.Instance.pongButton.gameObject.SetActive(true);
-            GameController.Instance.kongButton.gameObject.SetActive(true);
-            GameController.Instance.winButton.gameObject.SetActive(true);
-            GameController.Instance.skipButton.gameObject.SetActive(true);
-        }
-
-        [PunRPC]
-        public void HideButton()
-        {
-            GameController.Instance.pongButton.gameObject.SetActive(false);
-            GameController.Instance.kongButton.gameObject.SetActive(false);
-            GameController.Instance.skipButton.gameObject.SetActive(false);
-            GameController.Instance.addKongButton.gameObject.SetActive(false);
-            GameController.Instance.winButton.gameObject.SetActive(false);
-        }
+        // [PunRPC]
+        // public void CanH(int id)
+        // {
+        //     if (id != GameController.Instance.myPlayerController.playerID) return;
+        //     GameController.Instance.winButton.gameObject.SetActive(true);
+        //     GameController.Instance.skipButton.gameObject.SetActive(true);
+        // }
+        //
+        // [PunRPC]
+        // public void CanPAndK(int id)
+        // {
+        //     if (id != GameController.Instance.myPlayerController.playerID) return;
+        //     GameController.Instance.pongButton.gameObject.SetActive(true);
+        //     GameController.Instance.kongButton.gameObject.SetActive(true);
+        //     GameController.Instance.skipButton.gameObject.SetActive(true);
+        // }
+        //
+        // [PunRPC]
+        // public void CanPAndH(int id)
+        // {
+        //     if (id != GameController.Instance.myPlayerController.playerID) return;
+        //     GameController.Instance.pongButton.gameObject.SetActive(true);
+        //     GameController.Instance.winButton.gameObject.SetActive(true);
+        //     GameController.Instance.skipButton.gameObject.SetActive(true);
+        // }
+        //
+        // [PunRPC]
+        // public void CanKAndH(int id)
+        // {
+        //     if (id != GameController.Instance.myPlayerController.playerID) return;
+        //     GameController.Instance.kongButton.gameObject.SetActive(true);
+        //     GameController.Instance.winButton.gameObject.SetActive(true);
+        //     GameController.Instance.skipButton.gameObject.SetActive(true);
+        // }
+        //
+        // [PunRPC]
+        // public void CanPAndKAndH(int id)
+        // {
+        //     if (id != GameController.Instance.myPlayerController.playerID) return;
+        //     GameController.Instance.pongButton.gameObject.SetActive(true);
+        //     GameController.Instance.kongButton.gameObject.SetActive(true);
+        //     GameController.Instance.winButton.gameObject.SetActive(true);
+        //     GameController.Instance.skipButton.gameObject.SetActive(true);
+        // }
+        //
+        // [PunRPC]
+        // public void HideButton()
+        // {
+        //     GameController.Instance.pongButton.gameObject.SetActive(false);
+        //     GameController.Instance.kongButton.gameObject.SetActive(false);
+        //     GameController.Instance.skipButton.gameObject.SetActive(false);
+        //     GameController.Instance.addKongButton.gameObject.SetActive(false);
+        //     GameController.Instance.winButton.gameObject.SetActive(false);
+        // }
 
         [PunRPC]
         public void StoreTile(GameObject go)

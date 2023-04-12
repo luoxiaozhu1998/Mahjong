@@ -62,10 +62,10 @@ namespace Manager
             };
             _new = new List<Vector3>
             {
-                new(35.0f, 2.0f, 21.0f),
-                new(-21.0f, 2.0f, 35.0f),
-                new(-35.0f, 2.0f, -21.0f),
-                new(21.0f, 2.0f, -35.0f)
+                new(0.6f, 0.83f, 0.45f),
+                new(-0.45f, 2.0f, 0.6f),
+                new(-0.6f, 2.0f, -0.45f),
+                new(0.45f, 2.0f, -0.6f)
             };
 
             _rotate = new List<Vector3>
@@ -262,12 +262,11 @@ namespace Manager
                 var go = PhotonNetwork.Instantiate(
                     _userMahjongLists[id][i].Name, pos,
                     Quaternion.Euler(_rotate[id]));
-                // var script = go.GetComponent<MahjongAttr>();
-                // script.id = _userMahjongLists[id][i].ID;
+                var script = go.GetComponent<MahjongAttr>();
                 var pv = go.GetComponent<PhotonView>();
                 pv.RPC("SetState", RpcTarget.Others, false);
-                go.GetComponent<MahjongAttr>().inHand = true;
-                go.GetComponent<MahjongAttr>().id = _userMahjongLists[id][i].ID;
+                script.inHand = true;
+                script.id = _userMahjongLists[id][i].ID;
                 pos += _bias[id];
                 if (!ret.ContainsKey(_userMahjongLists[id][i].ID))
                 {
@@ -275,8 +274,8 @@ namespace Manager
                 }
 
                 ret[_userMahjongLists[id][i].ID].Add(go);
-                // script.num = i + 1;
-                // script.canPlay = true;
+                script.num = i + 1;
+                script.canPlay = true;
             }
 
             return ret;

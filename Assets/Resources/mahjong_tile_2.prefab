@@ -685,6 +685,8 @@ MonoBehaviour:
   inHand: 0
   isPut: 0
   isAdd: 0
+  originPosition: {x: 0, y: 0, z: 0}
+  originalRotation: {x: 0, y: 0, z: 0, w: 0}
 --- !u!54 &4082857393907657488
 Rigidbody:
   m_ObjectHideFlags: 0

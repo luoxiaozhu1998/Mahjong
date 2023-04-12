@@ -11016,8 +11016,8 @@ BoxCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1.4275753, y: 1.2933832, z: 10.001368}
-  m_Center: {x: -0.018836258, y: 0.1466915, z: 3.9835923}
+  m_Size: {x: 2.1287804, y: 1.2933832, z: 10.290174}
+  m_Center: {x: 0.2773177, y: 0.1466915, z: 3.4869194}
 --- !u!23 &328217589
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -28361,8 +28361,8 @@ BoxCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1.5293509, y: 1.2362419, z: 10.187997}
-  m_Center: {x: 0.032051504, y: 0.118120946, z: 4.2242365}
+  m_Size: {x: 2.3077931, y: 1.2362419, z: 10.569787}
+  m_Center: {x: 0.2570428, y: 0.118120946, z: 4.033344}
 --- !u!23 &736940296
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -35954,6 +35954,10 @@ PrefabInstance:
     - target: {fileID: 7516989854395125640, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_Name
       value: Player1PongButton
+      objectReference: {fileID: 0}
+    - target: {fileID: 7516989854951799704, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
@@ -45793,8 +45797,8 @@ BoxCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1.4275753, y: 1.2471038, z: 9.835637}
-  m_Center: {x: -0.01883626, y: 0.123551786, z: 4.044141}
+  m_Size: {x: 2.1964927, y: 1.2471038, z: 9.570244}
+  m_Center: {x: 0.3188815, y: 0.123551786, z: 3.4035192}
 --- !u!23 &1163987247
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -78561,8 +78565,8 @@ BoxCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1.4275752, y: 1.327883, z: 9.737085}
-  m_Center: {x: -0.018836256, y: 0.16394138, z: 4.108839}
+  m_Size: {x: 1.9752032, y: 1.327883, z: 10.609318}
+  m_Center: {x: 0.16287102, y: 0.16394138, z: 3.6727247}
 --- !u!23 &2063460830
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -106669,7 +106673,7 @@ MonoBehaviour:
   prefixField: -1
   Synchronization: 3
   OwnershipTransfer: 1
-  observableSearch: 2
+  observableSearch: 0
   ObservedComponents:
   - {fileID: 3081952460616091462}
   sceneViewId: 19
@@ -106853,7 +106857,7 @@ MonoBehaviour:
   prefixField: -1
   Synchronization: 3
   OwnershipTransfer: 1
-  observableSearch: 2
+  observableSearch: 0
   ObservedComponents:
   - {fileID: 3081952460510677685}
   sceneViewId: 27
@@ -107681,7 +107685,7 @@ MonoBehaviour:
   prefixField: -1
   Synchronization: 3
   OwnershipTransfer: 1
-  observableSearch: 2
+  observableSearch: 0
   ObservedComponents:
   - {fileID: 3081952460838660038}
   sceneViewId: 3
@@ -108440,7 +108444,7 @@ MonoBehaviour:
   prefixField: -1
   Synchronization: 3
   OwnershipTransfer: 1
-  observableSearch: 2
+  observableSearch: 0
   ObservedComponents:
   - {fileID: 3081952461414897120}
   sceneViewId: 18

@@ -13,8 +13,7 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
     public int id;
     public int num;
     private PhotonView _gameManagerPhotonView;
-    private PlayerController _myPlayerController;
-    public bool canPlay = true;
+    public bool canPlay;
     private Vector3 _moveto;
     private Vector3 _rotateTo;
     private bool _isGrounded = true;
@@ -33,7 +32,6 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
     {
         _gameManagerPhotonView = GameManager.Instance.GetComponent<PhotonView>();
         _rigidbody = GetComponent<Rigidbody>();
-        _myPlayerController = GameController.Instance.myPlayerController;
         _handGrabInteractable = GetComponentsInChildren<HandGrabInteractable>();
         //id = int.Parse(name[..^7][13..]);
         pointableUnityEventWrapper = GetComponent<PointableUnityEventWrapper>();
@@ -61,11 +59,30 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
         _photonView.RPC(nameof(SetKinematic), RpcTarget.All, false);
         if (isPut)
         {
-            _myPlayerController.MyMahjong[id].RemoveAt(0);
-            GameController.Instance.photonView.RPC(nameof(GameController.Instance.NextTurn), RpcTarget.All,
-                _myPlayerController.playerID == PhotonNetwork.CurrentRoom.PlayerCount
-                    ? 1
-                    : _myPlayerController.playerID + 1);
+            var playerController = GameController.Instance.myPlayerController;
+            var playerId = playerController.playerID;
+            if (GameController.Instance.nowTurn == playerId)
+            {
+                GameObject go = null;
+                foreach (var item in playerController.MyMahjong[id]
+                             .Where(item => item.GetComponent<MahjongAttr>().num == num))
+                {
+                    go = item;
+                }
+
+                if (go != null)
+                {
+                    playerController.MyMahjong[id].Remove(go);
+                }
+
+                GameController.Instance.SortMyMahjong();
+
+                photonView.RPC(nameof(PlayTile), RpcTarget.All, playerId, id);
+            }
+            else
+            {
+                GameController.Instance.SortMyMahjong();
+            }
         }
     }
 
@@ -82,6 +99,56 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
         {
             handGrabInteractable.enabled = b;
         }
+    }
+
+    [PunRPC]
+    private void PlayTile(int playerId, int tileId)
+    {
+        GameController.Instance.lastTurn = playerId;
+        //每个客户端先把把当前轮次的ID设置好（下面代码可能会更改）
+        GameController.Instance.nowTurn = playerId == PhotonNetwork.CurrentRoom.PlayerCount
+            ? 1
+            : playerId + 1;
+        //每个客户端先把把当前轮次的牌ID设置好（下面代码可能会更改）
+        GameController.Instance.nowTile = tileId;
+        var thisID = GameController.Instance.myPlayerController.playerID;
+        //打出牌的一定准备好了
+        if (playerId == thisID)
+        {
+            //是主客户端，直接加入
+            if (PhotonNetwork.IsMasterClient)
+            {
+                GameController.Instance.ReadyDict.Add(playerId, 0);
+            }
+            //向主客户端发送自己的状态
+            else
+            {
+                photonView.RPC(nameof(Send), RpcTarget.MasterClient, playerId, 0);
+            }
+        }
+        else
+        {
+            //check自己的状态
+            var flag = GameController.Instance.CheckMyState(tileId);
+            //是主客户端，直接加入
+            if (PhotonNetwork.IsMasterClient)
+            {
+                GameController.Instance.ReadyDict.Add(
+                    GameController.Instance.myPlayerController.playerID, flag);
+            }
+            //向主客户端发送自己的状态
+            else
+            {
+                photonView.RPC(nameof(Send), RpcTarget.MasterClient,
+                    GameController.Instance.myPlayerController.playerID, flag);
+            }
+        }
+    }
+
+    [PunRPC]
+    public void Send(int id, int flag)
+    {
+        GameController.Instance.ReadyDict.Add(id, flag);
     }
     // private void OnHover()
     // {

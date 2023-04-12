@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,12 +6,12 @@ using DG.Tweening.Core;
 using DG.Tweening.Plugins.Options;
 using Manager;
 using Newtonsoft.Json;
+using Oculus.Interaction;
 using Oculus.Interaction.HandGrab;
 using Photon.Pun;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using static System.String;
 
 namespace Controller
 {
@@ -22,11 +21,12 @@ namespace Controller
     public class GameController : MonoBehaviourPunCallbacks
     {
         public static GameController Instance { get; private set; }
-        public Button pongButton;
-        public Button kongButton;
-        public Button addKongButton;
-        public Button skipButton;
-        public Button winButton;
+
+        // public Button pongButton;
+        // public Button kongButton;
+        // public Button addKongButton;
+        // public Button skipButton;
+        // public Button winButton;
         public int playerCount;
         public PlayerController myPlayerController;
         private PhotonView _gameManagerPhotonView;
@@ -42,6 +42,8 @@ namespace Controller
         public Transform canvas;
         private ulong m_userId;
         private List<MahjongAttr> _mahjong;
+        private List<Transform> _playerButtons;
+        private bool _canPong;
 
         /// <summary>
         /// 初始化
@@ -73,6 +75,7 @@ namespace Controller
             canNext = true;
             ReadyDict = new Dictionary<int, int>();
             _mahjong = new List<MahjongAttr>();
+            _playerButtons = new List<Transform>();
         }
 
         /// <summary>
@@ -284,11 +287,11 @@ namespace Controller
                 var attr = _mahjong[i].GetComponent<MahjongAttr>();
                 attr.id = mahjongList[i].ID;
                 rb.constraints = RigidbodyConstraints.FreezeAll;
-                attr.pointableUnityEventWrapper.WhenSelect.AddListener(() =>
-                {
-                    rb.constraints = RigidbodyConstraints.None;
-                });
-                attr.pointableUnityEventWrapper.WhenUnselect.AddListener(() => AddMahjong(attr, rb));
+                // attr.pointableUnityEventWrapper.WhenSelect.AddListener(() =>
+                // {
+                //     rb.constraints = RigidbodyConstraints.None;
+                // });
+                // attr.pointableUnityEventWrapper.WhenUnselect.AddListener(() => AddMahjong(attr, rb));
                 var grabInteractables = _mahjong[i].GetComponentsInChildren<HandGrabInteractable>();
                 foreach (var grabInteractable in grabInteractables)
                 {
@@ -298,12 +301,20 @@ namespace Controller
 
             myPlayerController.MyMahjong =
                 GameManager.Instance.GenerateMahjongAtStart(myPlayerController.playerID - 1);
-            nowTurn = 1;
-            if (!PhotonNetwork.IsMasterClient) return;
-            foreach (var item in _mahjong[0].GetComponentsInChildren<HandGrabInteractable>())
+            for (var i = 1; i <= 4; i++)
             {
-                item.enabled = true;
+                _playerButtons.Add(GameObject.Find("Player" + i + "Button").transform);
             }
+
+            var pongButton = _playerButtons[myPlayerController.playerID - 1].GetChild(0).GetChild(2).GetChild(1)
+                .GetChild(0).GetChild(0);
+            pongButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect.AddListener(SolvePong);
+            nowTurn = 1;
+            // if (!PhotonNetwork.IsMasterClient) return;
+            // foreach (var item in _mahjong[0].GetComponentsInChildren<HandGrabInteractable>())
+            // {
+            //     item.enabled = true;
+            // }
         }
 
         private void AddMahjong(MahjongAttr attr, Rigidbody rb)
@@ -324,20 +335,33 @@ namespace Controller
             }
             else
             {
-                attr.inHand = true;
-                if (!myPlayerController.MyMahjong.ContainsKey(attr.id))
-                {
-                    myPlayerController.MyMahjong[attr.id] = new List<GameObject>();
-                }
-
-                myPlayerController.MyMahjong[attr.id].Add(attr.gameObject);
-                //新牌，把所有监听事件移除，然后添加监听事件
-                attr.pointableUnityEventWrapper.WhenUnselect.RemoveAllListeners();
-                attr.pointableUnityEventWrapper.WhenSelect.RemoveAllListeners();
-                attr.pointableUnityEventWrapper.WhenUnselect.AddListener(attr.OnPut);
-                attr.pointableUnityEventWrapper.WhenSelect.AddListener(attr.OnGrab);
-                photonView.RPC(nameof(RemoveMahjong), RpcTarget.All);
+                AddMahjongToHand(attr);
             }
+        }
+
+        private void AddMahjongToHand(MahjongAttr attr)
+        {
+            attr.inHand = true;
+            if (!myPlayerController.MyMahjong.ContainsKey(attr.id))
+            {
+                myPlayerController.MyMahjong[attr.id] = new List<GameObject>();
+            }
+
+            attr.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.None;
+            attr.num = 1;
+            myPlayerController.MyMahjong[attr.id].Add(attr.gameObject);
+            //新牌，把所有监听事件移除，然后添加监听事件
+            attr.pointableUnityEventWrapper.WhenUnselect.RemoveAllListeners();
+            attr.pointableUnityEventWrapper.WhenSelect.RemoveAllListeners();
+            attr.pointableUnityEventWrapper.WhenUnselect.AddListener(attr.OnPut);
+            attr.pointableUnityEventWrapper.WhenSelect.AddListener(attr.OnGrab);
+
+            foreach (var item in attr.GetComponentsInChildren<HandGrabInteractable>())
+            {
+                item.enabled = true;
+            }
+
+            photonView.RPC(nameof(RemoveMahjong), RpcTarget.All);
         }
 
         [PunRPC]
@@ -347,15 +371,36 @@ namespace Controller
         }
 
         [PunRPC]
-        public void NextTurn(int id)
+        public void NextTurn(int id, bool needDrawTile)
         {
             nowTurn = id;
+            // My Turn
             if (myPlayerController.playerID == id)
             {
-                foreach (var item in _mahjong[0].GetComponentsInChildren<HandGrabInteractable>())
+                // needDrawTile
+                if (needDrawTile)
                 {
-                    item.enabled = true;
-                    _mahjong[0].pointableUnityEventWrapper.WhenSelect.AddListener(ActivateHandGrab);
+                    _mahjong[0].GetComponent<PhotonView>().TransferOwnership(PhotonNetwork.LocalPlayer);
+                    DOTween.Sequence().Insert(0f, _mahjong[0].transform.DOMove(myPlayerController.putPos, 1f)).Insert(
+                                0f,
+                                _mahjong[0].transform.DORotate(GameManager.Instance.GetRotateList()[id - 1], 1f))
+                            .onComplete +=
+                        _mahjong[0].GetComponent<Rigidbody>().Sleep;
+                    AddMahjongToHand(_mahjong[0].GetComponent<MahjongAttr>());
+                    var idx = 1;
+                    foreach (var item in myPlayerController.MyMahjong)
+                    {
+                        foreach (var iGameObject in item.Value)
+                        {
+                            var script = iGameObject.GetComponent<MahjongAttr>();
+                            if (script.num == 0 || !script.canPlay)
+                            {
+                                continue;
+                            }
+
+                            script.num = idx++;
+                        }
+                    }
                 }
             }
         }
@@ -388,9 +433,6 @@ namespace Controller
                          .GetComponent<PlayerController>())
             {
                 myPlayerController = playerController;
-                // canvas.GetComponent<Canvas>().planeDistance = 50f;
-                // canvas.GetComponent<Canvas>().worldCamera = myPlayerController
-                //     .GetComponent<VRIK_PUN_Player>().vrRig.GetComponentInChildren<Camera>();
                 myPlayerController.playerID = index;
                 myPlayerController.SetPlayerStrategy();
                 myPlayerController.putPos =
@@ -423,37 +465,37 @@ namespace Controller
                     //给他处理
                     //可以碰牌
                     case 1:
-                        _gameManagerPhotonView.RPC(nameof(GameManager.Instance.CanP), RpcTarget.All,
+                        photonView.RPC(nameof(CanP), RpcTarget.All,
                             item.Key);
                         break;
                     //可以杠牌
                     case 2:
-                        _gameManagerPhotonView.RPC(nameof(GameManager.Instance.CanK), RpcTarget.All,
+                        photonView.RPC(nameof(CanK), RpcTarget.All,
                             item.Key);
                         break;
                     //可以胡牌
                     case 3:
-                        _gameManagerPhotonView.RPC(nameof(GameManager.Instance.CanH), RpcTarget.All,
+                        photonView.RPC(nameof(CanH), RpcTarget.All,
                             item.Key);
                         break;
                     case 4:
-                        _gameManagerPhotonView.RPC(nameof(GameManager.Instance.CanPAndK),
+                        photonView.RPC(nameof(CanPAndK),
                             RpcTarget.All,
                             item.Key);
                         break;
                     //碰且赢
                     case 5:
-                        _gameManagerPhotonView.RPC(nameof(GameManager.Instance.CanPAndH),
+                        photonView.RPC(nameof(CanPAndH),
                             RpcTarget.All,
                             item.Key);
                         break;
                     case 6:
-                        _gameManagerPhotonView.RPC(nameof(GameManager.Instance.CanKAndH),
+                        photonView.RPC(nameof(CanKAndH),
                             RpcTarget.All,
                             item.Key);
                         break;
                     case 7:
-                        _gameManagerPhotonView.RPC(nameof(GameManager.Instance.CanPAndKAndH),
+                        photonView.RPC(nameof(CanPAndKAndH),
                             RpcTarget.All,
                             item.Key);
                         break;
@@ -475,9 +517,86 @@ namespace Controller
             else
             {
                 //下一回合，给下一位发牌
-                _gameManagerPhotonView.RPC(nameof(GameManager.Instance.NextTurn), RpcTarget.All,
+                photonView.RPC(nameof(NextTurn), RpcTarget.All,
                     nowTurn, true);
             }
+        }
+
+        [PunRPC]
+        private void CanP(int id)
+        {
+            _playerButtons[myPlayerController.playerID - 1].GetChild(0).GetChild(2).GetChild(1).GetChild(0).GetChild(0)
+                .GetComponent<Renderer>().material.color = new Color(0.5f, 0.5f, 0.5f);
+            _playerButtons[id - 1].GetChild(3).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
+                .material.color = new Color(0.5f, 0.5f, 0.5f);
+            if (myPlayerController.playerID == id)
+            {
+                _canPong = true;
+            }
+        }
+
+        [PunRPC]
+        private void CanK(int id)
+        {
+            _playerButtons[id - 1].GetChild(1).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
+                .material.color = new Color(0.5f, 0.5f, 0.5f);
+            _playerButtons[id - 1].GetChild(3).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
+                .material.color = new Color(0.5f, 0.5f, 0.5f);
+        }
+
+        [PunRPC]
+        private void CanH(int id)
+        {
+            _playerButtons[id - 1].GetChild(2).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
+                .material.color = new Color(0.5f, 0.5f, 0.5f);
+            _playerButtons[id - 1].GetChild(3).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
+                .material.color = new Color(0.5f, 0.5f, 0.5f);
+        }
+
+        [PunRPC]
+        private void CanPAndK(int id)
+        {
+            _playerButtons[id - 1].GetChild(0).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
+                .material.color = new Color(0.5f, 0.5f, 0.5f);
+            _playerButtons[id - 1].GetChild(1).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
+                .material.color = new Color(0.5f, 0.5f, 0.5f);
+            _playerButtons[id - 1].GetChild(3).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
+                .material.color = new Color(0.5f, 0.5f, 0.5f);
+        }
+
+        [PunRPC]
+        private void CanPAndH(int id)
+        {
+            _playerButtons[id - 1].GetChild(0).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
+                .material.color = new Color(0.5f, 0.5f, 0.5f);
+            _playerButtons[id - 1].GetChild(2).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
+                .material.color = new Color(0.5f, 0.5f, 0.5f);
+            _playerButtons[id - 1].GetChild(3).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
+                .material.color = new Color(0.5f, 0.5f, 0.5f);
+        }
+
+        [PunRPC]
+        private void CanKAndH(int id)
+        {
+            _playerButtons[id - 1].GetChild(1).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
+                .material.color = new Color(0.5f, 0.5f, 0.5f);
+            _playerButtons[id - 1].GetChild(2).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
+                .material.color = new Color(0.5f, 0.5f, 0.5f);
+            _playerButtons[id - 1].GetChild(3).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
+                .material.color = new Color(0.5f, 0.5f, 0.5f);
+        }
+
+        [PunRPC]
+        private void CanPAndKAndH(int id)
+        {
+            _playerButtons[id - 1].GetChild(0).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
+                .material.color = new Color(0.5f, 0.5f, 0.5f);
+            _playerButtons[id - 1].GetChild(1).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
+                .material.color = new Color(0.5f, 0.5f, 0.5f);
+            _playerButtons[id - 1].GetChild(2).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
+                .material.color = new Color(0.5f, 0.5f, 0.5f);
+            _playerButtons[id - 1].GetChild(3).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
+                .material.color = new Color(0.5f, 0.5f, 0.5f);
         }
 
         [PunRPC]
@@ -507,23 +626,25 @@ namespace Controller
                     }
 
                     script.num = num++;
-                    go.transform.DOMove(
-                        GameManager.Instance.GetPickPoses()[
-                                myPlayerController.playerID - 1]
-                            .position +
-                        GameManager.Instance.GetBias()[myPlayerController.playerID - 1] *
-                        (script.num - 1), 1f);
+
+                    DOTween.Sequence().Insert(0f, go.transform.DOMove(
+                            GameManager.Instance.GetPickPoses()[myPlayerController.playerID - 1].position +
+                            GameManager.Instance.GetBias()[myPlayerController.playerID - 1] *
+                            (script.num - 1), 1f)).Insert(0f, go.transform.DORotate(
+                            GameManager.Instance.GetRotateList()[myPlayerController.playerID - 1], 1f)).onComplete +=
+                        go.GetComponent<Rigidbody>().Sleep;
                 }
             }
         }
 
         private void SolvePong()
         {
+            if (!_canPong) return;
             foreach (var go in myPlayerController.MyMahjong[nowTile])
             {
                 var script = go.GetComponent<MahjongAttr>();
                 script.canPlay = false;
-                go.transform.DOMove(myPlayerController.putPos - new Vector3(0.0f, 1.0f, 0.0f), 1f);
+                go.transform.DOMove(myPlayerController.putPos, 1f);
                 go.transform.DORotate(
                     GameManager.Instance.GetPlayerPutRotations()[
                         myPlayerController.playerID - 1], 1f);
@@ -533,7 +654,7 @@ namespace Controller
             }
 
             var newGo = PhotonNetwork.Instantiate("mahjong_tile_" + nowTile,
-                myPlayerController.putPos - new Vector3(0.0f, 1.0f, 0.0f),
+                myPlayerController.putPos,
                 Quaternion.Euler(GameManager.Instance.GetPlayerPutRotations()[
                     myPlayerController.playerID - 1]));
             newGo.GetComponent<MahjongAttr>().num = 0;
@@ -544,6 +665,7 @@ namespace Controller
                 RpcTarget.All, lastTurn);
             myPlayerController.putPos -=
                 GameManager.Instance.GetBias()[myPlayerController.playerID - 1];
+            _canPong = false;
         }
 
         // private enum OperationCode
