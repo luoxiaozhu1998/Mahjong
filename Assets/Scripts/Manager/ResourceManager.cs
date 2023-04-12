@@ -29,6 +29,8 @@ namespace Manager
         /// </summary>
         private readonly List<Transform> _pickPoses = new();
 
+        private List<Mesh> _mahjongs = new();
+
         // private readonly string _playerControllerPath =
         //     Path.Combine("PhotonPrefabs", "PlayerController");
         private const string PlayerControllerPath = "PUNPlayer";
@@ -41,23 +43,11 @@ namespace Manager
         private readonly List<Vector3> _playerInitPositions;
         private readonly List<Vector3> _playerPutPositions;
         private readonly List<Vector3> _playerPutRotations;
-        public readonly Dictionary<string, GameObject> Menus;
         private readonly List<Vector3> _putMoveList;
         private readonly List<Vector3> _putRotateList;
 
         public ResourceManager()
         {
-            Menus = new Dictionary<string, GameObject>
-            {
-                {"LoadingMenu", GameObject.Find("LoadingMenu")},
-                {"TitleMenu", GameObject.Find("TitleMenu")},
-                {"CreateRoomMenu", GameObject.Find("CreateRoomMenu")},
-                {"RoomMenu", GameObject.Find("RoomMenu")},
-                {"ErrorMenu", GameObject.Find("ErrorMenu")},
-                {"FindRoomMenu", GameObject.Find("FindRoomMenu")},
-                {"StartMenu", GameObject.Find("StartMenu")}
-            };
-
             _bias = new List<Vector3>
             {
                 new(0f, 0f, 0.05f),
@@ -129,6 +119,10 @@ namespace Manager
                 new(0f, -90f, 0f),
                 new(0f, -180f, 0f)
             };
+            for (var i = 1; i <= 34; i++)
+            {
+                _mahjongs.Add(Resources.Load<GameObject>("mahjong_tile_" + i).GetComponent<MeshFilter>().sharedMesh);
+            }
         }
 
         public void InitWhenStart()
@@ -180,6 +174,9 @@ namespace Manager
             return _playerPutRotations;
         }
 
+        /// <summary>
+        /// 新创建房间或者房主改变，房主重新生成麻将
+        /// </summary>
         public void LoadMahjong()
         {
             for (var j = 0; j < Constants.MaxPlayer; j++)
@@ -269,6 +266,8 @@ namespace Manager
                 // script.id = _userMahjongLists[id][i].ID;
                 var pv = go.GetComponent<PhotonView>();
                 pv.RPC("SetState", RpcTarget.Others, false);
+                go.GetComponent<MahjongAttr>().inHand = true;
+                go.GetComponent<MahjongAttr>().id = _userMahjongLists[id][i].ID;
                 pos += _bias[id];
                 if (!ret.ContainsKey(_userMahjongLists[id][i].ID))
                 {
@@ -301,6 +300,11 @@ namespace Manager
         public List<List<int>> GetUserMahjongListsInt()
         {
             return _userMahjongLists.Select(list => list.Select(item => item.ID).ToList()).ToList();
+        }
+
+        public Mesh GetMahjongMesh(int id)
+        {
+            return _mahjongs[id - 1];
         }
     }
 }

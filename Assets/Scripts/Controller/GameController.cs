@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,11 +7,12 @@ using DG.Tweening.Core;
 using DG.Tweening.Plugins.Options;
 using Manager;
 using Newtonsoft.Json;
-
+using Oculus.Interaction.HandGrab;
 using Photon.Pun;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using static System.String;
 
 namespace Controller
 {
@@ -39,6 +41,7 @@ namespace Controller
         public Button button;
         public Transform canvas;
         private ulong m_userId;
+        private List<MahjongAttr> _mahjong;
 
         /// <summary>
         /// 初始化
@@ -69,6 +72,7 @@ namespace Controller
             _gameManagerPhotonView = GameManager.Instance.GetComponent<PhotonView>();
             canNext = true;
             ReadyDict = new Dictionary<int, int>();
+            _mahjong = new List<MahjongAttr>();
         }
 
         /// <summary>
@@ -246,6 +250,13 @@ namespace Controller
 
             GeneratePlayers();
             CheckWin();
+            //StartCoroutine(Leave());
+        }
+
+        private IEnumerator Leave()
+        {
+            yield return new WaitForSeconds(2f);
+            PhotonNetwork.LeaveRoom();
         }
 
         [PunRPC]
@@ -254,8 +265,113 @@ namespace Controller
             GameManager.Instance.SetMahjongList(JsonConvert.DeserializeObject<List<Mahjong>>(a));
             GameManager.Instance.SetUserMahjongLists(
                 JsonConvert.DeserializeObject<List<List<Mahjong>>>(b));
+            var count = 14 + (PhotonNetwork.CurrentRoom.PlayerCount - 1) * 13;
+            _mahjong = FindObjectsOfType<MahjongAttr>().ToList();
+            _mahjong.Sort((a, b) =>
+                int.Parse(a.gameObject.name.Split('_')[2]).CompareTo(int.Parse(b.gameObject.name.Split('_')[2])));
+            for (var i = 0; i < count; i++)
+            {
+                Destroy(_mahjong[i].gameObject);
+            }
+
+            _mahjong.RemoveRange(0, count);
+            var mahjongList = GameManager.Instance.GetMahjongList();
+            var length = _mahjong.Count;
+            for (var i = 0; i < length; i++)
+            {
+                _mahjong[i].GetComponent<MeshFilter>().mesh = GameManager.Instance.GetMahjongMesh(mahjongList[i].ID);
+                var rb = _mahjong[i].GetComponent<Rigidbody>();
+                var attr = _mahjong[i].GetComponent<MahjongAttr>();
+                attr.id = mahjongList[i].ID;
+                rb.constraints = RigidbodyConstraints.FreezeAll;
+                attr.pointableUnityEventWrapper.WhenSelect.AddListener(() =>
+                {
+                    rb.constraints = RigidbodyConstraints.None;
+                });
+                attr.pointableUnityEventWrapper.WhenUnselect.AddListener(() => AddMahjong(attr, rb));
+                var grabInteractables = _mahjong[i].GetComponentsInChildren<HandGrabInteractable>();
+                foreach (var grabInteractable in grabInteractables)
+                {
+                    grabInteractable.enabled = false;
+                }
+            }
+
             myPlayerController.MyMahjong =
                 GameManager.Instance.GenerateMahjongAtStart(myPlayerController.playerID - 1);
+            nowTurn = 1;
+            if (!PhotonNetwork.IsMasterClient) return;
+            foreach (var item in _mahjong[0].GetComponentsInChildren<HandGrabInteractable>())
+            {
+                item.enabled = true;
+            }
+        }
+
+        private void AddMahjong(MahjongAttr attr, Rigidbody rb)
+        {
+            if (!attr.isAdd && !attr.isPut) return;
+            var sum = myPlayerController.MyMahjong.Sum(item => item.Value.Count);
+            //牌数大于14张，此时不能拿牌
+            if (sum >= 14)
+            {
+                rb.GetComponent<BoxCollider>().isTrigger = true;
+                DOTween.Sequence().Insert(0f, rb.DOMove(attr.originPosition, 1f))
+                    .Insert(0f, rb.DORotate(attr.originalRotation.eulerAngles, 1f)).onComplete += () =>
+                {
+                    rb.Sleep();
+                    rb.GetComponent<BoxCollider>().isTrigger = false;
+                };
+                rb.constraints = RigidbodyConstraints.FreezeAll;
+            }
+            else
+            {
+                attr.inHand = true;
+                if (!myPlayerController.MyMahjong.ContainsKey(attr.id))
+                {
+                    myPlayerController.MyMahjong[attr.id] = new List<GameObject>();
+                }
+
+                myPlayerController.MyMahjong[attr.id].Add(attr.gameObject);
+                //新牌，把所有监听事件移除，然后添加监听事件
+                attr.pointableUnityEventWrapper.WhenUnselect.RemoveAllListeners();
+                attr.pointableUnityEventWrapper.WhenSelect.RemoveAllListeners();
+                attr.pointableUnityEventWrapper.WhenUnselect.AddListener(attr.OnPut);
+                attr.pointableUnityEventWrapper.WhenSelect.AddListener(attr.OnGrab);
+                photonView.RPC(nameof(RemoveMahjong), RpcTarget.All);
+            }
+        }
+
+        [PunRPC]
+        private void RemoveMahjong()
+        {
+            _mahjong.RemoveAt(0);
+        }
+
+        [PunRPC]
+        public void NextTurn(int id)
+        {
+            nowTurn = id;
+            if (myPlayerController.playerID == id)
+            {
+                foreach (var item in _mahjong[0].GetComponentsInChildren<HandGrabInteractable>())
+                {
+                    item.enabled = true;
+                    _mahjong[0].pointableUnityEventWrapper.WhenSelect.AddListener(ActivateHandGrab);
+                }
+            }
+        }
+
+        private void ActivateHandGrab()
+        {
+            photonView.RPC(nameof(RPCActivateHandGrab), RpcTarget.Others);
+        }
+
+        [PunRPC]
+        private void RPCActivateHandGrab()
+        {
+            foreach (var item in _mahjong[0].GetComponentsInChildren<HandGrabInteractable>())
+            {
+                item.enabled = true;
+            }
         }
 
         /// <summary>
@@ -286,8 +402,6 @@ namespace Controller
                 photonView.RPC(nameof(SetList), RpcTarget.All, a, b);
             }
         }
-
-
 
         /// <summary>
         /// 让主客户端每回合处理牌

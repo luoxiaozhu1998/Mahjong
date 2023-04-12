@@ -1,10 +1,10 @@
+using System.Linq;
 using Controller;
 using Manager;
 using Oculus.Interaction;
 using Oculus.Interaction.HandGrab;
 using Photon.Pun;
 using UnityEngine;
-using UnityEngine.XR.Interaction.Toolkit;
 
 public class MahjongAttr : MonoBehaviourPunCallbacks
 {
@@ -21,8 +21,13 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
     public Transform parentTrans;
     public bool isSet = false;
     private Rigidbody _rigidbody;
-    private PointableUnityEventWrapper _pointableUnityEventWrapper;
+    public PointableUnityEventWrapper pointableUnityEventWrapper;
     private HandGrabInteractable[] _handGrabInteractable;
+    public bool inHand = false;
+    public bool isPut = true;
+    public bool isAdd = false;
+    public Vector3 originPosition;
+    public Quaternion originalRotation;
 
     private void Awake()
     {
@@ -30,27 +35,38 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
         _rigidbody = GetComponent<Rigidbody>();
         _myPlayerController = GameController.Instance.myPlayerController;
         _handGrabInteractable = GetComponentsInChildren<HandGrabInteractable>();
-        id = int.Parse(name[..^7][13..]);
-        _pointableUnityEventWrapper = GetComponent<PointableUnityEventWrapper>();
-        _pointableUnityEventWrapper.InjectAllPointableUnityEventWrapper(GetComponent<Grabbable>());
+        //id = int.Parse(name[..^7][13..]);
+        pointableUnityEventWrapper = GetComponent<PointableUnityEventWrapper>();
+        pointableUnityEventWrapper.InjectAllPointableUnityEventWrapper(GetComponent<Grabbable>());
         _photonView = GetComponent<PhotonView>();
-        _pointableUnityEventWrapper.WhenSelect.AddListener(OnGrab);
-        _pointableUnityEventWrapper.WhenUnselect.AddListener(OnPut);
-        
+        pointableUnityEventWrapper.WhenSelect.AddListener(OnGrab);
+        pointableUnityEventWrapper.WhenUnselect.AddListener(OnPut);
+        var transform1 = transform;
+        originPosition = transform1.position;
+        originalRotation = transform1.rotation;
+        isPut = true;
         // GetComponent<XRGrabInteractable>().hoverEntered.AddListener(_ => { OnHover(); });
         // GetComponent<XRGrabInteractable>().hoverExited.AddListener(_ => { OnHoverExit(); });
         // GetComponent<XRGrabInteractable>().activated.AddListener(_ => { OnTrigger(); });
         //GetComponent<XRGrabInteractable>().firstSelectEntered.AddListener(_ => { OnGrab(); });
     }
 
-    private void OnGrab()
+    public void OnGrab()
     {
         _photonView.RPC(nameof(SetKinematic), RpcTarget.All, true);
     }
 
-    private void OnPut()
+    public void OnPut()
     {
         _photonView.RPC(nameof(SetKinematic), RpcTarget.All, false);
+        if (isPut)
+        {
+            _myPlayerController.MyMahjong[id].RemoveAt(0);
+            GameController.Instance.photonView.RPC(nameof(GameController.Instance.NextTurn), RpcTarget.All,
+                _myPlayerController.playerID == PhotonNetwork.CurrentRoom.PlayerCount
+                    ? 1
+                    : _myPlayerController.playerID + 1);
+        }
     }
 
     [PunRPC]

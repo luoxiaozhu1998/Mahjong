@@ -589,7 +589,7 @@ GameObject:
   - component: {fileID: 3158300279266123482}
   m_Layer: 0
   m_Name: mahjong_tile_32
-  m_TagString: Untagged
+  m_TagString: Mahjong
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -736,6 +736,12 @@ MonoBehaviour:
   canPlay: 1
   parentTrans: {fileID: 0}
   isSet: 0
+  pointableUnityEventWrapper: {fileID: 0}
+  inHand: 0
+  isPut: 0
+  isAdd: 0
+  originPosition: {x: 0, y: 0, z: 0}
+  originalRotation: {x: 0, y: 0, z: 0, w: 0}
 --- !u!65 &3379220650751665042
 BoxCollider:
   m_ObjectHideFlags: 0

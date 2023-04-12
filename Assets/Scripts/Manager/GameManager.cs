@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Controller;
 using Oculus.Avatar2;
@@ -9,7 +8,6 @@ using TMPro;
 using Tools;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 using Oculus.Platform;
 using Random = UnityEngine.Random;
 using RoomOptions = Photon.Realtime.RoomOptions;
@@ -21,16 +19,13 @@ namespace Manager
     /// </summary>
     public class GameManager : MonoBehaviourPunCallbacks
     {
-        [SerializeField] private TMP_InputField roomNameInputField;
-        [SerializeField] private TMP_Text errorText;
-        [SerializeField] private TMP_Text roomNameText;
-        [SerializeField] private Transform roomListContent;
-        [SerializeField] private Transform playerListContent;
+        private TMP_InputField _roomNameInputField;
+        private TMP_Text _roomNameText;
+        private Transform _roomListContent;
+        private Transform _playerListContent;
         [SerializeField] private GameObject roomLIstItemPrefab;
         [SerializeField] private GameObject playerLIstItemPrefab;
         [SerializeField] private GameObject startGameButton;
-        [SerializeField] private Toggle withHonorToggle;
-        [SerializeField] private Toggle withoutHonorToggle;
         private ulong _userId;
         public static GameManager Instance { get; private set; }
 
@@ -48,10 +43,14 @@ namespace Manager
             {
                 Instance = this;
             }
-
             DontDestroyOnLoad(gameObject);
+            _roomNameInputField = GameObject.Find("RoomNameInputField").GetComponent<TMP_InputField>();
+            _roomNameText = GameObject.Find("RoomNameTxt").GetComponent<TMP_Text>();
+            _roomListContent = GameObject.Find("RoomListContent").transform;
+            _playerListContent = GameObject.Find("PlayerListContent").transform;
             _resourceManager = new ResourceManager();
             _menuManager = new MenuManager();
+            _menuManager.Initial();
             try
             {
                 Core.AsyncInitialize();
@@ -138,15 +137,15 @@ namespace Manager
             return _resourceManager.GetPutRotateList();
         }
 
-        #region PlayerManager
-
-        #endregion
-
         #region ResourceManager
 
         public List<Mahjong> GetMahjongList()
         {
             return _resourceManager.GetMahjongList();
+        }
+        public Mesh GetMahjongMesh(int id)
+        {
+            return _resourceManager.GetMahjongMesh(id);
         }
 
         public void SetMahjongList(List<Mahjong> mahjongList)
@@ -187,11 +186,6 @@ namespace Manager
         public GameObject GeneratePlayer(int id)
         {
             return _resourceManager.GeneratePlayer(id);
-        }
-
-        public Dictionary<string, GameObject> GetMenus()
-        {
-            return _resourceManager.Menus;
         }
 
         public List<Vector3> GetRotateList()
@@ -500,16 +494,16 @@ namespace Manager
             //     return;
             // }
 
-            PhotonNetwork.CreateRoom(roomNameInputField.text, new RoomOptions {MaxPlayers = 4});
+            PhotonNetwork.CreateRoom(_roomNameInputField.text, new RoomOptions {MaxPlayers = 4});
             OpenMenu("LoadingMenu");
             _resourceManager.LoadMahjong();
         }
 
         public override void OnJoinedRoom()
         {
-            roomNameText.text = PhotonNetwork.CurrentRoom.Name;
+            _roomNameText.text = PhotonNetwork.CurrentRoom.Name;
             OpenMenu("RoomMenu");
-            foreach (Transform item in playerListContent)
+            foreach (Transform item in _playerListContent)
             {
                 Destroy(item.gameObject);
             }
@@ -517,17 +511,11 @@ namespace Manager
             var players = PhotonNetwork.PlayerList;
             foreach (var t in players)
             {
-                Instantiate(playerLIstItemPrefab, playerListContent).GetComponent<PlayerListItem>()
+                Instantiate(playerLIstItemPrefab, _playerListContent).GetComponent<PlayerListItem>()
                     .Setup(t);
             }
 
             startGameButton.SetActive(PhotonNetwork.IsMasterClient);
-        }
-
-        public override void OnJoinRoomFailed(short returnCode, string message)
-        {
-            errorText.text = "Room Creation Failed" + message;
-            OpenMenu("ErrorMenu");
         }
 
         public void LeaveRoom()
@@ -543,15 +531,15 @@ namespace Manager
 
         public override void OnRoomListUpdate(List<RoomInfo> roomList)
         {
-            if (roomList.Count <= 0) return;
-            foreach (Transform t in roomListContent)
+            if (roomList.Count <= 0 || _roomListContent == null) return;
+            foreach (Transform t in _roomListContent)
             {
                 Destroy(t.gameObject);
             }
 
             foreach (var info in roomList.Where(info => !info.RemovedFromList))
             {
-                Instantiate(roomLIstItemPrefab, roomListContent).GetComponent<RoomListItem>()
+                Instantiate(roomLIstItemPrefab, _roomListContent).GetComponent<RoomListItem>()
                     .SetUp(info);
             }
         }
@@ -564,13 +552,9 @@ namespace Manager
 
         public override void OnPlayerEnteredRoom(Player newPlayer)
         {
-            Instantiate(playerLIstItemPrefab, playerListContent)
+            Instantiate(playerLIstItemPrefab, _playerListContent)
                 .GetComponent<PlayerListItem>()
                 .Setup(newPlayer);
-            if (PhotonNetwork.IsMasterClient)
-            {
-                photonView.RPC(nameof(SendMaxId), RpcTarget.Others, Constants.MaxId);
-            }
         }
 
 
@@ -582,6 +566,7 @@ namespace Manager
 
         public void StartGame()
         {
+            _menuManager.OpenAllMenus();
             OpenMenu("LoadingMenu");
             PhotonNetwork.LoadLevel(1);
         }
@@ -597,18 +582,6 @@ namespace Manager
             startGameButton.SetActive(PhotonNetwork.IsMasterClient);
         }
 
-        public void SetMaxIndexWithHonor()
-        {
-            withoutHonorToggle.isOn = false;
-
-            Constants.MaxId = 34;
-        }
-
-        public void SetMaxIndexWithoutHonor()
-        {
-            withHonorToggle.isOn = false;
-            Constants.MaxId = 27;
-        }
 
         public ulong GetUserId()
         {

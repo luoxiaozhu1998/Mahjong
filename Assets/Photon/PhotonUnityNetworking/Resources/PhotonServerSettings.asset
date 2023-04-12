@@ -66,6 +66,8 @@ MonoBehaviour:
   - OnGrab
   - SetKinematic
   - SetState
+  - RemoveMahjong
+  - RPCActivateHandGrab
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 0
