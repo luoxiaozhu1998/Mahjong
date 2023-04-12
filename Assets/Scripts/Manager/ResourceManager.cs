@@ -63,9 +63,9 @@ namespace Manager
             _new = new List<Vector3>
             {
                 new(0.6f, 0.83f, 0.45f),
-                new(-0.45f, 2.0f, 0.6f),
-                new(-0.6f, 2.0f, -0.45f),
-                new(0.45f, 2.0f, -0.6f)
+                new(-0.45f, 0.83f, 0.6f),
+                new(-0.6f, 0.83f, -0.45f),
+                new(0.45f, 0.83f, -0.6f)
             };
 
             _rotate = new List<Vector3>
@@ -179,16 +179,16 @@ namespace Manager
         /// </summary>
         public void LoadMahjong()
         {
-            for (var j = 0; j < Constants.MaxPlayer; j++)
+            for (var i = 1; i <= Constants.MaxId; i++)
             {
-                for (var i = 1; i <= Constants.MaxId; i++)
+                for (var j = 0; j < Constants.MaxPlayer; j++)
                 {
                     _mahjongList.Add(
                         new Mahjong(i, "mahjong_tile_" + i));
                 }
             }
-
-            _mahjongList = _mahjongList.OrderBy(_ => Guid.NewGuid()).ToList();
+            //_mahjongList = _mahjongList.OrderBy(_ => Guid.NewGuid()).ToList();
+            _mahjongList = _mahjongList.ToList();
         }
 
         public void ClearMahjong()
