@@ -34,7 +34,7 @@ namespace Manager
         // private readonly string _playerControllerPath =
         //     Path.Combine("PhotonPrefabs", "PlayerController");
         private const string PlayerControllerPath = "PUNPlayer";
-        private const string photonVoiceSetupPrefabName = "VoiceSetting";
+        private const string PhotonVoiceSetupPrefabName = "VoiceSetting";
         private readonly List<Vector3> _bias;
         private readonly List<Vector3> _rotate;
         private readonly List<Vector3> _kongRotate;
@@ -187,8 +187,9 @@ namespace Manager
                         new Mahjong(i, "mahjong_tile_" + i));
                 }
             }
-            //_mahjongList = _mahjongList.OrderBy(_ => Guid.NewGuid()).ToList();
-            _mahjongList = _mahjongList.ToList();
+
+            _mahjongList = _mahjongList.OrderBy(_ => Guid.NewGuid()).ToList();
+            //_mahjongList = _mahjongList.ToList();
         }
 
         public void ClearMahjong()
@@ -237,7 +238,7 @@ namespace Manager
             go.transform.localRotation = Quaternion.identity;
             go.transform.localPosition = Vector3.zero;
             var centerEyeAnchor = rig.Find("TrackingSpace/CenterEyeAnchor");
-            var voiceSetup = PhotonNetwork.Instantiate(photonVoiceSetupPrefabName, centerEyeAnchor.position,
+            var voiceSetup = PhotonNetwork.Instantiate(PhotonVoiceSetupPrefabName, centerEyeAnchor.position,
                 centerEyeAnchor.rotation);
             voiceSetup.transform.SetParent(centerEyeAnchor);
             voiceSetup.transform.localPosition = Vector3.zero;
