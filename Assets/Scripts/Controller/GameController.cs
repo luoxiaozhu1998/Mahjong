@@ -640,6 +640,7 @@ namespace Controller
         private void SolvePong()
         {
             if (!_canPong) return;
+            _canPong = false;
             foreach (var go in myPlayerController.MyMahjong[nowTile])
             {
                 var script = go.GetComponent<MahjongAttr>();
@@ -661,11 +662,17 @@ namespace Controller
             newGo.GetComponent<MahjongAttr>().canPlay = false;
             myPlayerController.MyMahjong[nowTile].Add(newGo);
             SortMyMahjong();
-            _gameManagerPhotonView.RPC(nameof(GameManager.Instance.DestroyItem),
+            photonView.RPC(nameof(DestroyItem),
                 RpcTarget.All, lastTurn);
             myPlayerController.putPos -=
                 GameManager.Instance.GetBias()[myPlayerController.playerID - 1];
-            _canPong = false;
+        }
+
+        [PunRPC]
+        public void DestroyItem(int playerId)
+        {
+            if (myPlayerController.playerID != playerId) return;
+            PhotonNetwork.Destroy(tile);
         }
 
         // private enum OperationCode

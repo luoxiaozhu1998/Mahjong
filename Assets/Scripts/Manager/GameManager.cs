@@ -446,11 +446,7 @@ namespace Manager
         //     GameController.Instance.winButton.gameObject.SetActive(false);
         // }
 
-        [PunRPC]
-        public void StoreTile(GameObject go)
-        {
-            GameController.Instance.tile = go;
-        }
+
 
         [PunRPC]
         public void DestroyItem(int playerId)

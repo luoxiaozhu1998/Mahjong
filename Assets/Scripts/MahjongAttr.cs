@@ -77,7 +77,8 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
 
                 GameController.Instance.SortMyMahjong();
 
-                photonView.RPC(nameof(PlayTile), RpcTarget.All, playerId, id);
+                _photonView.RPC(nameof(PlayTile), RpcTarget.All, playerId, id);
+                _photonView.RPC(nameof(StoreTile), RpcTarget.MasterClient, gameObject);
             }
             else
             {
@@ -149,6 +150,12 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
     public void Send(int id, int flag)
     {
         GameController.Instance.ReadyDict.Add(id, flag);
+    }
+
+    [PunRPC]
+    public void StoreTile(GameObject go)
+    {
+        GameController.Instance.tile = go;
     }
     // private void OnHover()
     // {
