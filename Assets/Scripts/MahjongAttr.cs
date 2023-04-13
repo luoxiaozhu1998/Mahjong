@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Linq;
 using Controller;
 using Manager;
@@ -27,10 +28,11 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
     public bool isAdd = false;
     public Vector3 originPosition;
     public Quaternion originalRotation;
+    private Renderer _renderer;
 
     private void Awake()
     {
-        _gameManagerPhotonView = GameManager.Instance.GetComponent<PhotonView>();
+        //_gameManagerPhotonView = GameManager.Instance.GetComponent<PhotonView>();
         _rigidbody = GetComponent<Rigidbody>();
         _handGrabInteractable = GetComponentsInChildren<HandGrabInteractable>();
         //id = int.Parse(name[..^7][13..]);
@@ -43,6 +45,7 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
         originPosition = transform1.position;
         originalRotation = transform1.rotation;
         isPut = true;
+        _renderer = GetComponent<Renderer>();
         // GetComponent<XRGrabInteractable>().hoverEntered.AddListener(_ => { OnHover(); });
         // GetComponent<XRGrabInteractable>().hoverExited.AddListener(_ => { OnHoverExit(); });
         // GetComponent<XRGrabInteractable>().activated.AddListener(_ => { OnTrigger(); });
@@ -52,6 +55,9 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
     public void OnGrab()
     {
         _photonView.RPC(nameof(SetKinematic), RpcTarget.All, true);
+        if (_photonView.IsMine)
+            return;
+        _renderer.material.color = Color.red;
     }
 
     public void OnPut()
@@ -96,11 +102,32 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
     [PunRPC]
     public void SetState(bool b)
     {
+        pointableUnityEventWrapper.WhenSelect.AddListener(() =>
+        {
+            _renderer.material.color = Color.red;
+            foreach (var handGrabInteractable in _handGrabInteractable)
+            {
+                handGrabInteractable.enabled = b;
+            }
+
+            if (!b)
+            {
+                StartCoroutine(ResetState());
+            }
+        });
+    }
+
+    private IEnumerator ResetState()
+    {
+        yield return new WaitForSeconds(2f);
         foreach (var handGrabInteractable in _handGrabInteractable)
         {
-            handGrabInteractable.enabled = b;
+            handGrabInteractable.enabled = true;
         }
+
+        _renderer.material.color = Color.white;
     }
+
 
     [PunRPC]
     private void PlayTile(int playerId, int tileId)

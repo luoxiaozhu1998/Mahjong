@@ -13,13 +13,13 @@ MonoBehaviour:
   m_Name: PhotonServerSettings
   m_EditorClassIdentifier: 
   AppSettings:
-    AppIdRealtime: 0a25ea5c-3a7f-422a-b52b-cc24c999e9ce
+    AppIdRealtime: b78553b4-1346-442d-a993-2c0a523c17b6
     AppIdFusion: 
     AppIdChat: 
     AppIdVoice: 1bba8402-4aff-4755-be31-85edd56ce646
     AppVersion: 
     UseNameServer: 0
-    FixedRegion: kr
+    FixedRegion: 
     Server: 10.46.18.148
     Port: 5055
     ProxyServer: 
@@ -27,9 +27,9 @@ MonoBehaviour:
     EnableProtocolFallback: 1
     AuthMode: 0
     EnableLobbyStatistics: 0
-    NetworkLogging: 5
+    NetworkLogging: 1
   DevRegion: 
-  PunLogging: 2
+  PunLogging: 0
   EnableSupportLogger: 0
   RunInBackground: 1
   StartInOfflineMode: 0
@@ -69,6 +69,8 @@ MonoBehaviour:
   - RemoveMahjong
   - RPCActivateHandGrab
   - ResetButton
+  - SendEffect
+  - SetPoint
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 0

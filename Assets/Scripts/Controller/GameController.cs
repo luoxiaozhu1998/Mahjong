@@ -46,6 +46,7 @@ namespace Controller
         private bool _canPong;
         private bool _canKong;
         private bool _canWin;
+        private Button _confirmButton;
 
         /// <summary>
         /// 初始化
@@ -312,15 +313,21 @@ namespace Controller
             var kongButton = _playerButtons[myPlayerController.playerID - 1].GetChild(1).GetChild(2).GetChild(1)
                 .GetChild(0).GetChild(0);
             kongButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect.AddListener(SolveKong);
-            var winButton=_playerButtons[myPlayerController.playerID - 1].GetChild(2).GetChild(2).GetChild(1)
+            var winButton = _playerButtons[myPlayerController.playerID - 1].GetChild(2).GetChild(2).GetChild(1)
                 .GetChild(0).GetChild(0);
             winButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect.AddListener(SolveWin);
             var skipButton = _playerButtons[myPlayerController.playerID - 1].GetChild(3).GetChild(2).GetChild(1)
                 .GetChild(0).GetChild(0);
             skipButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect.AddListener(SolveSkip);
+            // _confirmButton = _playerButtons[myPlayerController.playerID - 1].GetChild(4)
+            //     .GetComponentInChildren<Button>();
+            // _confirmButton.onClick.AddListener(() =>
+            // {
+            //     photonView.RPC(nameof(SetPoint), RpcTarget.All, myPlayerController.playerID);
+            // });
             foreach (var playerButton in _playerButtons)
             {
-                for (var i = 0; i < 4; i++)
+                for (var i = 0; i < 5; i++)
                 {
                     playerButton.GetChild(i).gameObject.SetActive(false);
                 }
@@ -334,9 +341,19 @@ namespace Controller
             // }
         }
 
+        [PunRPC]
+        private void SetPoint(int id)
+        {
+            foreach (var playerButton in _playerButtons)
+            {
+                playerButton.GetChild(5).GetComponentInChildren<TMP_Text>().text =
+                    "积分:" + (id == myPlayerController.playerID ? 20 : 0);
+            }
+        }
+
         private void SolveWin()
         {
-            
+            _playerButtons[myPlayerController.playerID - 1].GetChild(4).gameObject.SetActive(true);
         }
 
         private void SolveSkip()
@@ -404,7 +421,15 @@ namespace Controller
                 item.enabled = true;
             }
 
+            photonView.RPC(nameof(SendEffect), RpcTarget.Others, attr.gameObject);
             photonView.RPC(nameof(RemoveMahjong), RpcTarget.All);
+        }
+
+        [PunRPC]
+        private void SendEffect(GameObject go)
+        {
+            go.GetComponent<MahjongAttr>().pointableUnityEventWrapper.WhenSelect.AddListener(() =>
+                Debug.LogError(1));
         }
 
         [PunRPC]
