@@ -47,6 +47,8 @@ namespace Controller
         private bool _canKong;
         private bool _canWin;
         private Button _confirmButton;
+        [SerializeField] private Material[] transparentMaterials;
+        [SerializeField] private GameObject effectPrefab;
 
         /// <summary>
         /// 初始化
@@ -334,6 +336,7 @@ namespace Controller
             }
 
             nowTurn = 1;
+            ShowEffect(1);
             // if (!PhotonNetwork.IsMasterClient) return;
             // foreach (var item in _mahjong[0].GetComponentsInChildren<HandGrabInteractable>())
             // {
@@ -373,6 +376,25 @@ namespace Controller
                 for (var i = 0; i < 4; i++)
                 {
                     playerButton.GetChild(i).gameObject.SetActive(false);
+                }
+            }
+        }
+
+        [PunRPC]
+        private void ShowEffect(int id)
+        {
+            if (myPlayerController.playerID == id)
+            {
+                foreach (var mahjongs in myPlayerController.MyMahjong)
+                {
+                    foreach (var mahjong in mahjongs.Value)
+                    {
+                        mahjong.GetComponent<Renderer>().materials[0] = transparentMaterials[0];
+                        mahjong.GetComponent<Renderer>().materials[1] = transparentMaterials[1];
+                        var go = PhotonNetwork.Instantiate(effectPrefab.name, mahjong.transform.position,
+                            mahjong.transform.rotation);
+                        go.transform.SetParent(mahjong.transform);
+                    }
                 }
             }
         }
@@ -421,16 +443,9 @@ namespace Controller
                 item.enabled = true;
             }
 
-            photonView.RPC(nameof(SendEffect), RpcTarget.Others, attr.gameObject);
             photonView.RPC(nameof(RemoveMahjong), RpcTarget.All);
         }
 
-        [PunRPC]
-        private void SendEffect(GameObject go)
-        {
-            go.GetComponent<MahjongAttr>().pointableUnityEventWrapper.WhenSelect.AddListener(() =>
-                Debug.LogError(1));
-        }
 
         [PunRPC]
         private void RemoveMahjong()
@@ -506,6 +521,7 @@ namespace Controller
                 myPlayerController.SetPlayerStrategy();
                 myPlayerController.putPos =
                     GameManager.Instance.GetNewPositions()[myPlayerController.playerID - 1];
+                PhotonNetwork.NickName = "Fudan-VR-TA" + myPlayerController.playerID;
                 if (!PhotonNetwork.IsMasterClient) continue;
                 GameManager.Instance.MahjongSplit(players.Count);
                 var a = JsonConvert.SerializeObject(GameManager.Instance.GetMahjongList());

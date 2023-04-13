@@ -43,6 +43,7 @@ namespace Manager
             {
                 Instance = this;
             }
+
             DontDestroyOnLoad(gameObject);
             _roomNameInputField = GameObject.Find("RoomNameInputField").GetComponent<TMP_InputField>();
             _roomNameText = GameObject.Find("RoomNameTxt").GetComponent<TMP_Text>();
@@ -143,6 +144,7 @@ namespace Manager
         {
             return _resourceManager.GetMahjongList();
         }
+
         public Mesh GetMahjongMesh(int id)
         {
             return _resourceManager.GetMahjongMesh(id);
@@ -445,9 +447,6 @@ namespace Manager
         //     GameController.Instance.addKongButton.gameObject.SetActive(false);
         //     GameController.Instance.winButton.gameObject.SetActive(false);
         // }
-
-
-
         [PunRPC]
         public void DestroyItem(int playerId)
         {
@@ -480,7 +479,8 @@ namespace Manager
         {
             OpenMenu("TitleMenu");
             Debug.Log("OnJoinedLobby()");
-            PhotonNetwork.NickName = "Player" + Random.Range(0, 1000).ToString("0000");
+            //PhotonNetwork.NickName = "Player" + Random.Range(0, 1000).ToString("0000");
+            PhotonNetwork.NickName = "Fudan-VR-TA1";
         }
 
         public void CreateRoom()
@@ -505,10 +505,17 @@ namespace Manager
             }
 
             var players = PhotonNetwork.PlayerList;
-            foreach (var t in players)
+            // foreach (var t in players)
+            // {
+            //     Instantiate(playerLIstItemPrefab, _playerListContent).GetComponent<PlayerListItem>()
+            //         .Setup(t);
+            // }
+
+            for (var i = 1; i <= players.Length; i++)
             {
+                players[i].NickName = "Fudan-VR-TA" + i;
                 Instantiate(playerLIstItemPrefab, _playerListContent).GetComponent<PlayerListItem>()
-                    .Setup(t);
+                    .Setup(players[i]);
             }
 
             startGameButton.SetActive(PhotonNetwork.IsMasterClient);
