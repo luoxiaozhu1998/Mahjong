@@ -221,7 +221,7 @@ namespace Manager
             _mahjongList[7] = new Mahjong(16, "mahjong_tile_" + 16);
             _mahjongList[8] = new Mahjong(22, "mahjong_tile_" + 22);
             _mahjongList[9] = new Mahjong(22, "mahjong_tile_" + 22);
-            _mahjongList[10] = new Mahjong(24, "mahjong_tile_" + 22);
+            _mahjongList[10] = new Mahjong(24, "mahjong_tile_" + 24);
             _mahjongList[11] = new Mahjong(24, "mahjong_tile_" + 24);
             _mahjongList[12] = new Mahjong(26, "mahjong_tile_" + 26);
             _mahjongList[13] = new Mahjong(26, "mahjong_tile_" + 26);
@@ -232,6 +232,8 @@ namespace Manager
             _mahjongList[18] = new Mahjong(26, "mahjong_tile_" + 26);
             _mahjongList[19] = new Mahjong(30, "mahjong_tile_" + 30);
             _mahjongList[20] = new Mahjong(30, "mahjong_tile_" + 30);
+            _mahjongList[21] = new Mahjong(15, "mahjong_tile_" + 15);
+            _mahjongList[22] = new Mahjong(15, "mahjong_tile_" + 15);
             //_mahjongList[56]=new Mahjong()
             //_mahjongList = _mahjongList.OrderBy(_ => Guid.NewGuid()).ToList();
             _mahjongList = _mahjongList.ToList();
