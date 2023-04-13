@@ -55,6 +55,9 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
     public void OnGrab()
     {
         _photonView.RPC(nameof(SetKinematic), RpcTarget.All, true);
+        if (_photonView.IsMine)
+            return;
+        _renderer.material.color = Color.red;
     }
 
     public void OnPut()
@@ -116,7 +119,7 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
 
     private IEnumerator ResetState()
     {
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(2f);
         foreach (var handGrabInteractable in _handGrabInteractable)
         {
             handGrabInteractable.enabled = true;
