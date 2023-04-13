@@ -321,7 +321,10 @@ namespace Controller
             skipButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect.AddListener(SolveSkip);
             _confirmButton = _playerButtons[myPlayerController.playerID - 1].GetChild(4)
                 .GetComponentInChildren<Button>();
-            _confirmButton.onClick.AddListener(() => PhotonNetwork.LeaveRoom());
+            _confirmButton.onClick.AddListener(() =>
+            {
+                photonView.RPC(nameof(SetPoint), RpcTarget.All, myPlayerController.playerID);
+            });
             foreach (var playerButton in _playerButtons)
             {
                 for (var i = 0; i < 5; i++)
@@ -336,6 +339,16 @@ namespace Controller
             // {
             //     item.enabled = true;
             // }
+        }
+
+        [PunRPC]
+        private void SetPoint(int id)
+        {
+            foreach (var playerButton in _playerButtons)
+            {
+                playerButton.GetChild(5).GetComponentInChildren<TMP_Text>().text =
+                    "积分:" + (id == myPlayerController.playerID ? 20 : 0);
+            }
         }
 
         private void SolveWin()
@@ -836,7 +849,7 @@ namespace Controller
                 }
             }
 
-            return cnt2 + cnt3 + cnt4 == 5;
+            return cnt2 + cnt3 + cnt4 == 5 && cnt2 == 1;
         }
 
         public void SetCamera(Camera canvasCamera)
