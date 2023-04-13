@@ -242,13 +242,17 @@ namespace Controller
         /// </summary>
         public void StartGame()
         {
-            if (PhotonNetwork.IsMasterClient)
-            {
-                GetComponent<PhotonView>().RPC(nameof(NotMyTurn), RpcTarget.Others);
-            }
+            // if (PhotonNetwork.IsMasterClient)
+            // {
+            //     GetComponent<PhotonView>().RPC(nameof(NotMyTurn), RpcTarget.Others);
+            // }
 
             GeneratePlayers();
-            CheckWin();
+            if (CheckWin())
+            {
+                photonView.RPC(nameof(CanH), RpcTarget.All, myPlayerController.playerID);
+            }
+            //CheckWin();
             //StartCoroutine(Leave());
         }
 
@@ -308,15 +312,31 @@ namespace Controller
             var kongButton = _playerButtons[myPlayerController.playerID - 1].GetChild(1).GetChild(2).GetChild(1)
                 .GetChild(0).GetChild(0);
             kongButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect.AddListener(SolveKong);
+            var winButton=_playerButtons[myPlayerController.playerID - 1].GetChild(2).GetChild(2).GetChild(1)
+                .GetChild(0).GetChild(0);
+            winButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect.AddListener(SolveWin);
             var skipButton = _playerButtons[myPlayerController.playerID - 1].GetChild(3).GetChild(2).GetChild(1)
                 .GetChild(0).GetChild(0);
             skipButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect.AddListener(SolveSkip);
+            foreach (var playerButton in _playerButtons)
+            {
+                for (var i = 0; i < 4; i++)
+                {
+                    playerButton.GetChild(i).gameObject.SetActive(false);
+                }
+            }
+
             nowTurn = 1;
             // if (!PhotonNetwork.IsMasterClient) return;
             // foreach (var item in _mahjong[0].GetComponentsInChildren<HandGrabInteractable>())
             // {
             //     item.enabled = true;
             // }
+        }
+
+        private void SolveWin()
+        {
+            
         }
 
         private void SolveSkip()
@@ -331,14 +351,13 @@ namespace Controller
         [PunRPC]
         private void ResetButton()
         {
-            _playerButtons[myPlayerController.playerID - 1].GetChild(0).GetChild(2).GetChild(1).GetChild(0).GetChild(0)
-                .GetComponent<Renderer>().material.color = Color.white;
-            _playerButtons[myPlayerController.playerID - 1].GetChild(1).GetChild(2).GetChild(1).GetChild(0).GetChild(0)
-                .GetComponent<Renderer>().material.color = Color.white;
-            _playerButtons[myPlayerController.playerID - 1].GetChild(2).GetChild(2).GetChild(1).GetChild(0).GetChild(0)
-                .GetComponent<Renderer>().material.color = Color.white;
-            _playerButtons[myPlayerController.playerID - 1].GetChild(3).GetChild(2).GetChild(1).GetChild(0).GetChild(0)
-                .GetComponent<Renderer>().material.color = Color.white;
+            foreach (var playerButton in _playerButtons)
+            {
+                for (var i = 0; i < 4; i++)
+                {
+                    playerButton.GetChild(i).gameObject.SetActive(false);
+                }
+            }
         }
 
         private void AddMahjong(MahjongAttr attr, Rigidbody rb)
@@ -550,12 +569,8 @@ namespace Controller
         [PunRPC]
         private void CanP(int id)
         {
-            _playerButtons[id - 1].GetChild(0).GetChild(2).GetChild(1).GetChild(0)
-                .GetChild(0)
-                .GetComponent<Renderer>().material.color = new Color(0.5f, 0.5f, 0.5f);
-            _playerButtons[id - 1].GetChild(3).GetChild(2).GetChild(1).GetChild(0).GetChild(0)
-                .GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
+            _playerButtons[id - 1].GetChild(0).gameObject.SetActive(true);
+            _playerButtons[id - 1].GetChild(3).gameObject.SetActive(true);
             if (myPlayerController.playerID != id) return;
             _canPong = true;
         }
@@ -563,10 +578,8 @@ namespace Controller
         [PunRPC]
         private void CanK(int id)
         {
-            _playerButtons[id - 1].GetChild(1).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
-            _playerButtons[id - 1].GetChild(3).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
+            _playerButtons[id - 1].GetChild(1).gameObject.SetActive(true);
+            _playerButtons[id - 1].GetChild(3).gameObject.SetActive(true);
             if (myPlayerController.playerID != id) return;
             _canKong = true;
         }
@@ -574,10 +587,12 @@ namespace Controller
         [PunRPC]
         private void CanH(int id)
         {
-            _playerButtons[id - 1].GetChild(2).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
-            _playerButtons[id - 1].GetChild(3).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
+            // _playerButtons[id - 1].GetChild(2).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
+            //     .material.color = new Color(0.5f, 0.5f, 0.5f);
+            // _playerButtons[id - 1].GetChild(3).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
+            //     .material.color = new Color(0.5f, 0.5f, 0.5f);
+            _playerButtons[id - 1].GetChild(2).gameObject.SetActive(true);
+            _playerButtons[id - 1].GetChild(3).gameObject.SetActive(true);
             if (myPlayerController.playerID != id) return;
             _canWin = true;
         }
@@ -585,12 +600,9 @@ namespace Controller
         [PunRPC]
         private void CanPAndK(int id)
         {
-            _playerButtons[id - 1].GetChild(0).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
-            _playerButtons[id - 1].GetChild(1).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
-            _playerButtons[id - 1].GetChild(3).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
+            _playerButtons[id - 1].GetChild(0).gameObject.SetActive(true);
+            _playerButtons[id - 1].GetChild(1).gameObject.SetActive(true);
+            _playerButtons[id - 1].GetChild(3).gameObject.SetActive(true);
             if (myPlayerController.playerID != id) return;
             _canPong = true;
             _canKong = true;
@@ -599,12 +611,9 @@ namespace Controller
         [PunRPC]
         private void CanPAndH(int id)
         {
-            _playerButtons[id - 1].GetChild(0).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
-            _playerButtons[id - 1].GetChild(2).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
-            _playerButtons[id - 1].GetChild(3).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
+            _playerButtons[id - 1].GetChild(0).gameObject.SetActive(true);
+            _playerButtons[id - 1].GetChild(2).gameObject.SetActive(true);
+            _playerButtons[id - 1].GetChild(3).gameObject.SetActive(true);
             if (myPlayerController.playerID != id) return;
             _canPong = true;
             _canWin = true;
@@ -613,12 +622,9 @@ namespace Controller
         [PunRPC]
         private void CanKAndH(int id)
         {
-            _playerButtons[id - 1].GetChild(1).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
-            _playerButtons[id - 1].GetChild(2).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
-            _playerButtons[id - 1].GetChild(3).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
+            _playerButtons[id - 1].GetChild(1).gameObject.SetActive(true);
+            _playerButtons[id - 1].GetChild(2).gameObject.SetActive(true);
+            _playerButtons[id - 1].GetChild(3).gameObject.SetActive(true);
             if (myPlayerController.playerID != id) return;
             _canKong = true;
             _canWin = true;
@@ -627,14 +633,10 @@ namespace Controller
         [PunRPC]
         private void CanPAndKAndH(int id)
         {
-            _playerButtons[id - 1].GetChild(0).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
-            _playerButtons[id - 1].GetChild(1).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
-            _playerButtons[id - 1].GetChild(2).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
-            _playerButtons[id - 1].GetChild(3).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
+            _playerButtons[id - 1].GetChild(0).gameObject.SetActive(true);
+            _playerButtons[id - 1].GetChild(1).gameObject.SetActive(true);
+            _playerButtons[id - 1].GetChild(2).gameObject.SetActive(true);
+            _playerButtons[id - 1].GetChild(3).gameObject.SetActive(true);
             if (myPlayerController.playerID != id) return;
             _canKong = true;
             _canKong = true;

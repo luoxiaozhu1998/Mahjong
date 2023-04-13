@@ -188,8 +188,31 @@ namespace Manager
                 }
             }
 
-            _mahjongList = _mahjongList.OrderBy(_ => Guid.NewGuid()).ToList();
-            //_mahjongList = _mahjongList.ToList();
+
+            for (var j = 1; j <= 3; j++)
+            {
+                _mahjongList[j - 1] = new Mahjong(1, "mahjong_tile_" + 1);
+            }
+
+            for (var j = 1; j <= 3; j++)
+            {
+                _mahjongList[3 + j - 1] = new Mahjong(2, "mahjong_tile_" + 2);
+            }
+
+            for (var j = 1; j <= 3; j++)
+            {
+                _mahjongList[6 + j - 1] = new Mahjong(3, "mahjong_tile_" + 3);
+            }
+
+            for (var j = 1; j <= 3; j++)
+            {
+                _mahjongList[9 + j - 1] = new Mahjong(4, "mahjong_tile_" + 4);
+            }
+
+            _mahjongList[12] = new Mahjong(5, "mahjong_tile_" + 5);
+            _mahjongList[13] = new Mahjong(5, "mahjong_tile_" + 5);
+            //_mahjongList = _mahjongList.OrderBy(_ => Guid.NewGuid()).ToList();
+            _mahjongList = _mahjongList.ToList();
         }
 
         public void ClearMahjong()
