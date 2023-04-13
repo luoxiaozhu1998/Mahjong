@@ -19,8 +19,8 @@ MonoBehaviour:
     AppIdVoice: 1bba8402-4aff-4755-be31-85edd56ce646
     AppVersion: 
     UseNameServer: 0
-    FixedRegion: kr
-    Server: 10.177.74.215
+    FixedRegion: 
+    Server: 192.168.137.251
     Port: 5055
     ProxyServer: 
     Protocol: 0
@@ -69,6 +69,7 @@ MonoBehaviour:
   - RemoveMahjong
   - RPCActivateHandGrab
   - ResetButton
+  - SendEffect
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 0

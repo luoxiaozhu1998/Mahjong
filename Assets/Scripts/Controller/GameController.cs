@@ -385,7 +385,15 @@ namespace Controller
                 item.enabled = true;
             }
 
+            photonView.RPC(nameof(SendEffect), RpcTarget.Others, attr.gameObject);
             photonView.RPC(nameof(RemoveMahjong), RpcTarget.All);
+        }
+
+        [PunRPC]
+        private void SendEffect(GameObject go)
+        {
+            go.GetComponent<MahjongAttr>().pointableUnityEventWrapper.WhenSelect.AddListener(() =>
+                Debug.LogError(1));
         }
 
         [PunRPC]
