@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 1
   m_AmbientMode: 3
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 2100000, guid: 8556a2efa4fb3f742aefcce4dd31923d, type: 2}
+  m_SkyboxMaterial: {fileID: 2100000, guid: 0069a31be774bed469f63b155533c756, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.10564317, g: 0.36508277, b: 0.41321477, a: 1}
+  m_IndirectSpecularColor: {r: 0.12715457, g: 0.20063797, b: 0.8564503, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -2044,6 +2044,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cartoon Town
       objectReference: {fileID: 0}
+    - target: {fileID: 589204449279320032, guid: eabcbf21cf54c9c49b526b91dc324c26, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 589204449279320033, guid: eabcbf21cf54c9c49b526b91dc324c26, type: 3}
       propertyPath: m_RootOrder
       value: 1
@@ -2102,8 +2106,24 @@ PrefabInstance:
       value: Find Room
       objectReference: {fileID: 0}
     - target: {fileID: 5875840418943143575, guid: f4d4fd23404db4c37a97afd2456a8fa0, type: 3}
+      propertyPath: m_fontColor.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5875840418943143575, guid: f4d4fd23404db4c37a97afd2456a8fa0, type: 3}
+      propertyPath: m_fontColor.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5875840418943143575, guid: f4d4fd23404db4c37a97afd2456a8fa0, type: 3}
+      propertyPath: m_fontColor.r
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5875840418943143575, guid: f4d4fd23404db4c37a97afd2456a8fa0, type: 3}
       propertyPath: m_textAlignment
       value: 65535
+      objectReference: {fileID: 0}
+    - target: {fileID: 5875840418943143575, guid: f4d4fd23404db4c37a97afd2456a8fa0, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4294967295
       objectReference: {fileID: 0}
     - target: {fileID: 5875840418943143575, guid: f4d4fd23404db4c37a97afd2456a8fa0, type: 3}
       propertyPath: m_TextStyleHashCode
@@ -2240,7 +2260,7 @@ PrefabInstance:
     - target: {fileID: 5875840419452938230, guid: f4d4fd23404db4c37a97afd2456a8fa0, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: a8c00959312d042faa3fd4337500e438, type: 3}
+      objectReference: {fileID: 21300000, guid: faa041e9cf2f54eec895b9702f638d68, type: 3}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f4d4fd23404db4c37a97afd2456a8fa0, type: 3}
 --- !u!1001 &1308494058
@@ -2438,8 +2458,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4287751603
-  m_fontColor: {r: 0.70137864, g: 0.8962264, b: 0.5698647, a: 1}
+    rgba: 4278255615
+  m_fontColor: {r: 1, g: 1, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -2626,8 +2646,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: f69eddf68c1ac4ba6941f3456bfd0ec0, type: 3}
-  m_Type: 0
+  m_Sprite: {fileID: 21300002, guid: c6c411fa874e5d64db401bd5e14caa27, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -3013,8 +3033,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4287751603
-  m_fontColor: {r: 0.70137864, g: 0.8962264, b: 0.5698647, a: 1}
+    rgba: 4278255615
+  m_fontColor: {r: 1, g: 1, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -3703,8 +3723,24 @@ PrefabInstance:
       value: Create Room
       objectReference: {fileID: 0}
     - target: {fileID: 5875840418943143575, guid: f4d4fd23404db4c37a97afd2456a8fa0, type: 3}
+      propertyPath: m_fontColor.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5875840418943143575, guid: f4d4fd23404db4c37a97afd2456a8fa0, type: 3}
+      propertyPath: m_fontColor.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5875840418943143575, guid: f4d4fd23404db4c37a97afd2456a8fa0, type: 3}
+      propertyPath: m_fontColor.r
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5875840418943143575, guid: f4d4fd23404db4c37a97afd2456a8fa0, type: 3}
       propertyPath: m_textAlignment
       value: 65535
+      objectReference: {fileID: 0}
+    - target: {fileID: 5875840418943143575, guid: f4d4fd23404db4c37a97afd2456a8fa0, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4294967295
       objectReference: {fileID: 0}
     - target: {fileID: 5875840418943143575, guid: f4d4fd23404db4c37a97afd2456a8fa0, type: 3}
       propertyPath: m_TextStyleHashCode
@@ -3841,7 +3877,7 @@ PrefabInstance:
     - target: {fileID: 5875840419452938230, guid: f4d4fd23404db4c37a97afd2456a8fa0, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 82568ae4ef94544e38b32548cebc68d6, type: 3}
+      objectReference: {fileID: 21300000, guid: a7ced468dc50d462da1a5221eba0587e, type: 3}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f4d4fd23404db4c37a97afd2456a8fa0, type: 3}
 --- !u!1001 &1938304067
@@ -4157,8 +4193,24 @@ PrefabInstance:
       value: Quit Game
       objectReference: {fileID: 0}
     - target: {fileID: 5875840418943143575, guid: f4d4fd23404db4c37a97afd2456a8fa0, type: 3}
+      propertyPath: m_fontColor.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5875840418943143575, guid: f4d4fd23404db4c37a97afd2456a8fa0, type: 3}
+      propertyPath: m_fontColor.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5875840418943143575, guid: f4d4fd23404db4c37a97afd2456a8fa0, type: 3}
+      propertyPath: m_fontColor.r
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5875840418943143575, guid: f4d4fd23404db4c37a97afd2456a8fa0, type: 3}
       propertyPath: m_textAlignment
       value: 65535
+      objectReference: {fileID: 0}
+    - target: {fileID: 5875840418943143575, guid: f4d4fd23404db4c37a97afd2456a8fa0, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4294967295
       objectReference: {fileID: 0}
     - target: {fileID: 5875840418943143575, guid: f4d4fd23404db4c37a97afd2456a8fa0, type: 3}
       propertyPath: m_TextStyleHashCode
@@ -4291,7 +4343,7 @@ PrefabInstance:
     - target: {fileID: 5875840419452938230, guid: f4d4fd23404db4c37a97afd2456a8fa0, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: e702c5aac4f684bcc97af118d6959d25, type: 3}
+      objectReference: {fileID: 21300000, guid: a7ced468dc50d462da1a5221eba0587e, type: 3}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f4d4fd23404db4c37a97afd2456a8fa0, type: 3}
 --- !u!1 &2061066604
@@ -8851,8 +8903,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4294939648
+  m_fontColor: {r: 0, g: 0.5796678, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -8875,7 +8927,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 0
   m_fontSizeMax: 74
-  m_fontStyle: 0
+  m_fontStyle: 1
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -8931,7 +8983,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: cb57a1e07c427498ca88931342455182, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 4983ad09a53d24b98a0b366db3b337d5, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
