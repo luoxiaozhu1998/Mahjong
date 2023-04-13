@@ -10,6 +10,7 @@ using Oculus.Interaction;
 using Oculus.Interaction.HandGrab;
 using Photon.Pun;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -48,6 +49,7 @@ namespace Controller
         private bool _canWin;
         private Button _confirmButton;
         [SerializeField] private Material[] transparentMaterials;
+        [SerializeField] private Material[] normalMaterials;
         [SerializeField] private GameObject effectPrefab;
 
         /// <summary>
@@ -336,7 +338,6 @@ namespace Controller
             }
 
             nowTurn = 1;
-            ShowEffect(1);
             // if (!PhotonNetwork.IsMasterClient) return;
             // foreach (var item in _mahjong[0].GetComponentsInChildren<HandGrabInteractable>())
             // {
@@ -380,23 +381,40 @@ namespace Controller
             }
         }
 
-        [PunRPC]
-        private void ShowEffect(int id)
+        public void ShowEffect()
         {
-            if (myPlayerController.playerID == id)
+            if (!PhotonNetwork.IsMasterClient) return;
+            var mahjongs = FindObjectsOfType<MahjongAttr>();
+
+            foreach (var go in mahjongs)
             {
-                foreach (var mahjongs in myPlayerController.MyMahjong)
+                if (go.GetComponent<PhotonView>().IsMine == false)
                 {
-                    foreach (var mahjong in mahjongs.Value)
-                    {
-                        mahjong.GetComponent<Renderer>().materials[0] = transparentMaterials[0];
-                        mahjong.GetComponent<Renderer>().materials[1] = transparentMaterials[1];
-                        var go = PhotonNetwork.Instantiate(effectPrefab.name, mahjong.transform.position,
-                            mahjong.transform.rotation);
-                        go.transform.SetParent(mahjong.transform);
-                    }
+                    var materials = go.GetComponent<MeshRenderer>().materials;
+                    materials[0] = transparentMaterials[0];
+                    materials[1] = transparentMaterials[1];
+                    go.GetComponent<MeshRenderer>().materials = materials;
+                    var transform1 = go.transform;
+                    var effectGo = PhotonNetwork.Instantiate(effectPrefab.name, transform1.position,
+                        transform1.rotation);
+                    StartCoroutine(DestroyEffect(go, effectGo));
                 }
             }
+        }
+
+        private IEnumerator DestroyEffect(MahjongAttr go, GameObject effectGo)
+        {
+            yield return new WaitForSeconds(2f);
+            PhotonNetwork.Destroy(effectGo);
+            var mats = go.GetComponent<MeshRenderer>().materials;
+            mats[0] = normalMaterials[0];
+            mats[1] = normalMaterials[1];
+            go.GetComponent<MeshRenderer>().materials = mats;
+        }
+
+        [PunRPC]
+        private void RPCShowEffect(int id)
+        {
         }
 
         private void AddMahjong(MahjongAttr attr, Rigidbody rb)

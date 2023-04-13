@@ -511,9 +511,9 @@ namespace Manager
             //         .Setup(t);
             // }
 
-            for (var i = 1; i <= players.Length; i++)
+            for (var i = 0; i < players.Length; i++)
             {
-                players[i].NickName = "Fudan-VR-TA" + i;
+                players[i].NickName = "Fudan-VR-TA" + i + 1;
                 Instantiate(playerLIstItemPrefab, _playerListContent).GetComponent<PlayerListItem>()
                     .Setup(players[i]);
             }
