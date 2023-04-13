@@ -822,7 +822,7 @@ namespace Controller
                 }
             }
 
-            return cnt2 + cnt3 + cnt4 == 5 && cnt2 == 1;
+            return cnt2 + cnt3 + cnt4 == 5;
         }
 
         public void SetCamera(Camera canvasCamera)
