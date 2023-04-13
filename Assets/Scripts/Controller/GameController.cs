@@ -324,7 +324,7 @@ namespace Controller
             _confirmButton.onClick.AddListener(() => PhotonNetwork.LeaveRoom());
             foreach (var playerButton in _playerButtons)
             {
-                for (var i = 0; i < 4; i++)
+                for (var i = 0; i < 5; i++)
                 {
                     playerButton.GetChild(i).gameObject.SetActive(false);
                 }
@@ -340,6 +340,7 @@ namespace Controller
 
         private void SolveWin()
         {
+            _playerButtons[myPlayerController.playerID - 1].GetChild(4).gameObject.SetActive(true);
         }
 
         private void SolveSkip()
