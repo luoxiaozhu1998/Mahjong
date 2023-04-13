@@ -189,28 +189,49 @@ namespace Manager
             }
 
 
-            for (var j = 1; j <= 3; j++)
-            {
-                _mahjongList[j - 1] = new Mahjong(1, "mahjong_tile_" + 1);
-            }
-
-            for (var j = 1; j <= 3; j++)
-            {
-                _mahjongList[3 + j - 1] = new Mahjong(2, "mahjong_tile_" + 2);
-            }
-
-            for (var j = 1; j <= 3; j++)
-            {
-                _mahjongList[6 + j - 1] = new Mahjong(3, "mahjong_tile_" + 3);
-            }
-
-            for (var j = 1; j <= 3; j++)
-            {
-                _mahjongList[9 + j - 1] = new Mahjong(4, "mahjong_tile_" + 4);
-            }
-
-            _mahjongList[12] = new Mahjong(5, "mahjong_tile_" + 5);
-            _mahjongList[13] = new Mahjong(5, "mahjong_tile_" + 5);
+            // for (var j = 1; j <= 3; j++)
+            // {
+            //     _mahjongList[j - 1] = new Mahjong(1, "mahjong_tile_" + 1);
+            // }
+            //
+            // for (var j = 1; j <= 3; j++)
+            // {
+            //     _mahjongList[3 + j - 1] = new Mahjong(10, "mahjong_tile_" + 10);
+            // }
+            //
+            // for (var j = 1; j <= 3; j++)
+            // {
+            //     _mahjongList[6 + j - 1] = new Mahjong(14, "mahjong_tile_" + 14);
+            // }
+            //
+            // for (var j = 1; j <= 3; j++)
+            // {
+            //     _mahjongList[9 + j - 1] = new Mahjong(15, "mahjong_tile_" + 16);
+            // }
+            //
+            // _mahjongList[12] = new Mahjong(5, "mahjong_tile_" + 5);
+            // _mahjongList[13] = new Mahjong(5, "mahjong_tile_" + 5);
+            _mahjongList[0] = new Mahjong(1, "mahjong_tile_" + 1);
+            _mahjongList[1] = new Mahjong(1, "mahjong_tile_" + 1);
+            _mahjongList[2] = new Mahjong(11, "mahjong_tile_" + 11);
+            _mahjongList[3] = new Mahjong(11, "mahjong_tile_" + 11);
+            _mahjongList[4] = new Mahjong(11, "mahjong_tile_" + 11);
+            _mahjongList[5] = new Mahjong(15, "mahjong_tile_" + 15);
+            _mahjongList[6] = new Mahjong(16, "mahjong_tile_" + 16);
+            _mahjongList[7] = new Mahjong(16, "mahjong_tile_" + 16);
+            _mahjongList[8] = new Mahjong(22, "mahjong_tile_" + 22);
+            _mahjongList[9] = new Mahjong(22, "mahjong_tile_" + 22);
+            _mahjongList[10] = new Mahjong(24, "mahjong_tile_" + 22);
+            _mahjongList[11] = new Mahjong(24, "mahjong_tile_" + 24);
+            _mahjongList[12] = new Mahjong(26, "mahjong_tile_" + 26);
+            _mahjongList[13] = new Mahjong(26, "mahjong_tile_" + 26);
+            _mahjongList[14] = new Mahjong(1, "mahjong_tile_" + 1);
+            _mahjongList[15] = new Mahjong(16, "mahjong_tile_" + 16);
+            _mahjongList[16] = new Mahjong(22, "mahjong_tile_" + 22);
+            _mahjongList[17] = new Mahjong(24, "mahjong_tile_" + 24);
+            _mahjongList[18] = new Mahjong(26, "mahjong_tile_" + 26);
+            _mahjongList[19] = new Mahjong(30, "mahjong_tile_" + 30);
+            _mahjongList[20] = new Mahjong(30, "mahjong_tile_" + 30);
             //_mahjongList = _mahjongList.OrderBy(_ => Guid.NewGuid()).ToList();
             _mahjongList = _mahjongList.ToList();
         }
