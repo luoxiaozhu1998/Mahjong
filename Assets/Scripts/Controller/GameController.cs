@@ -319,12 +319,12 @@ namespace Controller
             var skipButton = _playerButtons[myPlayerController.playerID - 1].GetChild(3).GetChild(2).GetChild(1)
                 .GetChild(0).GetChild(0);
             skipButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect.AddListener(SolveSkip);
-            _confirmButton = _playerButtons[myPlayerController.playerID - 1].GetChild(4)
-                .GetComponentInChildren<Button>();
-            _confirmButton.onClick.AddListener(() =>
-            {
-                photonView.RPC(nameof(SetPoint), RpcTarget.All, myPlayerController.playerID);
-            });
+            // _confirmButton = _playerButtons[myPlayerController.playerID - 1].GetChild(4)
+            //     .GetComponentInChildren<Button>();
+            // _confirmButton.onClick.AddListener(() =>
+            // {
+            //     photonView.RPC(nameof(SetPoint), RpcTarget.All, myPlayerController.playerID);
+            // });
             foreach (var playerButton in _playerButtons)
             {
                 for (var i = 0; i < 5; i++)
