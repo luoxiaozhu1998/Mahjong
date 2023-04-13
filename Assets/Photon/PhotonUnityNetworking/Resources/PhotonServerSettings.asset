@@ -20,7 +20,7 @@ MonoBehaviour:
     AppVersion: 
     UseNameServer: 0
     FixedRegion: 
-    Server: 192.168.0.87
+    Server: 192.168.137.251
     Port: 5055
     ProxyServer: 
     Protocol: 0
@@ -68,6 +68,7 @@ MonoBehaviour:
   - SetState
   - RemoveMahjong
   - RPCActivateHandGrab
+  - ResetButton
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 0

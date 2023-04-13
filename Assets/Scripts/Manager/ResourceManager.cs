@@ -34,7 +34,7 @@ namespace Manager
         // private readonly string _playerControllerPath =
         //     Path.Combine("PhotonPrefabs", "PlayerController");
         private const string PlayerControllerPath = "PUNPlayer";
-        private const string photonVoiceSetupPrefabName = "VoiceSetting";
+        private const string PhotonVoiceSetupPrefabName = "VoiceSetting";
         private readonly List<Vector3> _bias;
         private readonly List<Vector3> _rotate;
         private readonly List<Vector3> _kongRotate;
@@ -63,9 +63,9 @@ namespace Manager
             _new = new List<Vector3>
             {
                 new(0.6f, 0.83f, 0.45f),
-                new(-0.45f, 2.0f, 0.6f),
-                new(-0.6f, 2.0f, -0.45f),
-                new(0.45f, 2.0f, -0.6f)
+                new(-0.45f, 0.83f, 0.6f),
+                new(-0.6f, 0.83f, -0.45f),
+                new(0.45f, 0.83f, -0.6f)
             };
 
             _rotate = new List<Vector3>
@@ -179,16 +179,61 @@ namespace Manager
         /// </summary>
         public void LoadMahjong()
         {
-            for (var j = 0; j < Constants.MaxPlayer; j++)
+            for (var i = 1; i <= Constants.MaxId; i++)
             {
-                for (var i = 1; i <= Constants.MaxId; i++)
+                for (var j = 0; j < Constants.MaxPlayer; j++)
                 {
                     _mahjongList.Add(
                         new Mahjong(i, "mahjong_tile_" + i));
                 }
             }
 
-            _mahjongList = _mahjongList.OrderBy(_ => Guid.NewGuid()).ToList();
+
+            // for (var j = 1; j <= 3; j++)
+            // {
+            //     _mahjongList[j - 1] = new Mahjong(1, "mahjong_tile_" + 1);
+            // }
+            //
+            // for (var j = 1; j <= 3; j++)
+            // {
+            //     _mahjongList[3 + j - 1] = new Mahjong(10, "mahjong_tile_" + 10);
+            // }
+            //
+            // for (var j = 1; j <= 3; j++)
+            // {
+            //     _mahjongList[6 + j - 1] = new Mahjong(14, "mahjong_tile_" + 14);
+            // }
+            //
+            // for (var j = 1; j <= 3; j++)
+            // {
+            //     _mahjongList[9 + j - 1] = new Mahjong(15, "mahjong_tile_" + 16);
+            // }
+            //
+            // _mahjongList[12] = new Mahjong(5, "mahjong_tile_" + 5);
+            // _mahjongList[13] = new Mahjong(5, "mahjong_tile_" + 5);
+            _mahjongList[0] = new Mahjong(1, "mahjong_tile_" + 1);
+            _mahjongList[1] = new Mahjong(1, "mahjong_tile_" + 1);
+            _mahjongList[2] = new Mahjong(11, "mahjong_tile_" + 11);
+            _mahjongList[3] = new Mahjong(11, "mahjong_tile_" + 11);
+            _mahjongList[4] = new Mahjong(11, "mahjong_tile_" + 11);
+            _mahjongList[5] = new Mahjong(15, "mahjong_tile_" + 15);
+            _mahjongList[6] = new Mahjong(16, "mahjong_tile_" + 16);
+            _mahjongList[7] = new Mahjong(16, "mahjong_tile_" + 16);
+            _mahjongList[8] = new Mahjong(22, "mahjong_tile_" + 22);
+            _mahjongList[9] = new Mahjong(22, "mahjong_tile_" + 22);
+            _mahjongList[10] = new Mahjong(24, "mahjong_tile_" + 22);
+            _mahjongList[11] = new Mahjong(24, "mahjong_tile_" + 24);
+            _mahjongList[12] = new Mahjong(26, "mahjong_tile_" + 26);
+            _mahjongList[13] = new Mahjong(26, "mahjong_tile_" + 26);
+            _mahjongList[14] = new Mahjong(1, "mahjong_tile_" + 1);
+            _mahjongList[15] = new Mahjong(16, "mahjong_tile_" + 16);
+            _mahjongList[16] = new Mahjong(22, "mahjong_tile_" + 22);
+            _mahjongList[17] = new Mahjong(24, "mahjong_tile_" + 24);
+            _mahjongList[18] = new Mahjong(26, "mahjong_tile_" + 26);
+            _mahjongList[19] = new Mahjong(30, "mahjong_tile_" + 30);
+            _mahjongList[20] = new Mahjong(30, "mahjong_tile_" + 30);
+            //_mahjongList = _mahjongList.OrderBy(_ => Guid.NewGuid()).ToList();
+            _mahjongList = _mahjongList.ToList();
         }
 
         public void ClearMahjong()
@@ -237,7 +282,7 @@ namespace Manager
             go.transform.localRotation = Quaternion.identity;
             go.transform.localPosition = Vector3.zero;
             var centerEyeAnchor = rig.Find("TrackingSpace/CenterEyeAnchor");
-            var voiceSetup = PhotonNetwork.Instantiate(photonVoiceSetupPrefabName, centerEyeAnchor.position,
+            var voiceSetup = PhotonNetwork.Instantiate(PhotonVoiceSetupPrefabName, centerEyeAnchor.position,
                 centerEyeAnchor.rotation);
             voiceSetup.transform.SetParent(centerEyeAnchor);
             voiceSetup.transform.localPosition = Vector3.zero;

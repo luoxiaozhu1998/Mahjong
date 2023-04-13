@@ -44,6 +44,9 @@ namespace Controller
         private List<MahjongAttr> _mahjong;
         private List<Transform> _playerButtons;
         private bool _canPong;
+        private bool _canKong;
+        private bool _canWin;
+        private Button _confirmButton;
 
         /// <summary>
         /// 初始化
@@ -192,23 +195,23 @@ namespace Controller
         // }
         private void SolveKong()
         {
+            if (!_canKong) return;
+            _canKong = false;
+            photonView.RPC(nameof(NextTurn), RpcTarget.All,
+                myPlayerController.playerID, false);
+            photonView.RPC(nameof(ResetButton), RpcTarget.All);
             var idx = 0;
-            TweenerCore<Vector3, Vector3, VectorOptions> a = null;
+            var flag = false;
             foreach (var go in myPlayerController.MyMahjong[nowTile])
             {
                 var script = go.GetComponent<MahjongAttr>();
                 script.canPlay = false;
                 if (idx == 1)
                 {
-                    a = go.transform.DOMove(
-                        myPlayerController.putPos - new Vector3(0.0f, 1.0f, 0.0f), 1f);
-                }
-                else
-                {
-                    go.transform.DOMove(myPlayerController.putPos - new Vector3(0.0f, 1.0f, 0.0f),
-                        1f);
+                    flag = true;
                 }
 
+                go.transform.DOMove(myPlayerController.putPos, 1f);
                 go.transform.DORotate(
                     GameManager.Instance.GetPlayerPutRotations()[
                         myPlayerController.playerID - 1], 1f);
@@ -218,22 +221,16 @@ namespace Controller
                 idx++;
             }
 
-            if (a != null)
-            {
-                var newGo = PhotonNetwork.Instantiate("mahjong_tile_" + nowTile,
-                    a.endValue -
-                    myPlayerController.MyMahjong[nowTile][0].transform.forward * 1.5f,
-                    Quaternion.Euler(GameManager.Instance.GetPlayerPutRotations()[
-                        myPlayerController.playerID - 1]));
-                myPlayerController.PlayTileStrategy.KongStrategy(newGo.transform);
-                newGo.GetComponent<MahjongAttr>().num = 0;
-                newGo.GetComponent<MahjongAttr>().canPlay = false;
-                myPlayerController.MyMahjong[nowTile].Add(newGo);
-            }
-
+            if (!flag) return;
+            var newGo = PhotonNetwork.Instantiate("mahjong_tile_" + nowTile,
+                myPlayerController.putPos,
+                Quaternion.Euler(GameManager.Instance.GetPlayerPutRotations()[
+                    myPlayerController.playerID - 1]));
+            newGo.GetComponent<MahjongAttr>().num = 0;
+            newGo.GetComponent<MahjongAttr>().canPlay = false;
+            myPlayerController.MyMahjong[nowTile].Add(newGo);
             SortMyMahjong();
-            _gameManagerPhotonView.RPC(nameof(GameManager.Instance.DestroyItem),
-                RpcTarget.All, lastTurn);
+            photonView.RPC(nameof(DestroyItem), RpcTarget.All, lastTurn);
         }
 
         public override void OnLeftRoom()
@@ -246,13 +243,17 @@ namespace Controller
         /// </summary>
         public void StartGame()
         {
-            if (PhotonNetwork.IsMasterClient)
-            {
-                GetComponent<PhotonView>().RPC(nameof(NotMyTurn), RpcTarget.Others);
-            }
+            // if (PhotonNetwork.IsMasterClient)
+            // {
+            //     GetComponent<PhotonView>().RPC(nameof(NotMyTurn), RpcTarget.Others);
+            // }
 
             GeneratePlayers();
-            CheckWin();
+            if (CheckWin())
+            {
+                photonView.RPC(nameof(CanH), RpcTarget.All, myPlayerController.playerID);
+            }
+            //CheckWin();
             //StartCoroutine(Leave());
         }
 
@@ -309,12 +310,58 @@ namespace Controller
             var pongButton = _playerButtons[myPlayerController.playerID - 1].GetChild(0).GetChild(2).GetChild(1)
                 .GetChild(0).GetChild(0);
             pongButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect.AddListener(SolvePong);
+            var kongButton = _playerButtons[myPlayerController.playerID - 1].GetChild(1).GetChild(2).GetChild(1)
+                .GetChild(0).GetChild(0);
+            kongButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect.AddListener(SolveKong);
+            var winButton = _playerButtons[myPlayerController.playerID - 1].GetChild(2).GetChild(2).GetChild(1)
+                .GetChild(0).GetChild(0);
+            winButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect.AddListener(SolveWin);
+            var skipButton = _playerButtons[myPlayerController.playerID - 1].GetChild(3).GetChild(2).GetChild(1)
+                .GetChild(0).GetChild(0);
+            skipButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect.AddListener(SolveSkip);
+            _confirmButton = _playerButtons[myPlayerController.playerID - 1].GetChild(4)
+                .GetComponentInChildren<Button>();
+            _confirmButton.onClick.AddListener(() => PhotonNetwork.LeaveRoom());
+            foreach (var playerButton in _playerButtons)
+            {
+                for (var i = 0; i < 5; i++)
+                {
+                    playerButton.GetChild(i).gameObject.SetActive(false);
+                }
+            }
+
             nowTurn = 1;
             // if (!PhotonNetwork.IsMasterClient) return;
             // foreach (var item in _mahjong[0].GetComponentsInChildren<HandGrabInteractable>())
             // {
             //     item.enabled = true;
             // }
+        }
+
+        private void SolveWin()
+        {
+            _playerButtons[myPlayerController.playerID - 1].GetChild(4).gameObject.SetActive(true);
+        }
+
+        private void SolveSkip()
+        {
+            if (!_canKong && !_canPong && !_canWin) return;
+            photonView.RPC(nameof(NextTurn), RpcTarget.All,
+                nowTurn, true);
+            _canKong = _canPong = _canWin = false;
+            photonView.RPC(nameof(ResetButton), RpcTarget.All);
+        }
+
+        [PunRPC]
+        private void ResetButton()
+        {
+            foreach (var playerButton in _playerButtons)
+            {
+                for (var i = 0; i < 4; i++)
+                {
+                    playerButton.GetChild(i).gameObject.SetActive(false);
+                }
+            }
         }
 
         private void AddMahjong(MahjongAttr attr, Rigidbody rb)
@@ -384,6 +431,7 @@ namespace Controller
                     DOTween.Sequence().Insert(0f, _mahjong[0].transform.DOMove(myPlayerController.putPos, 1f)).Insert(
                                 0f,
                                 _mahjong[0].transform.DORotate(GameManager.Instance.GetRotateList()[id - 1], 1f))
+                            .SetEase(Ease.Linear)
                             .onComplete +=
                         _mahjong[0].GetComponent<Rigidbody>().Sleep;
                     AddMahjongToHand(_mahjong[0].GetComponent<MahjongAttr>());
@@ -525,78 +573,78 @@ namespace Controller
         [PunRPC]
         private void CanP(int id)
         {
-            _playerButtons[myPlayerController.playerID - 1].GetChild(0).GetChild(2).GetChild(1).GetChild(0).GetChild(0)
-                .GetComponent<Renderer>().material.color = new Color(0.5f, 0.5f, 0.5f);
-            _playerButtons[id - 1].GetChild(3).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
-            if (myPlayerController.playerID == id)
-            {
-                _canPong = true;
-            }
+            _playerButtons[id - 1].GetChild(0).gameObject.SetActive(true);
+            _playerButtons[id - 1].GetChild(3).gameObject.SetActive(true);
+            if (myPlayerController.playerID != id) return;
+            _canPong = true;
         }
 
         [PunRPC]
         private void CanK(int id)
         {
-            _playerButtons[id - 1].GetChild(1).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
-            _playerButtons[id - 1].GetChild(3).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
+            _playerButtons[id - 1].GetChild(1).gameObject.SetActive(true);
+            _playerButtons[id - 1].GetChild(3).gameObject.SetActive(true);
+            if (myPlayerController.playerID != id) return;
+            _canKong = true;
         }
 
         [PunRPC]
         private void CanH(int id)
         {
-            _playerButtons[id - 1].GetChild(2).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
-            _playerButtons[id - 1].GetChild(3).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
+            // _playerButtons[id - 1].GetChild(2).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
+            //     .material.color = new Color(0.5f, 0.5f, 0.5f);
+            // _playerButtons[id - 1].GetChild(3).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
+            //     .material.color = new Color(0.5f, 0.5f, 0.5f);
+            _playerButtons[id - 1].GetChild(2).gameObject.SetActive(true);
+            _playerButtons[id - 1].GetChild(3).gameObject.SetActive(true);
+            if (myPlayerController.playerID != id) return;
+            _canWin = true;
         }
 
         [PunRPC]
         private void CanPAndK(int id)
         {
-            _playerButtons[id - 1].GetChild(0).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
-            _playerButtons[id - 1].GetChild(1).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
-            _playerButtons[id - 1].GetChild(3).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
+            _playerButtons[id - 1].GetChild(0).gameObject.SetActive(true);
+            _playerButtons[id - 1].GetChild(1).gameObject.SetActive(true);
+            _playerButtons[id - 1].GetChild(3).gameObject.SetActive(true);
+            if (myPlayerController.playerID != id) return;
+            _canPong = true;
+            _canKong = true;
         }
 
         [PunRPC]
         private void CanPAndH(int id)
         {
-            _playerButtons[id - 1].GetChild(0).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
-            _playerButtons[id - 1].GetChild(2).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
-            _playerButtons[id - 1].GetChild(3).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
+            _playerButtons[id - 1].GetChild(0).gameObject.SetActive(true);
+            _playerButtons[id - 1].GetChild(2).gameObject.SetActive(true);
+            _playerButtons[id - 1].GetChild(3).gameObject.SetActive(true);
+            if (myPlayerController.playerID != id) return;
+            _canPong = true;
+            _canWin = true;
         }
 
         [PunRPC]
         private void CanKAndH(int id)
         {
-            _playerButtons[id - 1].GetChild(1).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
-            _playerButtons[id - 1].GetChild(2).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
-            _playerButtons[id - 1].GetChild(3).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
+            _playerButtons[id - 1].GetChild(1).gameObject.SetActive(true);
+            _playerButtons[id - 1].GetChild(2).gameObject.SetActive(true);
+            _playerButtons[id - 1].GetChild(3).gameObject.SetActive(true);
+            if (myPlayerController.playerID != id) return;
+            _canKong = true;
+            _canWin = true;
         }
 
         [PunRPC]
         private void CanPAndKAndH(int id)
         {
-            _playerButtons[id - 1].GetChild(0).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
-            _playerButtons[id - 1].GetChild(1).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
-            _playerButtons[id - 1].GetChild(2).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
-            _playerButtons[id - 1].GetChild(3).GetChild(2).GetChild(1).GetChild(0).GetChild(0).GetComponent<Renderer>()
-                .material.color = new Color(0.5f, 0.5f, 0.5f);
+            _playerButtons[id - 1].GetChild(0).gameObject.SetActive(true);
+            _playerButtons[id - 1].GetChild(1).gameObject.SetActive(true);
+            _playerButtons[id - 1].GetChild(2).gameObject.SetActive(true);
+            _playerButtons[id - 1].GetChild(3).gameObject.SetActive(true);
+            if (myPlayerController.playerID != id) return;
+            _canKong = true;
+            _canKong = true;
+            _canWin = true;
         }
 
         [PunRPC]
@@ -628,10 +676,11 @@ namespace Controller
                     script.num = num++;
 
                     DOTween.Sequence().Insert(0f, go.transform.DOMove(
-                            GameManager.Instance.GetPickPoses()[myPlayerController.playerID - 1].position +
-                            GameManager.Instance.GetBias()[myPlayerController.playerID - 1] *
-                            (script.num - 1), 1f)).Insert(0f, go.transform.DORotate(
-                            GameManager.Instance.GetRotateList()[myPlayerController.playerID - 1], 1f)).onComplete +=
+                                GameManager.Instance.GetPickPoses()[myPlayerController.playerID - 1].position +
+                                GameManager.Instance.GetBias()[myPlayerController.playerID - 1] *
+                                (script.num - 1), 1f)).Insert(0f, go.transform.DORotate(
+                                GameManager.Instance.GetRotateList()[myPlayerController.playerID - 1], 1f))
+                            .SetEase(Ease.Linear).onComplete +=
                         go.GetComponent<Rigidbody>().Sleep;
                 }
             }
@@ -641,6 +690,9 @@ namespace Controller
         {
             if (!_canPong) return;
             _canPong = false;
+            photonView.RPC(nameof(NextTurn), RpcTarget.All,
+                myPlayerController.playerID, false);
+            photonView.RPC(nameof(ResetButton), RpcTarget.All);
             foreach (var go in myPlayerController.MyMahjong[nowTile])
             {
                 var script = go.GetComponent<MahjongAttr>();
@@ -662,10 +714,12 @@ namespace Controller
             newGo.GetComponent<MahjongAttr>().canPlay = false;
             myPlayerController.MyMahjong[nowTile].Add(newGo);
             SortMyMahjong();
-            photonView.RPC(nameof(DestroyItem),
-                RpcTarget.All, lastTurn);
+            photonView.RPC(nameof(DestroyItem), RpcTarget.All, lastTurn);
             myPlayerController.putPos -=
                 GameManager.Instance.GetBias()[myPlayerController.playerID - 1];
+            _playerButtons[myPlayerController.playerID - 1].GetChild(3).GetChild(2).GetChild(1).GetChild(0).GetChild(0)
+                .GetComponent<Renderer>()
+                .material.color = Color.white;
         }
 
         [PunRPC]
@@ -774,7 +828,7 @@ namespace Controller
                 }
             }
 
-            return cnt2 + cnt3 + cnt4 == 5 && cnt2 == 1;
+            return cnt2 + cnt3 + cnt4 == 5;
         }
 
         public void SetCamera(Camera canvasCamera)

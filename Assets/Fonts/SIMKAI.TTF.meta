@@ -1,0 +1,22 @@
+fileFormatVersion: 2
+guid: 60259859006cc9243a728b0a799de899
+timeCreated: 1621514348
+licenseType: Free
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: KaiTi_GB2312
+  fontNames:
+  - KaiTi_GB2312
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 5b75f4e01da0bb64395d1596c4df275c, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
