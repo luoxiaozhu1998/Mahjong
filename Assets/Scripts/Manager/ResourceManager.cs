@@ -232,6 +232,7 @@ namespace Manager
             _mahjongList[18] = new Mahjong(26, "mahjong_tile_" + 26);
             _mahjongList[19] = new Mahjong(30, "mahjong_tile_" + 30);
             _mahjongList[20] = new Mahjong(30, "mahjong_tile_" + 30);
+            //_mahjongList[56]=new Mahjong()
             //_mahjongList = _mahjongList.OrderBy(_ => Guid.NewGuid()).ToList();
             _mahjongList = _mahjongList.ToList();
         }
