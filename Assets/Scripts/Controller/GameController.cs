@@ -46,6 +46,7 @@ namespace Controller
         private bool _canPong;
         private bool _canKong;
         private bool _canWin;
+        private Button _confirmButton;
 
         /// <summary>
         /// 初始化
@@ -312,15 +313,18 @@ namespace Controller
             var kongButton = _playerButtons[myPlayerController.playerID - 1].GetChild(1).GetChild(2).GetChild(1)
                 .GetChild(0).GetChild(0);
             kongButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect.AddListener(SolveKong);
-            var winButton=_playerButtons[myPlayerController.playerID - 1].GetChild(2).GetChild(2).GetChild(1)
+            var winButton = _playerButtons[myPlayerController.playerID - 1].GetChild(2).GetChild(2).GetChild(1)
                 .GetChild(0).GetChild(0);
             winButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect.AddListener(SolveWin);
             var skipButton = _playerButtons[myPlayerController.playerID - 1].GetChild(3).GetChild(2).GetChild(1)
                 .GetChild(0).GetChild(0);
             skipButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect.AddListener(SolveSkip);
+            _confirmButton = _playerButtons[myPlayerController.playerID - 1].GetChild(4)
+                .GetComponentInChildren<Button>();
+            _confirmButton.onClick.AddListener(() => PhotonNetwork.LeaveRoom());
             foreach (var playerButton in _playerButtons)
             {
-                for (var i = 0; i < 4; i++)
+                for (var i = 0; i < 5; i++)
                 {
                     playerButton.GetChild(i).gameObject.SetActive(false);
                 }
@@ -336,7 +340,7 @@ namespace Controller
 
         private void SolveWin()
         {
-            
+            _playerButtons[myPlayerController.playerID - 1].GetChild(4).gameObject.SetActive(true);
         }
 
         private void SolveSkip()
