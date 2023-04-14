@@ -51,6 +51,7 @@ namespace Controller
         [SerializeField] private Material[] transparentMaterials;
         [SerializeField] private Material[] normalMaterials;
         [SerializeField] private GameObject effectPrefab;
+        public GameObject BubbleEffect;
 
         /// <summary>
         /// 初始化
@@ -351,13 +352,14 @@ namespace Controller
             foreach (var playerButton in _playerButtons)
             {
                 playerButton.GetChild(5).GetComponentInChildren<TMP_Text>().text =
-                    "积分:" + (id == myPlayerController.playerID ? 20 : 0);
+                    "Score:" + (id == myPlayerController.playerID ? 20 : 0);
             }
         }
 
         private void SolveWin()
         {
             _playerButtons[myPlayerController.playerID - 1].GetChild(4).gameObject.SetActive(true);
+            photonView.RPC(nameof(SetPoint), RpcTarget.All, myPlayerController.playerID);
         }
 
         private void SolveSkip()

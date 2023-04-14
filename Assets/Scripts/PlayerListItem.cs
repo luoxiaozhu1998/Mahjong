@@ -10,6 +10,8 @@ public class PlayerListItem : MonoBehaviourPunCallbacks
     public void Setup(Player player)
     {
         _player = player;
+
+        
         text.text = player.NickName;
     }
 

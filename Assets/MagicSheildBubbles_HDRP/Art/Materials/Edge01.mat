@@ -105,7 +105,7 @@ Material:
     - _TransparentWritingMotionVec: 0
     - _TransparentZWrite: 0
     - _UseShadowThreshold: 0
-    - _VertexOffset: 1.5
+    - _VertexOffset: 0
     - _WaveValue: 0
     - _ZTestDepthEqualForOpaque: 4
     - _ZTestGBuffer: 4

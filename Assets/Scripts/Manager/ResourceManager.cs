@@ -62,10 +62,10 @@ namespace Manager
             };
             _new = new List<Vector3>
             {
-                new(0.6f, 0.83f, 0.45f),
-                new(-0.45f, 0.83f, 0.6f),
-                new(-0.6f, 0.83f, -0.45f),
-                new(0.45f, 0.83f, -0.6f)
+                new(0.56f, 0.83f, 0.45f),
+                new(-0.45f, 0.83f, 0.56f),
+                new(-0.56f, 0.83f, -0.45f),
+                new(0.45f, 0.83f, -0.56f)
             };
 
             _rotate = new List<Vector3>

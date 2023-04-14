@@ -480,7 +480,6 @@ namespace Manager
             OpenMenu("TitleMenu");
             Debug.Log("OnJoinedLobby()");
             //PhotonNetwork.NickName = "Player" + Random.Range(0, 1000).ToString("0000");
-            PhotonNetwork.NickName = "Fudan-VR-TA1";
         }
 
         public void CreateRoom()
@@ -505,18 +504,35 @@ namespace Manager
             }
 
             var players = PhotonNetwork.PlayerList;
-            // foreach (var t in players)
-            // {
-            //     Instantiate(playerLIstItemPrefab, _playerListContent).GetComponent<PlayerListItem>()
-            //         .Setup(t);
-            // }
-
-            for (var i = 0; i < players.Length; i++)
+            if (PhotonNetwork.IsMasterClient)
             {
-                players[i].NickName = "Fudan-VR-TA" + i + 1;
-                Instantiate(playerLIstItemPrefab, _playerListContent).GetComponent<PlayerListItem>()
-                    .Setup(players[i]);
+                PhotonNetwork.LocalPlayer.NickName = "Fudan-VR-TA1";
             }
+            else
+            {
+                PhotonNetwork.LocalPlayer.NickName = "Fudan-VR-TA2";
+            }
+
+            foreach (var t in players)
+            {
+                Instantiate(playerLIstItemPrefab, _playerListContent).GetComponent<PlayerListItem>()
+                    .Setup(t);
+            }
+
+            // for (var i = 0; i < players.Length; i++)
+            // {
+            //     if (PhotonNetwork.IsMasterClient)
+            //     {
+            //         players[i].NickName = "Fudan-VR-TA" + 1;
+            //     }
+            //     else
+            //     {
+            //         players[i].NickName = "Fudan-VR-TA" + 2;
+            //     }
+            //
+            //     Instantiate(playerLIstItemPrefab, _playerListContent).GetComponent<PlayerListItem>()
+            //         .Setup(players[i]);
+            // }
 
             startGameButton.SetActive(PhotonNetwork.IsMasterClient);
         }
@@ -555,6 +571,7 @@ namespace Manager
 
         public override void OnPlayerEnteredRoom(Player newPlayer)
         {
+            newPlayer.NickName = "Fudan-VR-TA2";
             Instantiate(playerLIstItemPrefab, _playerListContent)
                 .GetComponent<PlayerListItem>()
                 .Setup(newPlayer);

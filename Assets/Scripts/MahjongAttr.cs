@@ -57,7 +57,16 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
         _photonView.RPC(nameof(SetKinematic), RpcTarget.All, true);
         if (_photonView.IsMine)
             return;
-        _renderer.material.color = Color.red;
+        var o = gameObject;
+        var go = PhotonNetwork.Instantiate(GameController.Instance.BubbleEffect.name, o.transform.position,
+            o.transform.rotation);
+        StartCoroutine(DestroyGo(go));
+    }
+
+    private IEnumerator DestroyGo(GameObject go)
+    {
+        yield return new WaitForSeconds(1f);
+        PhotonNetwork.Destroy(go);
     }
 
     public void OnPut()
@@ -84,7 +93,7 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
                 GameController.Instance.SortMyMahjong();
 
                 _photonView.RPC(nameof(PlayTile), RpcTarget.All, playerId, id);
-                _photonView.RPC(nameof(StoreTile), RpcTarget.MasterClient, gameObject);
+                GameController.Instance.tile = gameObject;
             }
             else
             {
@@ -104,7 +113,6 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
     {
         pointableUnityEventWrapper.WhenSelect.AddListener(() =>
         {
-            _renderer.material.color = Color.red;
             foreach (var handGrabInteractable in _handGrabInteractable)
             {
                 handGrabInteractable.enabled = b;
