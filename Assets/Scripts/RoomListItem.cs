@@ -1,4 +1,5 @@
 using Manager;
+using Photon.Pun;
 using Photon.Realtime;
 using TMPro;
 using UnityEngine;
@@ -17,6 +18,7 @@ public class RoomListItem : MonoBehaviour
 
     public void OnClick()
     {
-        GameManager.Instance.JoinRoom(_info);
+        GameManager.Instance.OpenMenu("LoadingMenu");
+        PhotonNetwork.JoinRoom(_info.Name);
     }
 }

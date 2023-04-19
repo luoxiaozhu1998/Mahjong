@@ -7,28 +7,18 @@ namespace Manager
 {
     public class MenuManager
     {
-        private readonly Dictionary<string, GameObject> _menus;
-        
+        private Dictionary<string, GameObject> _menus;
+
 
         public MenuManager()
         {
-            _menus = new Dictionary<string, GameObject>
-            {
-                {"LoadingMenu", GameObject.Find("LoadingMenu")},
-                {"TitleMenu", GameObject.Find("TitleMenu")},
-                {"CreateRoomMenu", GameObject.Find("CreateRoomMenu")},
-                {"RoomMenu", GameObject.Find("RoomMenu")},
-                {"FindRoomMenu", GameObject.Find("FindRoomMenu")},
-                {"StartMenu", GameObject.Find("StartMenu")}
-            };
-            
+            _menus = new Dictionary<string, GameObject>();
         }
 
         public void Initial()
         {
             if (!PhotonNetwork.IsConnected)
             {
-                
                 foreach (var t in _menus)
                 {
                     t.Value.SetActive(t.Key == "StartMenu");
@@ -42,6 +32,7 @@ namespace Manager
                 }
             }
         }
+
         public void OpenMenu(string menuName)
         {
             if (_menus[menuName] == null) return;
@@ -63,6 +54,11 @@ namespace Manager
         public void CloseMenu(string menuName)
         {
             _menus[menuName].SetActive(false);
+        }
+
+        public void AddMenu(string name, GameObject go)
+        {
+            _menus.Add(name, go);
         }
     }
 }

@@ -258,8 +258,9 @@ namespace Controller
             {
                 photonView.RPC(nameof(CanH), RpcTarget.All, myPlayerController.playerID);
             }
+
             //CheckWin();
-            //StartCoroutine(Leave());
+            StartCoroutine(Leave());
         }
 
         private IEnumerator Leave()
@@ -277,7 +278,8 @@ namespace Controller
             var count = 14 + (PhotonNetwork.CurrentRoom.PlayerCount - 1) * 13;
             _mahjong = FindObjectsOfType<MahjongAttr>().ToList();
             _mahjong.Sort((a, b) =>
-                int.Parse(a.gameObject.name.Split('_')[2]).CompareTo(int.Parse(b.gameObject.name.Split('_')[2])));
+                int.Parse(a.gameObject.name.Split('_')[2])
+                    .CompareTo(int.Parse(b.gameObject.name.Split('_')[2])));
             for (var i = 0; i < count; i++)
             {
                 Destroy(_mahjong[i].gameObject);
@@ -288,7 +290,8 @@ namespace Controller
             var length = _mahjong.Count;
             for (var i = 0; i < length; i++)
             {
-                _mahjong[i].GetComponent<MeshFilter>().mesh = GameManager.Instance.GetMahjongMesh(mahjongList[i].ID);
+                _mahjong[i].GetComponent<MeshFilter>().mesh =
+                    GameManager.Instance.GetMahjongMesh(mahjongList[i].ID);
                 var rb = _mahjong[i].GetComponent<Rigidbody>();
                 var attr = _mahjong[i].GetComponent<MahjongAttr>();
                 attr.id = mahjongList[i].ID;
@@ -312,18 +315,26 @@ namespace Controller
                 _playerButtons.Add(GameObject.Find("Player" + i + "Button").transform);
             }
 
-            var pongButton = _playerButtons[myPlayerController.playerID - 1].GetChild(0).GetChild(2).GetChild(1)
+            var pongButton = _playerButtons[myPlayerController.playerID - 1].GetChild(0).GetChild(2)
+                .GetChild(1)
                 .GetChild(0).GetChild(0);
-            pongButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect.AddListener(SolvePong);
-            var kongButton = _playerButtons[myPlayerController.playerID - 1].GetChild(1).GetChild(2).GetChild(1)
+            pongButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect
+                .AddListener(SolvePong);
+            var kongButton = _playerButtons[myPlayerController.playerID - 1].GetChild(1).GetChild(2)
+                .GetChild(1)
                 .GetChild(0).GetChild(0);
-            kongButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect.AddListener(SolveKong);
-            var winButton = _playerButtons[myPlayerController.playerID - 1].GetChild(2).GetChild(2).GetChild(1)
+            kongButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect
+                .AddListener(SolveKong);
+            var winButton = _playerButtons[myPlayerController.playerID - 1].GetChild(2).GetChild(2)
+                .GetChild(1)
                 .GetChild(0).GetChild(0);
-            winButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect.AddListener(SolveWin);
-            var skipButton = _playerButtons[myPlayerController.playerID - 1].GetChild(3).GetChild(2).GetChild(1)
+            winButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect
+                .AddListener(SolveWin);
+            var skipButton = _playerButtons[myPlayerController.playerID - 1].GetChild(3).GetChild(2)
+                .GetChild(1)
                 .GetChild(0).GetChild(0);
-            skipButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect.AddListener(SolveSkip);
+            skipButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect
+                .AddListener(SolveSkip);
             // _confirmButton = _playerButtons[myPlayerController.playerID - 1].GetChild(4)
             //     .GetComponentInChildren<Button>();
             // _confirmButton.onClick.AddListener(() =>
@@ -428,11 +439,13 @@ namespace Controller
             {
                 rb.GetComponent<BoxCollider>().isTrigger = true;
                 DOTween.Sequence().Insert(0f, rb.DOMove(attr.originPosition, 1f))
-                    .Insert(0f, rb.DORotate(attr.originalRotation.eulerAngles, 1f)).onComplete += () =>
-                {
-                    rb.Sleep();
-                    rb.GetComponent<BoxCollider>().isTrigger = false;
-                };
+                        .Insert(0f, rb.DORotate(attr.originalRotation.eulerAngles, 1f))
+                        .onComplete +=
+                    () =>
+                    {
+                        rb.Sleep();
+                        rb.GetComponent<BoxCollider>().isTrigger = false;
+                    };
                 rb.constraints = RigidbodyConstraints.FreezeAll;
             }
             else
@@ -483,10 +496,13 @@ namespace Controller
                 // needDrawTile
                 if (needDrawTile)
                 {
-                    _mahjong[0].GetComponent<PhotonView>().TransferOwnership(PhotonNetwork.LocalPlayer);
-                    DOTween.Sequence().Insert(0f, _mahjong[0].transform.DOMove(myPlayerController.putPos, 1f)).Insert(
+                    _mahjong[0].GetComponent<PhotonView>()
+                        .TransferOwnership(PhotonNetwork.LocalPlayer);
+                    DOTween.Sequence().Insert(0f,
+                                _mahjong[0].transform.DOMove(myPlayerController.putPos, 1f)).Insert(
                                 0f,
-                                _mahjong[0].transform.DORotate(GameManager.Instance.GetRotateList()[id - 1], 1f))
+                                _mahjong[0].transform
+                                    .DORotate(GameManager.Instance.GetRotateList()[id - 1], 1f))
                             .SetEase(Ease.Linear)
                             .onComplete +=
                         _mahjong[0].GetComponent<Rigidbody>().Sleep;
@@ -733,10 +749,12 @@ namespace Controller
                     script.num = num++;
 
                     DOTween.Sequence().Insert(0f, go.transform.DOMove(
-                                GameManager.Instance.GetPickPoses()[myPlayerController.playerID - 1].position +
+                                GameManager.Instance.GetPickPoses()[myPlayerController.playerID - 1]
+                                    .position +
                                 GameManager.Instance.GetBias()[myPlayerController.playerID - 1] *
                                 (script.num - 1), 1f)).Insert(0f, go.transform.DORotate(
-                                GameManager.Instance.GetRotateList()[myPlayerController.playerID - 1], 1f))
+                                GameManager.Instance.GetRotateList()[
+                                    myPlayerController.playerID - 1], 1f))
                             .SetEase(Ease.Linear).onComplete +=
                         go.GetComponent<Rigidbody>().Sleep;
                 }
@@ -774,7 +792,8 @@ namespace Controller
             photonView.RPC(nameof(DestroyItem), RpcTarget.All, lastTurn);
             myPlayerController.putPos -=
                 GameManager.Instance.GetBias()[myPlayerController.playerID - 1];
-            _playerButtons[myPlayerController.playerID - 1].GetChild(3).GetChild(2).GetChild(1).GetChild(0).GetChild(0)
+            _playerButtons[myPlayerController.playerID - 1].GetChild(3).GetChild(2).GetChild(1)
+                .GetChild(0).GetChild(0)
                 .GetComponent<Renderer>()
                 .material.color = Color.white;
         }

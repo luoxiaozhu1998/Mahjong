@@ -156,7 +156,7 @@ MonoBehaviour:
   OnLoadFailedEvent:
     m_PersistentCalls:
       m_Calls: []
-  SkinningType: 0
+  SkinningType: 3
   MotionSmoothingSettings: 0
   _hidden: 0
   useRenderLods: 1
