@@ -6,7 +6,6 @@ using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using TMPro;
 #if ENABLE_INPUT_SYSTEM
-using UnityEngine.InputSystem;
 #endif
 
 namespace Michsky.MUIP

@@ -58,7 +58,7 @@ namespace Manager
 
         public void AddMenu(string name, GameObject go)
         {
-            _menus.Add(name, go);
+            _menus[name] = go;
         }
     }
 }

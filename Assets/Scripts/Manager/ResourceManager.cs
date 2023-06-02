@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using Controller;
 using Oculus.Avatar2;
-using Oculus.Interaction.HandGrab;
-using Oculus.Platform;
 using Photon.Pun;
 using Tools;
+using Unity.Mathematics;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -29,7 +28,7 @@ namespace Manager
         /// </summary>
         private readonly List<Transform> _pickPoses = new();
 
-        private List<Mesh> _mahjongs = new();
+        private readonly List<Mesh> _mahjongs = new();
 
         // private readonly string _playerControllerPath =
         //     Path.Combine("PhotonPrefabs", "PlayerController");
@@ -127,6 +126,7 @@ namespace Manager
 
         public void InitWhenStart()
         {
+            _pickPoses.Clear();
             for (var i = 1; i <= Constants.MaxPlayer; i++)
             {
                 _pickPoses.Add(GameObject.Find("PickPos" + i).transform);
@@ -179,6 +179,7 @@ namespace Manager
         /// </summary>
         public void LoadMahjong()
         {
+            _mahjongList.Clear();
             for (var i = 1; i <= Constants.MaxId; i++)
             {
                 for (var j = 0; j < Constants.MaxPlayer; j++)
@@ -250,6 +251,7 @@ namespace Manager
         /// <param name="count"></param>
         public void MahjongSplit(int count)
         {
+            _userMahjongLists.Clear();
             for (var i = 1; i <= count; i++)
             {
                 _userMahjongLists.Add(_mahjongList.Take(i == 1 ? 14 : 13)
@@ -281,6 +283,11 @@ namespace Manager
             var go = PhotonNetwork.Instantiate(PlayerControllerPath,
                 rig.position,
                 rig.rotation, 0, objects);
+            // var handGo = GameObject.CreatePrimitive(PrimitiveType.Sphere).transform;
+            // handGo.SetParent(go.transform.GetChild(0).GetChild(2));
+            // handGo.SetLocalPositionAndRotation(Vector3.zero, quaternion.identity);
+            // handGo.localScale = new Vector3(0.01f, 0.01f, 0.01f);
+            // handGo.tag = "Hand";
             go.transform.SetParent(rig);
             go.transform.localRotation = Quaternion.identity;
             go.transform.localPosition = Vector3.zero;
@@ -312,7 +319,8 @@ namespace Manager
                     Quaternion.Euler(_rotate[id]));
                 var script = go.GetComponent<MahjongAttr>();
                 var pv = go.GetComponent<PhotonView>();
-                pv.RPC("SetState", RpcTarget.Others, false);
+                //其他人不可以抓取我的麻将
+                pv.RPC(nameof(script.SetState), RpcTarget.Others);
                 script.inHand = true;
                 script.id = _userMahjongLists[id][i].ID;
                 pos += _bias[id];
@@ -324,6 +332,8 @@ namespace Manager
                 ret[_userMahjongLists[id][i].ID].Add(go);
                 script.num = i + 1;
                 script.canPlay = true;
+                pv.RPC(nameof(script.SetOwnerID), RpcTarget.All,
+                    GameController.Instance.myPlayerController.playerID);
             }
 
             return ret;

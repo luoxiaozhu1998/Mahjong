@@ -1,12 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using Controller;
 using Manager;
 using Photon.Pun;
 using Photon.Realtime;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class PunStuff : MonoBehaviourPunCallbacks
@@ -14,6 +13,8 @@ public class PunStuff : MonoBehaviourPunCallbacks
     [Header("Buttons")] public Button startGameButton;
     [Header("UIs")] public TMP_InputField roomNameInputField;
     public TMP_Text roomNameText;
+    public TMP_InputField ipAddressInputField;
+    public TMP_InputField userNameInputField;
     public Transform roomListContent;
     public Transform playerListContent;
     [Header("Prefabs")] [SerializeField] private GameObject roomLIstItemPrefab;
@@ -30,47 +31,51 @@ public class PunStuff : MonoBehaviourPunCallbacks
     private const string RoomMenuName = "RoomMenu";
     private const string FindRoomMenuName = "FindRoomMenu";
     private const string StartMenuName = "StartMenu";
+    public ServerSettings serverSettings;
+    private const string UserNameKey = "UserName";
+    private const string IPAddressKey = "IPAddress";
 
     private void Awake()
     {
-        //第一次启动，给menu manager添加menus
-        if (!PhotonNetwork.IsConnected)
-        {
-            GameManager.Instance.AddMenu(LoadingMenuName, loadingMenu);
-            GameManager.Instance.AddMenu(TitleMenuName, titleMenu);
-            GameManager.Instance.AddMenu(CreateRoomMenuName, createRoomMenu);
-            GameManager.Instance.AddMenu(RoomMenuName, roomMenu);
-            GameManager.Instance.AddMenu(FindRoomMenuName, findRoomMenu);
-            GameManager.Instance.AddMenu(StartMenuName, startMenu);
-        }
-
+        ipAddressInputField.text = PlayerPrefs.GetString(IPAddressKey, "192.168.137.1");
+        userNameInputField.text = PlayerPrefs.GetString(UserNameKey, "FuDan-TA-01");
+        GameManager.Instance.AddMenu(LoadingMenuName, loadingMenu);
+        GameManager.Instance.AddMenu(TitleMenuName, titleMenu);
+        GameManager.Instance.AddMenu(CreateRoomMenuName, createRoomMenu);
+        GameManager.Instance.AddMenu(RoomMenuName, roomMenu);
+        GameManager.Instance.AddMenu(FindRoomMenuName, findRoomMenu);
+        GameManager.Instance.AddMenu(StartMenuName, startMenu);
         GameManager.Instance.OpenMenu(!PhotonNetwork.IsConnected ? "StartMenu" : "TitleMenu");
     }
 
     public void JoinLobby()
     {
+        serverSettings.AppSettings.Server = ipAddressInputField.text;
+        GameManager.Instance.SetPlayerName(userNameInputField.text);
+        PlayerPrefs.SetString(IPAddressKey, ipAddressInputField.text);
+        PlayerPrefs.SetString(UserNameKey, userNameInputField.text);
         GameManager.Instance.OpenMenu("LoadingMenu");
         PhotonNetwork.ConnectUsingSettings();
     }
 
-    public override void OnEnable()
-    {
-        base.OnEnable();
-        SceneManager.sceneLoaded += OnSceneLoaded;
-    }
-
-    public override void OnDisable()
-    {
-        base.OnDisable();
-        SceneManager.sceneLoaded -= OnSceneLoaded;
-    }
-
-    private void OnSceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
-    {
-        if (scene.buildIndex != 2) return; //we are in the game scene
-        GameManager.Instance.InitWhenStart();
-        GameController.Instance.StartGame();
-    }
+    // public override void OnEnable()
+    // {
+    //     base.OnEnable();
+    //     SceneManager.sceneLoaded += OnSceneLoaded;
+    // }
+    //
+    // public override void OnDisable()
+    // {
+    //     base.OnDisable();
+    //     SceneManager.sceneLoaded -= OnSceneLoaded;
+    // }
+    //
+    // private void OnSceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
+    // {
+    //     if (scene.buildIndex != 2) return; //we are in the game scene
+    //     GameManager.Instance.InitWhenStart();
+    //     GameController.Instance.StartGame();
+    // }
 
     public override void OnConnectedToMaster()
     {
@@ -82,6 +87,7 @@ public class PunStuff : MonoBehaviourPunCallbacks
     {
         GameManager.Instance.OpenMenu("TitleMenu");
         Debug.Log("OnJoinedLobby()");
+        PhotonNetwork.LocalPlayer.NickName = GameManager.Instance.GetPlayerName();
         //PhotonNetwork.NickName = "Player" + Random.Range(0, 1000).ToString("0000");
     }
 
@@ -107,14 +113,6 @@ public class PunStuff : MonoBehaviourPunCallbacks
         }
 
         var players = PhotonNetwork.PlayerList;
-        if (PhotonNetwork.IsMasterClient)
-        {
-            PhotonNetwork.LocalPlayer.NickName = "Fudan-VR-TA1";
-        }
-        else
-        {
-            PhotonNetwork.LocalPlayer.NickName = "Fudan-VR-TA2";
-        }
 
         foreach (var t in players)
         {
@@ -166,13 +164,8 @@ public class PunStuff : MonoBehaviourPunCallbacks
         }
     }
 
-    public void JoinRoom(RoomInfo info)
-    {
-    }
-
     public override void OnPlayerEnteredRoom(Player newPlayer)
     {
-        newPlayer.NickName = "Fudan-VR-TA2";
         Instantiate(playerLIstItemPrefab, playerListContent)
             .GetComponent<PlayerListItem>()
             .Setup(newPlayer);
@@ -180,6 +173,7 @@ public class PunStuff : MonoBehaviourPunCallbacks
 
     public void StartGame()
     {
+        //只有房主能点击
         GameManager.Instance.OpenMenu("LoadingMenu");
         PhotonNetwork.LoadLevel(2);
     }
@@ -204,10 +198,12 @@ public class PunStuff : MonoBehaviourPunCallbacks
     {
         GameManager.Instance.OpenMenu(CreateRoomMenuName);
     }
+
     public void OpenFindRoomMenu()
     {
         GameManager.Instance.OpenMenu(FindRoomMenuName);
     }
+
     public void QuitGame()
     {
 #if UNITY_EDITOR

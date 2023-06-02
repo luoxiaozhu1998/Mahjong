@@ -117,9 +117,9 @@ MonoBehaviour:
   _maxInteractors: -1
   _maxSelectingInteractors: -1
   _data: {fileID: 0}
-  _pointableElement: {fileID: 6740245078738752776}
+  _pointableElement: {fileID: 2156443176475605848}
   _rigidbody: {fileID: 2157407224856271956}
-  _physicsGrabbable: {fileID: 2369102278798222745}
+  _physicsGrabbable: {fileID: -1635141759885323558}
   _resetGrabOnGrabsUpdated: 1
   _scoringModifier:
     _positionRotationWeight: 0.8
@@ -191,9 +191,9 @@ MonoBehaviour:
   _maxInteractors: -1
   _maxSelectingInteractors: -1
   _data: {fileID: 0}
-  _pointableElement: {fileID: 6740245078738752776}
+  _pointableElement: {fileID: 2156443176475605848}
   _rigidbody: {fileID: 2157407224856271956}
-  _physicsGrabbable: {fileID: 2369102278798222745}
+  _physicsGrabbable: {fileID: -1635141759885323558}
   _resetGrabOnGrabsUpdated: 1
   _scoringModifier:
     _positionRotationWeight: 0.8
@@ -469,9 +469,9 @@ MonoBehaviour:
   _maxInteractors: -1
   _maxSelectingInteractors: -1
   _data: {fileID: 0}
-  _pointableElement: {fileID: 6740245078738752776}
+  _pointableElement: {fileID: 2156443176475605848}
   _rigidbody: {fileID: 2157407224856271956}
-  _physicsGrabbable: {fileID: 2369102278798222745}
+  _physicsGrabbable: {fileID: -1635141759885323558}
   _resetGrabOnGrabsUpdated: 1
   _scoringModifier:
     _positionRotationWeight: 0.8
@@ -543,9 +543,9 @@ MonoBehaviour:
   _maxInteractors: -1
   _maxSelectingInteractors: -1
   _data: {fileID: 0}
-  _pointableElement: {fileID: 6740245078738752776}
+  _pointableElement: {fileID: 2156443176475605848}
   _rigidbody: {fileID: 2157407224856271956}
-  _physicsGrabbable: {fileID: 2369102278798222745}
+  _physicsGrabbable: {fileID: -1635141759885323558}
   _resetGrabOnGrabsUpdated: 1
   _scoringModifier:
     _positionRotationWeight: 0.8
@@ -584,9 +584,9 @@ GameObject:
   - component: {fileID: 4157608618605764604}
   - component: {fileID: 6222294642946377699}
   - component: {fileID: -6669862525782844912}
-  - component: {fileID: 6740245078738752776}
-  - component: {fileID: 2369102278798222745}
   - component: {fileID: 7816827607634305303}
+  - component: {fileID: 2156443176475605848}
+  - component: {fileID: -1635141759885323558}
   m_Layer: 0
   m_Name: mahjong_tile_10
   m_TagString: Mahjong
@@ -755,40 +755,6 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.038999997, y: 0.02192167, z: 0.056999996}
   m_Center: {x: 0, y: 0.0040391684, z: 9.313226e-10}
---- !u!114 &6740245078738752776
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4534105472449741973}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 43f86b14a27b52f4f9298c33015b5c26, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _transferOnSecondSelection: 0
-  _addNewPointsToFront: 0
-  _forwardElement: {fileID: 0}
-  _oneGrabTransformer: {fileID: 0}
-  _twoGrabTransformer: {fileID: 0}
-  _targetTransform: {fileID: 0}
-  _maxGrabPoints: -1
---- !u!114 &2369102278798222745
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4534105472449741973}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1bedaac29a943f844a7074b53c8bdf9f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _grabbable: {fileID: 6740245078738752776}
-  _rigidbody: {fileID: 2157407224856271956}
-  _scaleMassWithSize: 1
 --- !u!114 &7816827607634305303
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -823,3 +789,37 @@ MonoBehaviour:
   _whenCancel:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &2156443176475605848
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4534105472449741973}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43f86b14a27b52f4f9298c33015b5c26, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _transferOnSecondSelection: 0
+  _addNewPointsToFront: 0
+  _forwardElement: {fileID: 0}
+  _oneGrabTransformer: {fileID: 0}
+  _twoGrabTransformer: {fileID: 0}
+  _targetTransform: {fileID: 0}
+  _maxGrabPoints: -1
+--- !u!114 &-1635141759885323558
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4534105472449741973}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1bedaac29a943f844a7074b53c8bdf9f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _grabbable: {fileID: 2156443176475605848}
+  _rigidbody: {fileID: 2157407224856271956}
+  _scaleMassWithSize: 1

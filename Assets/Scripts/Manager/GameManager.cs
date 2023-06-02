@@ -1,23 +1,15 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-using Controller;
 using Oculus.Avatar2;
-using Photon.Pun;
-using Photon.Realtime;
-using TMPro;
-using Tools;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Oculus.Platform;
-using UnityEngine.UI;
-using RoomOptions = Photon.Realtime.RoomOptions;
 
 namespace Manager
 {
     /// <summary>
     /// 游戏总管理类,外观模式+中介者模式
     /// </summary>
-    public class GameManager : MonoBehaviourPunCallbacks
+    public class GameManager : MonoBehaviour
     {
         private ulong _userId;
         public static GameManager Instance { get; private set; }
@@ -25,6 +17,7 @@ namespace Manager
         private ResourceManager _resourceManager;
 
         private MenuManager _menuManager;
+        private string _playerName;
 
         private void Awake()
         {
@@ -109,12 +102,14 @@ namespace Manager
                         else
                         {
                             var e = message.GetError();
+                            Debug.LogError(e);
                         }
                     });
                 }
                 else
                 {
                     var e = message.GetError();
+                    Debug.LogError(e);
                 }
             });
         }
@@ -210,13 +205,16 @@ namespace Manager
         {
             _resourceManager.LoadMahjong();
         }
+
         #endregion
 
         #region MenuManager
-        public void AddMenu(string name,GameObject go)
+
+        public void AddMenu(string name, GameObject go)
         {
-            _menuManager.AddMenu(name,go);
+            _menuManager.AddMenu(name, go);
         }
+
         public void OpenMenu(string menuName)
         {
             _menuManager.OpenMenu(menuName);
@@ -228,11 +226,21 @@ namespace Manager
         }
 
         #endregion
+
         public ulong GetUserId()
         {
             return _userId;
         }
 
+        public void SetPlayerName(string str)
+        {
+            _playerName = str;
+        }
+
+        public string GetPlayerName()
+        {
+            return _playerName;
+        }
         // /// <summary>
         // /// 给出牌权
         // /// </summary>
@@ -468,6 +476,5 @@ namespace Manager
         // {
         //     Constants.MaxId = id;
         // }
-
     }
 }

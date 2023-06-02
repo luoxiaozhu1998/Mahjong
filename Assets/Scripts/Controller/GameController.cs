@@ -2,15 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
-using DG.Tweening.Core;
-using DG.Tweening.Plugins.Options;
 using Manager;
 using Newtonsoft.Json;
 using Oculus.Interaction;
 using Oculus.Interaction.HandGrab;
 using Photon.Pun;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -22,12 +19,6 @@ namespace Controller
     public class GameController : MonoBehaviourPunCallbacks
     {
         public static GameController Instance { get; private set; }
-
-        // public Button pongButton;
-        // public Button kongButton;
-        // public Button addKongButton;
-        // public Button skipButton;
-        // public Button winButton;
         public int playerCount;
         public PlayerController myPlayerController;
         private PhotonView _gameManagerPhotonView;
@@ -36,22 +27,23 @@ namespace Controller
         public int nowTurn;
         public int lastTurn;
         public int nowTile;
-        [HideInInspector] public GameObject tile;
+        public int tileViewID;
         public Image bg;
         public TMP_Text text;
         public Button button;
         public Transform canvas;
-        private ulong m_userId;
         private List<MahjongAttr> _mahjong;
         private List<Transform> _playerButtons;
         private bool _canPong;
         private bool _canKong;
         private bool _canWin;
         private Button _confirmButton;
-        [SerializeField] private Material[] transparentMaterials;
-        [SerializeField] private Material[] normalMaterials;
-        [SerializeField] private GameObject effectPrefab;
-        public GameObject BubbleEffect;
+        public Material[] transparentMaterials;
+        public Material[] normalMaterials;
+        public GameObject effectPrefab;
+        public GameObject bubbleEffect;
+        public Transform[] playerPanelContainers;
+        public GameObject playerPanelPrefab;
 
         /// <summary>
         /// 初始化
@@ -78,12 +70,14 @@ namespace Controller
             // winButton.gameObject.SetActive(false);
             //bg.gameObject.SetActive(false);
             //bg.GetComponent<Image>().raycastTarget = false;
+            GameManager.Instance.InitWhenStart();
             playerCount = PhotonNetwork.CurrentRoom.PlayerCount;
             _gameManagerPhotonView = GameManager.Instance.GetComponent<PhotonView>();
             canNext = true;
             ReadyDict = new Dictionary<int, int>();
             _mahjong = new List<MahjongAttr>();
             _playerButtons = new List<Transform>();
+            StartGame();
         }
 
         /// <summary>
@@ -235,12 +229,12 @@ namespace Controller
             newGo.GetComponent<MahjongAttr>().canPlay = false;
             myPlayerController.MyMahjong[nowTile].Add(newGo);
             SortMyMahjong();
-            photonView.RPC(nameof(DestroyItem), RpcTarget.All, lastTurn);
+            photonView.RPC(nameof(DestroyItem), RpcTarget.All);
         }
 
         public override void OnLeftRoom()
         {
-            PhotonNetwork.LoadLevel(0);
+            PhotonNetwork.LoadLevel(1);
         }
 
         /// <summary>
@@ -248,24 +242,16 @@ namespace Controller
         /// </summary>
         public void StartGame()
         {
-            // if (PhotonNetwork.IsMasterClient)
-            // {
-            //     GetComponent<PhotonView>().RPC(nameof(NotMyTurn), RpcTarget.Others);
-            // }
-
             GeneratePlayers();
             if (CheckWin())
             {
                 photonView.RPC(nameof(CanH), RpcTarget.All, myPlayerController.playerID);
             }
-
-            //CheckWin();
-            StartCoroutine(Leave());
         }
 
         private IEnumerator Leave()
         {
-            yield return new WaitForSeconds(2f);
+            yield return new WaitForSeconds(20f);
             PhotonNetwork.LeaveRoom();
         }
 
@@ -358,19 +344,28 @@ namespace Controller
         }
 
         [PunRPC]
-        private void SetPoint(int id)
+        private void SetPoint(int id, string playerName)
         {
             foreach (var playerButton in _playerButtons)
             {
                 playerButton.GetChild(5).GetComponentInChildren<TMP_Text>().text =
                     "Score:" + (id == myPlayerController.playerID ? 20 : 0);
             }
+
+            _playerButtons[myPlayerController.playerID - 1].GetChild(4).gameObject.SetActive(true);
+            foreach (var item in PhotonNetwork.CurrentRoom.Players)
+            {
+                var go = Instantiate(playerPanelPrefab, playerPanelContainers[myPlayerController.playerID - 1]);
+                go.transform.GetChild(0).GetComponent<TMP_Text>().text = item.Value.NickName;
+                go.transform.GetChild(1).GetComponent<TMP_Text>().text =
+                    item.Value.NickName == playerName ? "Score + 10" : "Score - 10";
+            }
         }
 
         private void SolveWin()
         {
-            _playerButtons[myPlayerController.playerID - 1].GetChild(4).gameObject.SetActive(true);
-            photonView.RPC(nameof(SetPoint), RpcTarget.All, myPlayerController.playerID);
+            photonView.RPC(nameof(SetPoint), RpcTarget.All, myPlayerController.playerID,
+                PhotonNetwork.LocalPlayer.NickName);
         }
 
         private void SolveSkip()
@@ -394,65 +389,64 @@ namespace Controller
             }
         }
 
-        public void ShowEffect()
-        {
-            if (!PhotonNetwork.IsMasterClient) return;
-            var mahjongs = FindObjectsOfType<MahjongAttr>();
-
-            foreach (var go in mahjongs)
-            {
-                if (go.GetComponent<PhotonView>().IsMine == false)
-                {
-                    var materials = go.GetComponent<MeshRenderer>().materials;
-                    materials[0] = transparentMaterials[0];
-                    materials[1] = transparentMaterials[1];
-                    go.GetComponent<MeshRenderer>().materials = materials;
-                    var transform1 = go.transform;
-                    var effectGo = PhotonNetwork.Instantiate(effectPrefab.name, transform1.position,
-                        transform1.rotation);
-                    StartCoroutine(DestroyEffect(go, effectGo));
-                }
-            }
-        }
-
-        private IEnumerator DestroyEffect(MahjongAttr go, GameObject effectGo)
-        {
-            yield return new WaitForSeconds(2f);
-            PhotonNetwork.Destroy(effectGo);
-            var mats = go.GetComponent<MeshRenderer>().materials;
-            mats[0] = normalMaterials[0];
-            mats[1] = normalMaterials[1];
-            go.GetComponent<MeshRenderer>().materials = mats;
-        }
+        // public void ShowEffect()
+        // {
+        //     if (!PhotonNetwork.IsMasterClient) return;
+        //     var mahjongs = FindObjectsOfType<MahjongAttr>();
+        //     foreach (var go in mahjongs)
+        //     {
+        //         if (go.ownerID == 2)
+        //         {
+        //             var materials = go.GetComponent<MeshRenderer>().materials;
+        //             materials[0] = transparentMaterials[0];
+        //             materials[1] = transparentMaterials[1];
+        //             go.GetComponent<MeshRenderer>().materials = materials;
+        //             var transform1 = go.transform;
+        //             var effectGo = PhotonNetwork.Instantiate(effectPrefab.name, transform1.position,
+        //                 transform1.rotation);
+        //             StartCoroutine(DestroyEffect(go, effectGo));
+        //         }
+        //     }
+        // }
+        //
+        // private IEnumerator DestroyEffect(Component go, GameObject effectGo)
+        // {
+        //     yield return new WaitForSeconds(2f);
+        //     PhotonNetwork.Destroy(effectGo);
+        //     var mats = go.GetComponent<MeshRenderer>().materials;
+        //     mats[0] = normalMaterials[0];
+        //     mats[1] = normalMaterials[1];
+        //     go.GetComponent<MeshRenderer>().materials = mats;
+        // }
 
         [PunRPC]
         private void RPCShowEffect(int id)
         {
         }
 
-        private void AddMahjong(MahjongAttr attr, Rigidbody rb)
-        {
-            if (!attr.isAdd && !attr.isPut) return;
-            var sum = myPlayerController.MyMahjong.Sum(item => item.Value.Count);
-            //牌数大于14张，此时不能拿牌
-            if (sum >= 14)
-            {
-                rb.GetComponent<BoxCollider>().isTrigger = true;
-                DOTween.Sequence().Insert(0f, rb.DOMove(attr.originPosition, 1f))
-                        .Insert(0f, rb.DORotate(attr.originalRotation.eulerAngles, 1f))
-                        .onComplete +=
-                    () =>
-                    {
-                        rb.Sleep();
-                        rb.GetComponent<BoxCollider>().isTrigger = false;
-                    };
-                rb.constraints = RigidbodyConstraints.FreezeAll;
-            }
-            else
-            {
-                AddMahjongToHand(attr);
-            }
-        }
+        // private void AddMahjong(MahjongAttr attr, Rigidbody rb)
+        // {
+        //     if (!attr.isAdd && !attr.isPut) return;
+        //     var sum = myPlayerController.MyMahjong.Sum(item => item.Value.Count);
+        //     //牌数大于14张，此时不能拿牌
+        //     if (sum >= 14)
+        //     {
+        //         rb.GetComponent<BoxCollider>().isTrigger = true;
+        //         DOTween.Sequence().Insert(0f, rb.DOMove(attr.originPosition, 1f))
+        //                 .Insert(0f, rb.DORotate(attr.originalRotation.eulerAngles, 1f))
+        //                 .onComplete +=
+        //             () =>
+        //             {
+        //                 rb.Sleep();
+        //                 rb.GetComponent<BoxCollider>().isTrigger = false;
+        //             };
+        //         rb.constraints = RigidbodyConstraints.FreezeAll;
+        //     }
+        //     else
+        //     {
+        //         AddMahjongToHand(attr);
+        //     }
+        // }
 
         private void AddMahjongToHand(MahjongAttr attr)
         {
@@ -470,7 +464,7 @@ namespace Controller
             attr.pointableUnityEventWrapper.WhenSelect.RemoveAllListeners();
             attr.pointableUnityEventWrapper.WhenUnselect.AddListener(attr.OnPut);
             attr.pointableUnityEventWrapper.WhenSelect.AddListener(attr.OnGrab);
-
+            attr.photonView.RPC(nameof(attr.SetOwnerID), RpcTarget.All, myPlayerController.playerID);
             foreach (var item in attr.GetComponentsInChildren<HandGrabInteractable>())
             {
                 item.enabled = true;
@@ -513,7 +507,7 @@ namespace Controller
                         foreach (var iGameObject in item.Value)
                         {
                             var script = iGameObject.GetComponent<MahjongAttr>();
-                            if (script.num == 0 || !script.canPlay)
+                            if (script.num == 0)
                             {
                                 continue;
                             }
@@ -557,7 +551,6 @@ namespace Controller
                 myPlayerController.SetPlayerStrategy();
                 myPlayerController.putPos =
                     GameManager.Instance.GetNewPositions()[myPlayerController.playerID - 1];
-                PhotonNetwork.NickName = "Fudan-VR-TA" + myPlayerController.playerID;
                 if (!PhotonNetwork.IsMasterClient) continue;
                 GameManager.Instance.MahjongSplit(players.Count);
                 var a = JsonConvert.SerializeObject(GameManager.Instance.GetMahjongList());
@@ -741,7 +734,7 @@ namespace Controller
                 foreach (var go in item.Value)
                 {
                     var script = go.GetComponent<MahjongAttr>();
-                    if (!script.canPlay || script.num == 0)
+                    if (script.num == 0)
                     {
                         continue;
                     }
@@ -761,48 +754,64 @@ namespace Controller
             }
         }
 
+        /// <summary>
+        /// 处理碰牌
+        /// </summary>
         private void SolvePong()
         {
+            //自己能碰的时候，点击按钮才生效
             if (!_canPong) return;
+            //点击之后立马不能碰牌
             _canPong = false;
+            //向所有人RPC，当前轮次轮到我了，并且不需要发牌
             photonView.RPC(nameof(NextTurn), RpcTarget.All,
                 myPlayerController.playerID, false);
+            //向所有人RPC，隐藏所有按钮
             photonView.RPC(nameof(ResetButton), RpcTarget.All);
+            //遍历自己的所有与被碰的牌相同的牌
             foreach (var go in myPlayerController.MyMahjong[nowTile])
             {
                 var script = go.GetComponent<MahjongAttr>();
-                script.canPlay = false;
+                //这些牌不能再被拿起来
+                script.photonView.RPC(nameof(script.SetState), RpcTarget.All, false);
+                //把牌移动到指定的位置
                 go.transform.DOMove(myPlayerController.putPos, 1f);
+                //旋转牌
                 go.transform.DORotate(
                     GameManager.Instance.GetPlayerPutRotations()[
                         myPlayerController.playerID - 1], 1f);
+                //自己的位置减去一个牌的距离
                 myPlayerController.putPos -=
                     GameManager.Instance.GetBias()[myPlayerController.playerID - 1];
                 script.num = 0;
             }
 
+            //再生成一个相同的牌，放到指定位置
             var newGo = PhotonNetwork.Instantiate("mahjong_tile_" + nowTile,
                 myPlayerController.putPos,
                 Quaternion.Euler(GameManager.Instance.GetPlayerPutRotations()[
                     myPlayerController.playerID - 1]));
-            newGo.GetComponent<MahjongAttr>().num = 0;
-            newGo.GetComponent<MahjongAttr>().canPlay = false;
+            var attr = newGo.GetComponent<MahjongAttr>();
+            attr.num = 0;
+            //这个牌也不能在被抓取
+            attr.photonView.RPC(nameof(attr.SetState), RpcTarget.All, false);
             myPlayerController.MyMahjong[nowTile].Add(newGo);
+            //整理牌
             SortMyMahjong();
-            photonView.RPC(nameof(DestroyItem), RpcTarget.All, lastTurn);
+            //销毁场上的那个牌
+            photonView.RPC(nameof(DestroyItem), RpcTarget.All);
             myPlayerController.putPos -=
                 GameManager.Instance.GetBias()[myPlayerController.playerID - 1];
-            _playerButtons[myPlayerController.playerID - 1].GetChild(3).GetChild(2).GetChild(1)
-                .GetChild(0).GetChild(0)
-                .GetComponent<Renderer>()
-                .material.color = Color.white;
         }
 
         [PunRPC]
-        public void DestroyItem(int playerId)
+        public void DestroyItem()
         {
-            if (myPlayerController.playerID != playerId) return;
-            PhotonNetwork.Destroy(tile);
+            var destroyGo =
+                (from go in FindObjectsOfType<PhotonView>() where go.ViewID == tileViewID select go.gameObject)
+                .FirstOrDefault();
+
+            Destroy(destroyGo);
         }
 
         // private enum OperationCode

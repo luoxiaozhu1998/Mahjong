@@ -1,34 +1,29 @@
-using System.Collections;
+using System;
 using System.Linq;
 using Controller;
-using Manager;
 using Oculus.Interaction;
+using Oculus.Interaction.Grab;
 using Oculus.Interaction.HandGrab;
 using Photon.Pun;
 using UnityEngine;
 
 public class MahjongAttr : MonoBehaviourPunCallbacks
 {
-    private readonly Vector3 _pos = Vector3.zero;
     private PhotonView _photonView;
     public int id;
     public int num;
-    private PhotonView _gameManagerPhotonView;
     public bool canPlay;
-    private Vector3 _moveto;
-    private Vector3 _rotateTo;
-    private bool _isGrounded = true;
-    public Transform parentTrans;
-    public bool isSet = false;
     private Rigidbody _rigidbody;
-    public PointableUnityEventWrapper pointableUnityEventWrapper;
+    [HideInInspector] public PointableUnityEventWrapper pointableUnityEventWrapper;
     private HandGrabInteractable[] _handGrabInteractable;
     public bool inHand = false;
     public bool isPut = true;
     public bool isAdd = false;
-    public Vector3 originPosition;
-    public Quaternion originalRotation;
-    private Renderer _renderer;
+    private Vector3 _originPosition;
+    private GameObject _effectGo;
+    private GameObject _eyeInteractGo;
+    [HideInInspector] public int ownerID;
+    private Transform _transform;
 
     private void Awake()
     {
@@ -41,32 +36,13 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
         _photonView = GetComponent<PhotonView>();
         pointableUnityEventWrapper.WhenSelect.AddListener(OnGrab);
         pointableUnityEventWrapper.WhenUnselect.AddListener(OnPut);
-        var transform1 = transform;
-        originPosition = transform1.position;
-        originalRotation = transform1.rotation;
         isPut = true;
-        _renderer = GetComponent<Renderer>();
-        // GetComponent<XRGrabInteractable>().hoverEntered.AddListener(_ => { OnHover(); });
-        // GetComponent<XRGrabInteractable>().hoverExited.AddListener(_ => { OnHoverExit(); });
-        // GetComponent<XRGrabInteractable>().activated.AddListener(_ => { OnTrigger(); });
-        //GetComponent<XRGrabInteractable>().firstSelectEntered.AddListener(_ => { OnGrab(); });
+        _transform = transform;
     }
 
     public void OnGrab()
     {
-        _photonView.RPC(nameof(SetKinematic), RpcTarget.All, true);
-        if (_photonView.IsMine)
-            return;
-        var o = gameObject;
-        var go = PhotonNetwork.Instantiate(GameController.Instance.BubbleEffect.name, o.transform.position,
-            o.transform.rotation);
-        StartCoroutine(DestroyGo(go));
-    }
-
-    private IEnumerator DestroyGo(GameObject go)
-    {
-        yield return new WaitForSeconds(1f);
-        PhotonNetwork.Destroy(go);
+        _photonView.RPC(nameof(SetKinematic), RpcTarget.Others, true);
     }
 
     public void OnPut()
@@ -76,6 +52,7 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
         {
             var playerController = GameController.Instance.myPlayerController;
             var playerId = playerController.playerID;
+            //可以出牌，先把牌移除，再整理牌
             if (GameController.Instance.nowTurn == playerId)
             {
                 GameObject go = null;
@@ -92,9 +69,9 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
 
                 GameController.Instance.SortMyMahjong();
 
-                _photonView.RPC(nameof(PlayTile), RpcTarget.All, playerId, id);
-                GameController.Instance.tile = gameObject;
+                _photonView.RPC(nameof(PlayTile), RpcTarget.All, playerId, id, gameObject.GetPhotonView().ViewID);
             }
+            //本回合不能出牌，直接整理牌
             else
             {
                 GameController.Instance.SortMyMahjong();
@@ -109,36 +86,18 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
     }
 
     [PunRPC]
-    public void SetState(bool b)
+    public void SetState()
     {
-        pointableUnityEventWrapper.WhenSelect.AddListener(() =>
-        {
-            foreach (var handGrabInteractable in _handGrabInteractable)
-            {
-                handGrabInteractable.enabled = b;
-            }
-
-            if (!b)
-            {
-                StartCoroutine(ResetState());
-            }
-        });
-    }
-
-    private IEnumerator ResetState()
-    {
-        yield return new WaitForSeconds(2f);
+        //对所有其他人，麻将不能抓取
         foreach (var handGrabInteractable in _handGrabInteractable)
         {
-            handGrabInteractable.enabled = true;
+            handGrabInteractable.enabled = false;
         }
-
-        _renderer.material.color = Color.white;
     }
 
 
     [PunRPC]
-    private void PlayTile(int playerId, int tileId)
+    private void PlayTile(int playerId, int tileId, int viewID)
     {
         GameController.Instance.lastTurn = playerId;
         //每个客户端先把把当前轮次的ID设置好（下面代码可能会更改）
@@ -147,7 +106,10 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
             : playerId + 1;
         //每个客户端先把把当前轮次的牌ID设置好（下面代码可能会更改）
         GameController.Instance.nowTile = tileId;
+        GameController.Instance.tileViewID = viewID;
         var thisID = GameController.Instance.myPlayerController.playerID;
+        //牌打出之后，ownerID为0
+        _photonView.RPC(nameof(SetOwnerID), RpcTarget.All, 0);
         //打出牌的一定准备好了
         if (playerId == thisID)
         {
@@ -182,16 +144,79 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
     }
 
     [PunRPC]
-    public void Send(int id, int flag)
+    public void Send(int playerId, int flag)
     {
-        GameController.Instance.ReadyDict.Add(id, flag);
+        GameController.Instance.ReadyDict.Add(playerId, flag);
     }
 
     [PunRPC]
-    public void StoreTile(GameObject go)
+    public void StoreTile(int viewID)
     {
-        GameController.Instance.tile = go;
+        GameController.Instance.tileViewID = viewID;
     }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (!_photonView.IsMine && other.gameObject.CompareTag("Hand") && _effectGo == null)
+        {
+            _effectGo = PhotonNetwork.Instantiate(GameController.Instance.bubbleEffect.name, _transform.position,
+                _transform.rotation);
+        }
+
+        if (!_photonView.IsMine && other.gameObject.CompareTag("EyeInteractor") && _eyeInteractGo == null)
+        {
+            var materials = GetComponent<MeshRenderer>().materials;
+            materials[0] = GameController.Instance.transparentMaterials[0];
+            materials[1] = GameController.Instance.transparentMaterials[1];
+            GetComponent<MeshRenderer>().materials = materials;
+            _eyeInteractGo = PhotonNetwork.Instantiate(GameController.Instance.effectPrefab.name, _transform.position,
+                _transform.rotation);
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (ownerID != GameController.Instance.myPlayerController.playerID && ownerID != 0 &&
+            other.gameObject.CompareTag("Hand") &&
+            _effectGo != null)
+        {
+            PhotonNetwork.Destroy(_effectGo);
+        }
+
+        if (ownerID != GameController.Instance.myPlayerController.playerID && ownerID != 0 &&
+            other.gameObject.CompareTag("EyeInteractor") && _eyeInteractGo != null)
+        {
+            PhotonNetwork.Destroy(_eyeInteractGo);
+            var mats = GetComponent<MeshRenderer>().materials;
+            mats[0] = GameController.Instance.normalMaterials[0];
+            mats[1] = GameController.Instance.normalMaterials[1];
+            GetComponent<MeshRenderer>().materials = mats;
+        }
+    }
+
+    [PunRPC]
+    public void SetOwnerID(int id)
+    {
+        ownerID = id;
+    }
+
+    // private void OnCollisionEnter(Collision other)
+    // {
+    //     if (other.gameObject.CompareTag("Hand"))
+    //     {
+    //         var o = gameObject;
+    //         _effectGo = PhotonNetwork.Instantiate(GameController.Instance.BubbleEffect.name, o.transform.position,
+    //             o.transform.rotation);
+    //     }
+    // }
+    //
+    // private void OnCollisionExit(Collision other)
+    // {
+    //     if (other.gameObject.CompareTag("Hand"))
+    //     {
+    //         pointableUnityEventWrapper.WhenUnhover.AddListener(() => { PhotonNetwork.Destroy(_effectGo); });
+    //     }
+    // }
     // private void OnHover()
     // {
     //     if (!photonView.IsMine) return;

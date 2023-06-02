@@ -474,7 +474,6 @@ MonoBehaviour:
   inHand: 0
   isPut: 1
   isAdd: 0
-  originPosition: {x: 0.8990231, y: 0.8362737, z: 0.049837697}
   originalRotation: {x: 0.5421295, y: 0.4539775, z: -0.5421295, w: 0.4539775}
 --- !u!65 &6060959427465947901
 BoxCollider:

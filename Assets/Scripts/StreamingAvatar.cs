@@ -5,11 +5,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Manager;
 using Oculus.Avatar2;
 #if USING_XR_SDK
 using System.Reflection;
-using Oculus.Platform;
 using Photon.Pun;
 #endif
 using UnityEngine;

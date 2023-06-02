@@ -1,7 +1,6 @@
 ﻿#if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
-using static Michsky.MUIP.ButtonManager;
 
 namespace Michsky.MUIP
 {

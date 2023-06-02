@@ -44,8 +44,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622db80eec0bd344f920b1aa056ae8d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _relativeTo: {fileID: 1727942928801592587}
   _surface: {fileID: 0}
+  _relativeTo: {fileID: 1727942928801592587}
   _usesHandPose: 1
   _handPose:
     _handedness: 1
@@ -112,8 +112,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622db80eec0bd344f920b1aa056ae8d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _relativeTo: {fileID: 1727942928801592587}
   _surface: {fileID: 0}
+  _relativeTo: {fileID: 1727942928801592587}
   _usesHandPose: 1
   _handPose:
     _handedness: 1
@@ -185,9 +185,9 @@ MonoBehaviour:
   _maxInteractors: -1
   _maxSelectingInteractors: -1
   _data: {fileID: 0}
-  _pointableElement: {fileID: 7902421560957197427}
+  _pointableElement: {fileID: -5224432529706769641}
   _rigidbody: {fileID: 24572112301697906}
-  _physicsGrabbable: {fileID: -8642919987876766735}
+  _physicsGrabbable: {fileID: 3520231927352445075}
   _resetGrabOnGrabsUpdated: 1
   _scoringModifier:
     _positionRotationWeight: 0.8
@@ -254,8 +254,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622db80eec0bd344f920b1aa056ae8d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _relativeTo: {fileID: 1727942928801592587}
   _surface: {fileID: 0}
+  _relativeTo: {fileID: 1727942928801592587}
   _usesHandPose: 1
   _handPose:
     _handedness: 1
@@ -327,9 +327,9 @@ MonoBehaviour:
   _maxInteractors: -1
   _maxSelectingInteractors: -1
   _data: {fileID: 0}
-  _pointableElement: {fileID: 7902421560957197427}
+  _pointableElement: {fileID: -5224432529706769641}
   _rigidbody: {fileID: 24572112301697906}
-  _physicsGrabbable: {fileID: -8642919987876766735}
+  _physicsGrabbable: {fileID: 3520231927352445075}
   _resetGrabOnGrabsUpdated: 1
   _scoringModifier:
     _positionRotationWeight: 0.8
@@ -401,9 +401,9 @@ MonoBehaviour:
   _maxInteractors: -1
   _maxSelectingInteractors: -1
   _data: {fileID: 0}
-  _pointableElement: {fileID: 7902421560957197427}
+  _pointableElement: {fileID: -5224432529706769641}
   _rigidbody: {fileID: 24572112301697906}
-  _physicsGrabbable: {fileID: -8642919987876766735}
+  _physicsGrabbable: {fileID: 3520231927352445075}
   _resetGrabOnGrabsUpdated: 1
   _scoringModifier:
     _positionRotationWeight: 0.8
@@ -475,9 +475,9 @@ MonoBehaviour:
   _maxInteractors: -1
   _maxSelectingInteractors: -1
   _data: {fileID: 0}
-  _pointableElement: {fileID: 7902421560957197427}
+  _pointableElement: {fileID: -5224432529706769641}
   _rigidbody: {fileID: 24572112301697906}
-  _physicsGrabbable: {fileID: -8642919987876766735}
+  _physicsGrabbable: {fileID: 3520231927352445075}
   _resetGrabOnGrabsUpdated: 1
   _scoringModifier:
     _positionRotationWeight: 0.8
@@ -544,8 +544,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622db80eec0bd344f920b1aa056ae8d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _relativeTo: {fileID: 1727942928801592587}
   _surface: {fileID: 0}
+  _relativeTo: {fileID: 1727942928801592587}
   _usesHandPose: 1
   _handPose:
     _handedness: 1
@@ -584,9 +584,9 @@ GameObject:
   - component: {fileID: 3988514660489930663}
   - component: {fileID: 8350219670964526220}
   - component: {fileID: 3620936651878023077}
-  - component: {fileID: 7902421560957197427}
-  - component: {fileID: -8642919987876766735}
   - component: {fileID: -2934119998179308022}
+  - component: {fileID: -5224432529706769641}
+  - component: {fileID: 3520231927352445075}
   m_Layer: 0
   m_Name: mahjong_tile_22
   m_TagString: Mahjong
@@ -679,14 +679,11 @@ MonoBehaviour:
   id: 0
   num: 0
   canPlay: 1
-  parentTrans: {fileID: 0}
-  isSet: 0
   pointableUnityEventWrapper: {fileID: 0}
   inHand: 0
   isPut: 0
   isAdd: 0
-  originPosition: {x: 0, y: 0, z: 0}
-  originalRotation: {x: 0, y: 0, z: 0, w: 0}
+  ownerID: 0
 --- !u!54 &24572112301697906
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -755,40 +752,6 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.038999997, y: 0.02192167, z: 0.056999996}
   m_Center: {x: 0, y: 0.0040391684, z: 9.313226e-10}
---- !u!114 &7902421560957197427
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1726948545992274187}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 43f86b14a27b52f4f9298c33015b5c26, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _transferOnSecondSelection: 0
-  _addNewPointsToFront: 0
-  _forwardElement: {fileID: 0}
-  _oneGrabTransformer: {fileID: 0}
-  _twoGrabTransformer: {fileID: 0}
-  _targetTransform: {fileID: 0}
-  _maxGrabPoints: -1
---- !u!114 &-8642919987876766735
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1726948545992274187}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1bedaac29a943f844a7074b53c8bdf9f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _grabbable: {fileID: 7902421560957197427}
-  _rigidbody: {fileID: 24572112301697906}
-  _scaleMassWithSize: 1
 --- !u!114 &-2934119998179308022
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -823,3 +786,37 @@ MonoBehaviour:
   _whenCancel:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &-5224432529706769641
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1726948545992274187}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43f86b14a27b52f4f9298c33015b5c26, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _transferOnSecondSelection: 0
+  _addNewPointsToFront: 0
+  _forwardElement: {fileID: 0}
+  _oneGrabTransformer: {fileID: 0}
+  _twoGrabTransformer: {fileID: 0}
+  _targetTransform: {fileID: 0}
+  _maxGrabPoints: -1
+--- !u!114 &3520231927352445075
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1726948545992274187}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1bedaac29a943f844a7074b53c8bdf9f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _grabbable: {fileID: -5224432529706769641}
+  _rigidbody: {fileID: 24572112301697906}
+  _scaleMassWithSize: 1
