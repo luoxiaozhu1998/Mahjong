@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  version: 5
+  version: 7
 --- !u!114 &-7380937895845702557
 MonoBehaviour:
   m_ObjectHideFlags: 11
@@ -35,6 +35,8 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: Point01
   m_Shader: {fileID: -6465566751694194690, guid: c56a7b9df1d72ea468b1aec67ff5600e, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - DISSOLVE_OFFSET_MODE_A
   - MAINTEX_OFFSET_MODE_A
@@ -54,6 +56,7 @@ Material:
   - MOTIONVECTORS
   - TransparentDepthPrepass
   - TransparentDepthPostpass
+  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:

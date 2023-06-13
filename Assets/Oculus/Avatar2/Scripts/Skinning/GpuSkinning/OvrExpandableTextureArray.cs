@@ -151,7 +151,7 @@ namespace Oculus.Skinning.GpuSkinning
 
         public void CopyFromTexture(CAPI.ovrTextureLayoutResult layout, Texture2D tempTex)
         {
-            if (QualitySettings.masterTextureLimit == 0) {
+            if (QualitySettings.globalTextureMipmapLimit == 0) {
                 Graphics.CopyTexture(
                     tempTex,  // src
                     0,    // srcElement
