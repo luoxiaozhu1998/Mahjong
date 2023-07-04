@@ -17,7 +17,6 @@ public class PlayerListItem : MonoBehaviourPunCallbacks
 
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
-        
         if (Equals(_player, otherPlayer))
         {
             Destroy(gameObject);

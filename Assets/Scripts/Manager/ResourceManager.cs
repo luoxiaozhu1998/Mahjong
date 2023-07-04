@@ -189,7 +189,6 @@ namespace Manager
                 }
             }
 
-
             // for (var j = 1; j <= 3; j++)
             // {
             //     _mahjongList[j - 1] = new Mahjong(1, "mahjong_tile_" + 1);
@@ -276,18 +275,11 @@ namespace Manager
         /// <returns></returns>
         public GameObject GeneratePlayer(int id)
         {
-            object[] objects = {Convert.ToInt64(GameManager.Instance.GetUserId())};
+            object[] objects = {Convert.ToInt64(GameManager.Instance.GetUserId()), PhotonNetwork.LocalPlayer.NickName};
             var rig = Object.FindObjectOfType<OVRCameraRig>().transform;
             rig.position = _playerInitPositions[id];
             rig.rotation = Quaternion.Euler(_playerInitRotations[id]);
-            var go = PhotonNetwork.Instantiate(PlayerControllerPath,
-                rig.position,
-                rig.rotation, 0, objects);
-            // var handGo = GameObject.CreatePrimitive(PrimitiveType.Sphere).transform;
-            // handGo.SetParent(go.transform.GetChild(0).GetChild(2));
-            // handGo.SetLocalPositionAndRotation(Vector3.zero, quaternion.identity);
-            // handGo.localScale = new Vector3(0.01f, 0.01f, 0.01f);
-            // handGo.tag = "Hand";
+            var go = PhotonNetwork.Instantiate(PlayerControllerPath, rig.position, rig.rotation, 0, objects);
             go.transform.SetParent(rig);
             go.transform.localRotation = Quaternion.identity;
             go.transform.localPosition = Vector3.zero;
@@ -317,12 +309,19 @@ namespace Manager
                 var go = PhotonNetwork.Instantiate(
                     _userMahjongLists[id][i].Name, pos,
                     Quaternion.Euler(_rotate[id]));
-                var script = go.GetComponent<MahjongAttr>();
-                var pv = go.GetComponent<PhotonView>();
+                go.layer = LayerMask.NameToLayer("Ignore Raycast");
+                var attr = go.GetComponent<MahjongAttr>();
+                var pv = attr.photonView;
                 //其他人不可以抓取我的麻将
-                pv.RPC(nameof(script.SetState), RpcTarget.Others);
-                script.inHand = true;
-                script.id = _userMahjongLists[id][i].ID;
+                pv.RPC(nameof(attr.SetState), RpcTarget.Others);
+                attr.inMyHand = true;
+                attr.inOthersHand = false;
+                pv.RPC(nameof(attr.RPCSetInMyHand), RpcTarget.Others, false);
+                pv.RPC(nameof(attr.RPCSetInOthersHand), RpcTarget.Others, true);
+                pv.RPC(nameof(attr.RPCSetOnDesk), RpcTarget.All, false);
+                pv.RPC(nameof(attr.RPCSetIsThrown), RpcTarget.All, false);
+                pv.RPC(nameof(attr.RPCSetLayer), RpcTarget.Others, LayerMask.NameToLayer("Mahjong"));
+                attr.id = _userMahjongLists[id][i].ID;
                 pos += _bias[id];
                 if (!ret.ContainsKey(_userMahjongLists[id][i].ID))
                 {
@@ -330,10 +329,8 @@ namespace Manager
                 }
 
                 ret[_userMahjongLists[id][i].ID].Add(go);
-                script.num = i + 1;
-                script.canPlay = true;
-                pv.RPC(nameof(script.SetOwnerID), RpcTarget.All,
-                    GameController.Instance.myPlayerController.playerID);
+                attr.num = i + 1;
+                attr.canPlay = true;
             }
 
             return ret;

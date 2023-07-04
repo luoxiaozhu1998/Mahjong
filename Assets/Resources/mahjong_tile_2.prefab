@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 314164605}
   - component: {fileID: 314164606}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: HandGrabInteractable
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -84,7 +84,7 @@ GameObject:
   m_Component:
   - component: {fileID: 534204795}
   - component: {fileID: 534204796}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: HandGrabInteractable
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -158,7 +158,7 @@ GameObject:
   m_Component:
   - component: {fileID: 717324058}
   - component: {fileID: 717324059}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: HandGrabPose
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -192,8 +192,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622db80eec0bd344f920b1aa056ae8d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _relativeTo: {fileID: 8693695926780257517}
   _surface: {fileID: 0}
+  _relativeTo: {fileID: 8693695926780257517}
   _usesHandPose: 1
   _handPose:
     _handedness: 1
@@ -226,7 +226,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1328541760}
   - component: {fileID: 1328541761}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: HandGrabInteractable
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -300,7 +300,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1792422047}
   - component: {fileID: 1792422048}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: HandGrabPose
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -334,8 +334,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622db80eec0bd344f920b1aa056ae8d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _relativeTo: {fileID: 8693695926780257517}
   _surface: {fileID: 0}
+  _relativeTo: {fileID: 8693695926780257517}
   _usesHandPose: 1
   _handPose:
     _handedness: 1
@@ -368,7 +368,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1793195343}
   - component: {fileID: 1793195344}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: HandGrabPose
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -402,8 +402,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622db80eec0bd344f920b1aa056ae8d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _relativeTo: {fileID: 8693695926780257517}
   _surface: {fileID: 0}
+  _relativeTo: {fileID: 8693695926780257517}
   _usesHandPose: 1
   _handPose:
     _handedness: 1
@@ -436,7 +436,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1989139737}
   - component: {fileID: 1989139738}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: HandGrabInteractable
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -510,7 +510,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1993459926}
   - component: {fileID: 1993459927}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: HandGrabPose
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -544,8 +544,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622db80eec0bd344f920b1aa056ae8d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _relativeTo: {fileID: 8693695926780257517}
   _surface: {fileID: 0}
+  _relativeTo: {fileID: 8693695926780257517}
   _usesHandPose: 1
   _handPose:
     _handedness: 1
@@ -587,7 +587,7 @@ GameObject:
   - component: {fileID: -2405878460500706461}
   - component: {fileID: -6510366007200596763}
   - component: {fileID: 1756965402410435993}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: mahjong_tile_2
   m_TagString: Mahjong
   m_Icon: {fileID: 0}
@@ -679,14 +679,11 @@ MonoBehaviour:
   id: 0
   num: 0
   canPlay: 1
-  parentTrans: {fileID: 0}
-  isSet: 0
   pointableUnityEventWrapper: {fileID: 0}
   inHand: 0
   isPut: 0
   isAdd: 0
-  originPosition: {x: 0, y: 0, z: 0}
-  originalRotation: {x: 0, y: 0, z: 0, w: 0}
+  ownerID: 0
 --- !u!54 &4082857393907657488
 Rigidbody:
   m_ObjectHideFlags: 0

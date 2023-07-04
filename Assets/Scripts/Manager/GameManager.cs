@@ -13,9 +13,7 @@ namespace Manager
     {
         private ulong _userId;
         public static GameManager Instance { get; private set; }
-
         private ResourceManager _resourceManager;
-
         private MenuManager _menuManager;
         private string _playerName;
 
@@ -28,30 +26,6 @@ namespace Manager
                 _menuManager = new MenuManager();
                 DontDestroyOnLoad(gameObject);
             }
-            // _roomNameInputField =
-            //     GameObject.Find("RoomNameInputField").GetComponent<TMP_InputField>();
-            // _leaveRoomButton = GameObject.Find("LeaveRoomButton").GetComponent<Button>();
-            // _leaveRoomButton.onClick.AddListener(LeaveRoom);
-            // _confirmCreateButton = GameObject.Find("ConfirmCreate").GetComponent<Button>();
-            // _confirmCreateButton.onClick.AddListener(CreateRoom);
-            // _createRoomBackButton = GameObject.Find("CreateRoomBackButton").GetComponent<Button>();
-            // _createRoomBackButton.onClick.AddListener(() => OpenMenu("TitleMenu"));
-            // _findRoomBackButton = GameObject.Find("FindRoomBackButton").GetComponent<Button>();
-            // _findRoomBackButton.onClick.AddListener(() => OpenMenu("TitleMenu"));
-            // _leaveRoomButton = GameObject.Find("LeaveRoomButton").GetComponent<Button>();
-            // _leaveRoomButton.onClick.AddListener(LeaveRoom);
-            // _startGameButton = GameObject.Find("StartGameButton").GetComponent<Button>();
-            // _startGameButton.onClick.AddListener(StartGame);
-            // _findRoomButton = GameObject.Find("FindRoomButton").GetComponent<Button>();
-            // _findRoomButton.onClick.AddListener(() => OpenMenu("FindRoomMenu"));
-            // _createRoomButton = GameObject.Find("CreateRoomButton").GetComponent<Button>();
-            // _createRoomButton.onClick.AddListener(() => OpenMenu("CreateRoomMenu"));
-            // _quitGameButton = GameObject.Find("QuitGameButton").GetComponent<Button>();
-            // _quitGameButton.onClick.AddListener(QuitGame);
-            // _roomNameText = GameObject.Find("RoomNameTxt").GetComponent<TMP_Text>();
-            // _roomListContent = GameObject.Find("RoomListContent/Viewport/Content").transform;
-            // _playerListContent = GameObject.Find("PlayerListContent/Viewport/Content").transform;
-            // OpenMenu(!PhotonNetwork.IsConnected ? "StartMenu" : "TitleMenu");
 
             // 初始化oculus环境
             try

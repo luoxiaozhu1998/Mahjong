@@ -17,48 +17,13 @@ public class PlayerController : MonoBehaviour
     public Vector3 putRotate;
     private Transform _mainCamera;
     private Transform _xrOriginTransform;
-    public PlayTileStrategy PlayTileStrategy;
     private ulong _userId;
     private SampleAvatarEntity _sampleAvatarEntity;
-    private bool _beginSync = false;
 
     private void Awake()
     {
         _pv = GetComponent<PhotonView>();
         _sampleAvatarEntity = GetComponent<SampleAvatarEntity>();
         MyMahjong = new SortedDictionary<int, List<GameObject>>();
-    }
-    
-
-    public void BeginSync()
-    {
-        _beginSync = true;
-    }
-
-    public void SetPlayerStrategy()
-    {
-        PlayTileStrategy = playerID switch
-        {
-            1 => new PlayerAPlayTileStrategy(),
-            2 => new PlayerBPlayTileStrategy(),
-            3 => new PlayerCPlayTileStrategy(),
-            4 => new PlayerDPlayTileStrategy(),
-            _ => PlayTileStrategy
-        };
-    }
-
-    public void BackTrace()
-    {
-        PlayTileStrategy.BackTrace();
-    }
-
-    public void SetUserId(ulong userId)
-    {
-        _userId = userId;
-    }
-
-    public ulong GetUserId()
-    {
-        return _userId;
     }
 }

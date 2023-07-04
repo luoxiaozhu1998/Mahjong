@@ -272,8 +272,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622db80eec0bd344f920b1aa056ae8d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _relativeTo: {fileID: 7058081314285251572}
   _surface: {fileID: 0}
+  _relativeTo: {fileID: 7058081314285251572}
   _usesHandPose: 1
   _handPose:
     _handedness: 1
@@ -468,13 +468,11 @@ MonoBehaviour:
   id: 0
   num: 0
   canPlay: 1
-  parentTrans: {fileID: 0}
-  isSet: 0
   pointableUnityEventWrapper: {fileID: 1440455176822453505}
   inHand: 0
   isPut: 1
   isAdd: 0
-  originalRotation: {x: 0.5421295, y: 0.4539775, z: -0.5421295, w: 0.4539775}
+  ownerID: 0
 --- !u!65 &6060959427465947901
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -888,8 +886,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622db80eec0bd344f920b1aa056ae8d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _relativeTo: {fileID: 7058081314285251572}
   _surface: {fileID: 0}
+  _relativeTo: {fileID: 7058081314285251572}
   _usesHandPose: 1
   _handPose:
     _handedness: 1
@@ -956,8 +954,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622db80eec0bd344f920b1aa056ae8d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _relativeTo: {fileID: 7058081314285251572}
   _surface: {fileID: 0}
+  _relativeTo: {fileID: 7058081314285251572}
   _usesHandPose: 1
   _handPose:
     _handedness: 1
@@ -1024,8 +1022,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622db80eec0bd344f920b1aa056ae8d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _relativeTo: {fileID: 7058081314285251572}
   _surface: {fileID: 0}
+  _relativeTo: {fileID: 7058081314285251572}
   _usesHandPose: 1
   _handPose:
     _handedness: 1

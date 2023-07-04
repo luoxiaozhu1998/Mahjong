@@ -2,13 +2,13 @@ using UnityEngine;
 
 public class AddTrigger : MonoBehaviour
 {
-    private void OnTriggerEnter(Collider other)
+    private void OnTriggerStay(Collider other)
     {
         if (other.CompareTag("Mahjong"))
         {
             var attr = other.GetComponent<MahjongAttr>();
-            attr.isAdd = true;
             attr.isPut = false;
+            attr.isAdd = true;
         }
     }
 
@@ -17,8 +17,8 @@ public class AddTrigger : MonoBehaviour
         if (other.CompareTag("Mahjong"))
         {
             var attr = other.GetComponent<MahjongAttr>();
-            attr.isAdd = false;
             attr.isPut = true;
+            attr.isAdd = false;
         }
     }
 }

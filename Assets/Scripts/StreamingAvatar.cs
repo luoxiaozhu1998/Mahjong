@@ -5,7 +5,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Manager;
 using Oculus.Avatar2;
+using TMPro;
+using Unity.Mathematics;
 #if USING_XR_SDK
 using System.Reflection;
 using Photon.Pun;
@@ -99,6 +102,7 @@ public class StreamingAvatar : OvrAvatarEntity
 
     private Stopwatch _loadTime = new Stopwatch();
     private PhotonView _photonView;
+    private string _userName;
 
     protected override void Awake()
     {
@@ -190,6 +194,7 @@ public class StreamingAvatar : OvrAvatarEntity
     {
         var instantiationData = _photonView.InstantiationData;
         _userId = Convert.ToUInt64(instantiationData[0]);
+        _userName = instantiationData[1].ToString();
         yield return LoadUserAvatar();
     }
 
@@ -549,6 +554,14 @@ public class StreamingAvatar : OvrAvatarEntity
             StartCoroutine(StreamAvatarData());
         }
 
+        var anchor = transform.GetChild(0);
+        var playerNamePrefab = PhotonNetwork.Instantiate("PlayerNamePrefab", Vector3.zero, quaternion.identity)
+            .transform;
+        playerNamePrefab.SetParent(anchor);
+        playerNamePrefab.SetLocalPositionAndRotation(Vector3.zero, quaternion.identity);
+        playerNamePrefab.GetComponentInChildren<TMP_Text>().text = _userName;
+        var rect = playerNamePrefab as RectTransform;
+        if (rect != null) rect.anchoredPosition3D = Vector3.zero;
         // Check for changes unless a local asset is configured, user could create one later
         // If a local asset is loaded, it will currently conflict w/ the CDN asset
         if (_autoCheckChanges && (hasFoundAvatar || !HasLocalAvatarConfigured))

@@ -35,8 +35,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -94.0001, y: 0}
-  m_SizeDelta: {x: 600, y: 24}
+  m_AnchoredPosition: {x: -124.41998, y: -0.0002861}
+  m_SizeDelta: {x: 267.7511, y: 65.04}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1565310602832307089
 CanvasRenderer:
@@ -68,8 +68,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Fudan-VR-TA1
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 581c047ed60765249b12f37ff2895497, type: 2}
-  m_sharedMaterial: {fileID: 21082280118058838, guid: 581c047ed60765249b12f37ff2895497, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: aa605a172e4b03b42ac520c519fedf61, type: 2}
+  m_sharedMaterial: {fileID: -5459410016884986833, guid: aa605a172e4b03b42ac520c519fedf61, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -93,10 +93,10 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
+  m_fontSize: 35.45
   m_fontSizeBase: 36
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 1
@@ -170,8 +170,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 146, y: 0}
-  m_SizeDelta: {x: 600, y: 24}
+  m_AnchoredPosition: {x: 172.96872, y: -0.0002822797}
+  m_SizeDelta: {x: 198.792, y: 65.04}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8576441452553413534
 CanvasRenderer:
@@ -201,10 +201,10 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Score +10
+  m_text: "\u5206\u6570 +10"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 581c047ed60765249b12f37ff2895497, type: 2}
-  m_sharedMaterial: {fileID: 21082280118058838, guid: 581c047ed60765249b12f37ff2895497, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: aa605a172e4b03b42ac520c519fedf61, type: 2}
+  m_sharedMaterial: {fileID: -5459410016884986833, guid: aa605a172e4b03b42ac520c519fedf61, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

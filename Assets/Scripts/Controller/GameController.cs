@@ -230,6 +230,7 @@ namespace Controller
             myPlayerController.MyMahjong[nowTile].Add(newGo);
             SortMyMahjong();
             photonView.RPC(nameof(DestroyItem), RpcTarget.All);
+            EnableHandGrab();
         }
 
         public override void OnLeftRoom()
@@ -302,23 +303,19 @@ namespace Controller
             }
 
             var pongButton = _playerButtons[myPlayerController.playerID - 1].GetChild(0).GetChild(2)
-                .GetChild(1)
-                .GetChild(0).GetChild(0);
+                .GetChild(1).GetChild(0).GetChild(0);
             pongButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect
                 .AddListener(SolvePong);
             var kongButton = _playerButtons[myPlayerController.playerID - 1].GetChild(1).GetChild(2)
-                .GetChild(1)
-                .GetChild(0).GetChild(0);
+                .GetChild(1).GetChild(0).GetChild(0);
             kongButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect
                 .AddListener(SolveKong);
             var winButton = _playerButtons[myPlayerController.playerID - 1].GetChild(2).GetChild(2)
-                .GetChild(1)
-                .GetChild(0).GetChild(0);
+                .GetChild(1).GetChild(0).GetChild(0);
             winButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect
                 .AddListener(SolveWin);
             var skipButton = _playerButtons[myPlayerController.playerID - 1].GetChild(3).GetChild(2)
-                .GetChild(1)
-                .GetChild(0).GetChild(0);
+                .GetChild(1).GetChild(0).GetChild(0);
             skipButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect
                 .AddListener(SolveSkip);
             // _confirmButton = _playerButtons[myPlayerController.playerID - 1].GetChild(4)
@@ -336,11 +333,6 @@ namespace Controller
             }
 
             nowTurn = 1;
-            // if (!PhotonNetwork.IsMasterClient) return;
-            // foreach (var item in _mahjong[0].GetComponentsInChildren<HandGrabInteractable>())
-            // {
-            //     item.enabled = true;
-            // }
         }
 
         [PunRPC]
@@ -450,7 +442,7 @@ namespace Controller
 
         private void AddMahjongToHand(MahjongAttr attr)
         {
-            attr.inHand = true;
+            attr.inMyHand = true;
             if (!myPlayerController.MyMahjong.ContainsKey(attr.id))
             {
                 myPlayerController.MyMahjong[attr.id] = new List<GameObject>();
@@ -458,13 +450,20 @@ namespace Controller
 
             attr.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.None;
             attr.num = 1;
+            attr.inMyHand = true;
+            attr.inOthersHand = false;
+            attr.photonView.RPC(nameof(attr.RPCSetInMyHand), RpcTarget.Others, false);
+            attr.photonView.RPC(nameof(attr.RPCSetInOthersHand), RpcTarget.Others, true);
+            attr.photonView.RPC(nameof(attr.RPCSetOnDesk), RpcTarget.All, false);
+            attr.photonView.RPC(nameof(attr.RPCSetIsThrown), RpcTarget.All, false);
+            attr.gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
+            attr.photonView.RPC(nameof(attr.RPCSetLayer), RpcTarget.Others, LayerMask.NameToLayer("Mahjong"));
             myPlayerController.MyMahjong[attr.id].Add(attr.gameObject);
             //新牌，把所有监听事件移除，然后添加监听事件
             attr.pointableUnityEventWrapper.WhenUnselect.RemoveAllListeners();
             attr.pointableUnityEventWrapper.WhenSelect.RemoveAllListeners();
             attr.pointableUnityEventWrapper.WhenUnselect.AddListener(attr.OnPut);
             attr.pointableUnityEventWrapper.WhenSelect.AddListener(attr.OnGrab);
-            attr.photonView.RPC(nameof(attr.SetOwnerID), RpcTarget.All, myPlayerController.playerID);
             foreach (var item in attr.GetComponentsInChildren<HandGrabInteractable>())
             {
                 item.enabled = true;
@@ -494,9 +493,7 @@ namespace Controller
                         .TransferOwnership(PhotonNetwork.LocalPlayer);
                     DOTween.Sequence().Insert(0f,
                                 _mahjong[0].transform.DOMove(myPlayerController.putPos, 1f)).Insert(
-                                0f,
-                                _mahjong[0].transform
-                                    .DORotate(GameManager.Instance.GetRotateList()[id - 1], 1f))
+                                0f, _mahjong[0].transform.DORotate(GameManager.Instance.GetRotateList()[id - 1], 1f))
                             .SetEase(Ease.Linear)
                             .onComplete +=
                         _mahjong[0].GetComponent<Rigidbody>().Sleep;
@@ -548,7 +545,6 @@ namespace Controller
             {
                 myPlayerController = playerController;
                 myPlayerController.playerID = index;
-                myPlayerController.SetPlayerStrategy();
                 myPlayerController.putPos =
                     GameManager.Instance.GetNewPositions()[myPlayerController.playerID - 1];
                 if (!PhotonNetwork.IsMasterClient) continue;
@@ -636,6 +632,36 @@ namespace Controller
             }
         }
 
+        private void DisableHandGrab()
+        {
+            foreach (var pair in myPlayerController.MyMahjong)
+            {
+                foreach (var mahjong in pair.Value)
+                {
+                    var handGrabInteractables = mahjong.GetComponentsInChildren<HandGrabInteractable>();
+                    foreach (var handGrabInteractable in handGrabInteractables)
+                    {
+                        handGrabInteractable.enabled = false;
+                    }
+                }
+            }
+        }
+
+        private void EnableHandGrab()
+        {
+            foreach (var pair in myPlayerController.MyMahjong)
+            {
+                foreach (var mahjong in pair.Value)
+                {
+                    var handGrabInteractables = mahjong.GetComponentsInChildren<HandGrabInteractable>();
+                    foreach (var handGrabInteractable in handGrabInteractables)
+                    {
+                        handGrabInteractable.enabled = true;
+                    }
+                }
+            }
+        }
+
         [PunRPC]
         private void CanP(int id)
         {
@@ -643,6 +669,7 @@ namespace Controller
             _playerButtons[id - 1].GetChild(3).gameObject.SetActive(true);
             if (myPlayerController.playerID != id) return;
             _canPong = true;
+            DisableHandGrab();
         }
 
         [PunRPC]
@@ -652,6 +679,7 @@ namespace Controller
             _playerButtons[id - 1].GetChild(3).gameObject.SetActive(true);
             if (myPlayerController.playerID != id) return;
             _canKong = true;
+            DisableHandGrab();
         }
 
         [PunRPC]
@@ -665,6 +693,7 @@ namespace Controller
             _playerButtons[id - 1].GetChild(3).gameObject.SetActive(true);
             if (myPlayerController.playerID != id) return;
             _canWin = true;
+            DisableHandGrab();
         }
 
         [PunRPC]
@@ -676,6 +705,7 @@ namespace Controller
             if (myPlayerController.playerID != id) return;
             _canPong = true;
             _canKong = true;
+            DisableHandGrab();
         }
 
         [PunRPC]
@@ -687,6 +717,7 @@ namespace Controller
             if (myPlayerController.playerID != id) return;
             _canPong = true;
             _canWin = true;
+            DisableHandGrab();
         }
 
         [PunRPC]
@@ -698,6 +729,7 @@ namespace Controller
             if (myPlayerController.playerID != id) return;
             _canKong = true;
             _canWin = true;
+            DisableHandGrab();
         }
 
         [PunRPC]
@@ -711,6 +743,7 @@ namespace Controller
             _canKong = true;
             _canKong = true;
             _canWin = true;
+            DisableHandGrab();
         }
 
         [PunRPC]
@@ -773,7 +806,7 @@ namespace Controller
             {
                 var script = go.GetComponent<MahjongAttr>();
                 //这些牌不能再被拿起来
-                script.photonView.RPC(nameof(script.SetState), RpcTarget.All, false);
+                script.photonView.RPC(nameof(script.SetState), RpcTarget.All);
                 //把牌移动到指定的位置
                 go.transform.DOMove(myPlayerController.putPos, 1f);
                 //旋转牌
@@ -794,7 +827,7 @@ namespace Controller
             var attr = newGo.GetComponent<MahjongAttr>();
             attr.num = 0;
             //这个牌也不能在被抓取
-            attr.photonView.RPC(nameof(attr.SetState), RpcTarget.All, false);
+            attr.photonView.RPC(nameof(attr.SetState), RpcTarget.All);
             myPlayerController.MyMahjong[nowTile].Add(newGo);
             //整理牌
             SortMyMahjong();
@@ -802,6 +835,7 @@ namespace Controller
             photonView.RPC(nameof(DestroyItem), RpcTarget.All);
             myPlayerController.putPos -=
                 GameManager.Instance.GetBias()[myPlayerController.playerID - 1];
+            EnableHandGrab();
         }
 
         [PunRPC]
@@ -814,17 +848,6 @@ namespace Controller
             Destroy(destroyGo);
         }
 
-        // private enum OperationCode
-        // {
-        //     None = 0,
-        //     Pong = 1,
-        //     Kong = 2,
-        //     Win = 3,
-        //     PongAndKong = 4,
-        //     PongAndWin = 5,
-        //     KongAndWin = 6,
-        //     PongAndKongAndWin = 7
-        // }
         public int CheckMyState(int id)
         {
             var ans = 0;
@@ -914,11 +937,6 @@ namespace Controller
             }
 
             return cnt2 + cnt3 + cnt4 == 5 && cnt2 == 1;
-        }
-
-        public void SetCamera(Camera canvasCamera)
-        {
-            canvas.GetComponent<Canvas>().worldCamera = canvasCamera;
         }
     }
 }

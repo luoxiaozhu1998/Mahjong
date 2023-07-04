@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 19342501}
   - component: {fileID: 19342502}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: HandGrabInteractable
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -84,7 +84,7 @@ GameObject:
   m_Component:
   - component: {fileID: 322727089}
   - component: {fileID: 322727090}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: HandGrabPose
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -152,7 +152,7 @@ GameObject:
   m_Component:
   - component: {fileID: 613213775}
   - component: {fileID: 613213776}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: HandGrabInteractable
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -226,7 +226,7 @@ GameObject:
   m_Component:
   - component: {fileID: 699974099}
   - component: {fileID: 699974100}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: HandGrabPose
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -294,7 +294,7 @@ GameObject:
   m_Component:
   - component: {fileID: 763622933}
   - component: {fileID: 763622934}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: HandGrabInteractable
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -368,7 +368,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1121588264}
   - component: {fileID: 1121588265}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: HandGrabPose
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -436,7 +436,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1133505200}
   - component: {fileID: 1133505201}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: HandGrabInteractable
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -510,7 +510,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1905164765}
   - component: {fileID: 1905164766}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: HandGrabPose
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -587,7 +587,7 @@ GameObject:
   - component: {fileID: 1759526425279524365}
   - component: {fileID: 7000464087585777197}
   - component: {fileID: -7850915384943119523}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: mahjong_tile_15
   m_TagString: Mahjong
   m_Icon: {fileID: 0}
@@ -683,6 +683,7 @@ MonoBehaviour:
   inHand: 0
   isPut: 0
   isAdd: 0
+  onDesk: 1
   ownerID: 0
 --- !u!54 &8786547949634161997
 Rigidbody:

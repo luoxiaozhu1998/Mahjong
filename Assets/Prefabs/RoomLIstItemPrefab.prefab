@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 84181907369483666}
   - component: {fileID: 84181907369483667}
   - component: {fileID: 5759568368557423467}
+  - component: {fileID: -6949031837270760038}
   m_Layer: 5
   m_Name: RoomLIstItemPrefab
   m_TagString: Untagged
@@ -148,6 +149,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   text: {fileID: 84181908487889283}
+--- !u!65 &-6949031837270760038
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 84181907369483373}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 600, y: 50, z: 2}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &84181908487889309
 GameObject:
   m_ObjectHideFlags: 0
@@ -214,10 +228,10 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Room Name
+  m_text: "\u623F\u95F4\u540D\u79F0"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 581c047ed60765249b12f37ff2895497, type: 2}
-  m_sharedMaterial: {fileID: 21082280118058838, guid: 581c047ed60765249b12f37ff2895497, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: aa605a172e4b03b42ac520c519fedf61, type: 2}
+  m_sharedMaterial: {fileID: -5459410016884986833, guid: aa605a172e4b03b42ac520c519fedf61, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -241,7 +255,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 39.15
+  m_fontSize: 34.5
   m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 1

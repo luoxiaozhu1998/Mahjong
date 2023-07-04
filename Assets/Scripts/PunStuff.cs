@@ -13,8 +13,8 @@ public class PunStuff : MonoBehaviourPunCallbacks
     [Header("Buttons")] public Button startGameButton;
     [Header("UIs")] public TMP_InputField roomNameInputField;
     public TMP_Text roomNameText;
-    public TMP_InputField ipAddressInputField;
-    public TMP_InputField userNameInputField;
+    [SerializeField] private TMP_InputField ipAddressInputField;
+    [SerializeField] private TMP_InputField userNameInputField;
     public Transform roomListContent;
     public Transform playerListContent;
     [Header("Prefabs")] [SerializeField] private GameObject roomLIstItemPrefab;
@@ -32,8 +32,16 @@ public class PunStuff : MonoBehaviourPunCallbacks
     private const string FindRoomMenuName = "FindRoomMenu";
     private const string StartMenuName = "StartMenu";
     public ServerSettings serverSettings;
+    private bool _isStartGameButtonNull;
+    private bool _isRoomListContentNull;
     private const string UserNameKey = "UserName";
     private const string IPAddressKey = "IPAddress";
+
+    private void Start()
+    {
+        _isRoomListContentNull = roomListContent == null;
+        _isStartGameButtonNull = startGameButton == null;
+    }
 
     private void Awake()
     {
@@ -48,8 +56,14 @@ public class PunStuff : MonoBehaviourPunCallbacks
         GameManager.Instance.OpenMenu(!PhotonNetwork.IsConnected ? "StartMenu" : "TitleMenu");
     }
 
+    private void Update()
+    {
+        Debug.Log(ipAddressInputField.text);
+    }
+
     public void JoinLobby()
     {
+        Debug.Log(ipAddressInputField.text);
         serverSettings.AppSettings.Server = ipAddressInputField.text;
         GameManager.Instance.SetPlayerName(userNameInputField.text);
         PlayerPrefs.SetString(IPAddressKey, ipAddressInputField.text);
@@ -57,25 +71,6 @@ public class PunStuff : MonoBehaviourPunCallbacks
         GameManager.Instance.OpenMenu("LoadingMenu");
         PhotonNetwork.ConnectUsingSettings();
     }
-
-    // public override void OnEnable()
-    // {
-    //     base.OnEnable();
-    //     SceneManager.sceneLoaded += OnSceneLoaded;
-    // }
-    //
-    // public override void OnDisable()
-    // {
-    //     base.OnDisable();
-    //     SceneManager.sceneLoaded -= OnSceneLoaded;
-    // }
-    //
-    // private void OnSceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
-    // {
-    //     if (scene.buildIndex != 2) return; //we are in the game scene
-    //     GameManager.Instance.InitWhenStart();
-    //     GameController.Instance.StartGame();
-    // }
 
     public override void OnConnectedToMaster()
     {
@@ -93,13 +88,21 @@ public class PunStuff : MonoBehaviourPunCallbacks
 
     public void CreateRoom()
     {
-        // if (string.IsNullOrEmpty(roomNameInputField.text))
-        // {
-        //     return;
-        // }
-
+#if !UNITY_EDITOR
+        if (string.IsNullOrEmpty(roomNameInputField.text))
+        {
+            return;
+        }
+#endif
         PhotonNetwork.CreateRoom(roomNameInputField.text, new RoomOptions {MaxPlayers = 4});
         GameManager.Instance.OpenMenu("LoadingMenu");
+    }
+
+    /// <summary>
+    /// 房主创建房间后，加载麻将
+    /// </summary>
+    public override void OnCreatedRoom()
+    {
         GameManager.Instance.LoadMahjong();
     }
 
@@ -120,21 +123,6 @@ public class PunStuff : MonoBehaviourPunCallbacks
                 .Setup(t);
         }
 
-        // for (var i = 0; i < players.Length; i++)
-        // {
-        //     if (PhotonNetwork.IsMasterClient)
-        //     {
-        //         players[i].NickName = "Fudan-VR-TA" + 1;
-        //     }
-        //     else
-        //     {
-        //         players[i].NickName = "Fudan-VR-TA" + 2;
-        //     }
-        //
-        //     Instantiate(playerLIstItemPrefab, _playerListContent).GetComponent<PlayerListItem>()
-        //         .Setup(players[i]);
-        // }
-
         startGameButton.gameObject.SetActive(PhotonNetwork.IsMasterClient);
     }
 
@@ -149,21 +137,33 @@ public class PunStuff : MonoBehaviourPunCallbacks
         GameManager.Instance.OpenMenu("TitleMenu");
     }
 
+    /// <summary>
+    /// 房间列表信息改变，更新房间列表
+    /// </summary>
+    /// <param name="roomList">房间列表</param>
     public override void OnRoomListUpdate(List<RoomInfo> roomList)
     {
-        if (roomList.Count <= 0 || roomListContent == null) return;
+        if (roomList.Count <= 0 || _isRoomListContentNull) return;
         foreach (Transform t in roomListContent)
         {
             Destroy(t.gameObject);
         }
 
-        foreach (var info in roomList.Where(info => !info.RemovedFromList))
+        foreach (var info in roomList)
         {
-            Instantiate(roomLIstItemPrefab, roomListContent).GetComponent<RoomListItem>()
-                .SetUp(info);
+            if (!info.RemovedFromList)
+            {
+                Instantiate(roomLIstItemPrefab, roomListContent)
+                    .GetComponent<RoomListItem>()
+                    .SetUp(info);
+            }
         }
     }
 
+    /// <summary>
+    /// 新玩家加入房间后，给已经在房间的玩家的玩家列表中生成对应的prefab
+    /// </summary>
+    /// <param name="newPlayer">新玩家的信息</param>
     public override void OnPlayerEnteredRoom(Player newPlayer)
     {
         Instantiate(playerLIstItemPrefab, playerListContent)
@@ -171,6 +171,9 @@ public class PunStuff : MonoBehaviourPunCallbacks
             .Setup(newPlayer);
     }
 
+    /// <summary>
+    /// 开始游戏的按钮绑定函数
+    /// </summary>
     public void StartGame()
     {
         //只有房主能点击
@@ -178,15 +181,20 @@ public class PunStuff : MonoBehaviourPunCallbacks
         PhotonNetwork.LoadLevel(2);
     }
 
+    /// <summary>
+    /// 当房主切换时，让新房主加载麻将，同时切换开始游戏按钮的隐藏和显示
+    /// </summary>
+    /// <param name="newMasterClient">新房主</param>
     public override void OnMasterClientSwitched(Player newMasterClient)
     {
-        if (startGameButton == null) return;
-        if (PhotonNetwork.IsMasterClient)
+        var flag = Equals(PhotonNetwork.LocalPlayer, newMasterClient);
+        if (flag)
         {
             GameManager.Instance.LoadMahjong();
         }
 
-        startGameButton.gameObject.SetActive(PhotonNetwork.IsMasterClient);
+        if (_isStartGameButtonNull) return;
+        startGameButton.gameObject.SetActive(flag);
     }
 
     public void BackToTitleMenu()
