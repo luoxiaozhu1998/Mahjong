@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Photon.Pun;
-using PlayerAttr;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour

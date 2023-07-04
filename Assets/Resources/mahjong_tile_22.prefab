@@ -680,11 +680,12 @@ MonoBehaviour:
   num: 0
   canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!54 &24572112301697906
 Rigidbody:
   m_ObjectHideFlags: 0

@@ -2904,7 +2904,7 @@ MonoBehaviour:
   roomNameText: {fileID: 1181162501}
   ipAddressInputField: {fileID: 446794554}
   userNameInputField: {fileID: 1915537963}
-  roomListContent: {fileID: 1382187267}
+  roomListContent: {fileID: 2032093110}
   playerListContent: {fileID: 1382187267}
   roomLIstItemPrefab: {fileID: 84181907369483373, guid: 0b0d60d96022a924eaa3ebdae9e7140d, type: 3}
   playerLIstItemPrefab: {fileID: 134825414515928773, guid: e5d73a41d29331947a16c462ee235c44, type: 3}
@@ -5003,7 +5003,6 @@ MonoBehaviour:
     m_Bits: 32
   _camera: {fileID: 0}
   GazeIcon: {fileID: 1836058279}
-  _hand: {fileID: 154898069}
 --- !u!114 &1893014924
 MonoBehaviour:
   m_ObjectHideFlags: 0

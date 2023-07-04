@@ -56,14 +56,8 @@ public class PunStuff : MonoBehaviourPunCallbacks
         GameManager.Instance.OpenMenu(!PhotonNetwork.IsConnected ? "StartMenu" : "TitleMenu");
     }
 
-    private void Update()
-    {
-        Debug.Log(ipAddressInputField.text);
-    }
-
     public void JoinLobby()
     {
-        Debug.Log(ipAddressInputField.text);
         serverSettings.AppSettings.Server = ipAddressInputField.text;
         GameManager.Instance.SetPlayerName(userNameInputField.text);
         PlayerPrefs.SetString(IPAddressKey, ipAddressInputField.text);
@@ -149,14 +143,11 @@ public class PunStuff : MonoBehaviourPunCallbacks
             Destroy(t.gameObject);
         }
 
-        foreach (var info in roomList)
+        foreach (var info in roomList.Where(info => !info.RemovedFromList))
         {
-            if (!info.RemovedFromList)
-            {
-                Instantiate(roomLIstItemPrefab, roomListContent)
-                    .GetComponent<RoomListItem>()
-                    .SetUp(info);
-            }
+            Instantiate(roomLIstItemPrefab, roomListContent)
+                .GetComponent<RoomListItem>()
+                .SetUp(info);
         }
     }
 
