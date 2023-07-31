@@ -20,7 +20,6 @@ using UnityEditor;
 public class SampleAvatarEntity : OvrAvatarEntity
 {
     private const string logScope = "sampleAvatar";
-
     public enum AssetSource
     {
         /// Load from one of the preloaded .zip files
@@ -38,28 +37,24 @@ public class SampleAvatarEntity : OvrAvatarEntity
     }
 
     [Header("Sample Avatar Entity")]
-    [Tooltip(
-        "Attempt to load the Avatar model file from the Content Delivery Network (CDN) based on a userID, as opposed to loading from disc.")]
+    [Tooltip("Attempt to load the Avatar model file from the Content Delivery Network (CDN) based on a userID, as opposed to loading from disc.")]
     [SerializeField]
     private bool _loadUserFromCdn = true;
 
-    [Tooltip(
-        "Make initial requests for avatar and then defer loading until other avatars can make their requests.")]
+    [Tooltip("Make initial requests for avatar and then defer loading until other avatars can make their requests.")]
     [SerializeField]
     private bool _deferLoading = false;
 
     [Header("Assets")]
-    [Tooltip(
-        "Asset paths to load, and whether each asset comes from a preloaded zip file or directly from StreamingAssets. See Preset Asset settings on OvrAvatarManager for how this maps to the real file name.")]
+    [Tooltip("Asset paths to load, and whether each asset comes from a preloaded zip file or directly from StreamingAssets. See Preset Asset settings on OvrAvatarManager for how this maps to the real file name.")]
     [SerializeField]
-    private List<AssetData> _assets = new List<AssetData>
-        {new AssetData {source = AssetSource.Zip, path = "0"}};
+    private List<AssetData> _assets = new List<AssetData> { new AssetData { source = AssetSource.Zip, path = "0" } };
 
-    [Tooltip("Adds an underscore between the path and the postfix.")] [SerializeField]
+    [Tooltip("Adds an underscore between the path and the postfix.")]
+    [SerializeField]
     private bool _underscorePostfix = true;
 
-    [Tooltip(
-        "Filename Postfix (WARNING: Typically the postfix is Platform specific, such as \"_rift.glb\")")]
+    [Tooltip("Filename Postfix (WARNING: Typically the postfix is Platform specific, such as \"_rift.glb\")")]
     [SerializeField]
     private string _overridePostfix = String.Empty;
 
@@ -68,10 +63,13 @@ public class SampleAvatarEntity : OvrAvatarEntity
     [SerializeField]
     protected bool _autoCdnRetry = true;
 
-    [Tooltip("Automatically check for avatar changes")] [SerializeField]
+    [Tooltip("Automatically check for avatar changes")]
+    [SerializeField]
     protected bool _autoCheckChanges = false;
 
-    [Tooltip("How frequently to check for avatar changes")] [SerializeField] [Range(4.0f, 320.0f)]
+    [Tooltip("How frequently to check for avatar changes")]
+    [SerializeField]
+    [Range(4.0f, 320.0f)]
     private float _changeCheckInterval = 8.0f;
 
 #pragma warning disable CS0414
@@ -80,7 +78,8 @@ public class SampleAvatarEntity : OvrAvatarEntity
     [SerializeField]
     private bool _debugDrawGazePos;
 
-    [Tooltip("Color for gaze debug visualization")] [SerializeField]
+    [Tooltip("Color for gaze debug visualization")]
+    [SerializeField]
     private Color _debugDrawGazePosColor = Color.magenta;
 #pragma warning restore CS0414
 
@@ -116,17 +115,15 @@ public class SampleAvatarEntity : OvrAvatarEntity
         // OVRPlugin.StartEyeTracking();
         // OVRPlugin.StartFaceTracking();
         // We use reflection here so that there are not compiler errors when using Oculus SDK v45 or below.
-        typeof(OVRPlugin).GetMethod("StartFaceTracking", BindingFlags.Public | BindingFlags.Static)
-            ?.Invoke(null, null);
-        typeof(OVRPlugin).GetMethod("StartEyeTracking", BindingFlags.Public | BindingFlags.Static)
-            ?.Invoke(null, null);
-        typeof(OVRPlugin).GetMethod("StartBodyTracking", BindingFlags.Public | BindingFlags.Static)
-            ?.Invoke(null, null);
+        typeof(OVRPlugin).GetMethod("StartFaceTracking", BindingFlags.Public | BindingFlags.Static)?.Invoke(null, null);
+        typeof(OVRPlugin).GetMethod("StartEyeTracking", BindingFlags.Public | BindingFlags.Static)?.Invoke(null, null);
+        typeof(OVRPlugin).GetMethod("StartBodyTracking", BindingFlags.Public | BindingFlags.Static)?.Invoke(null, null);
 #endif
     }
 
     protected virtual IEnumerator Start()
     {
+
         if (!_deferLoading)
         {
             if (_loadUserFromCdn)
@@ -173,7 +170,6 @@ public class SampleAvatarEntity : OvrAvatarEntity
     }
 
     #region Loading
-
     private IEnumerator LoadCdnAvatar()
     {
 #if USING_XR_SDK
@@ -187,8 +183,7 @@ public class SampleAvatarEntity : OvrAvatarEntity
         {
             if (OvrPlatformInit.status == OvrPlatformInitStatus.Failed)
             {
-                OvrAvatarLog.LogError(
-                    $"Error initializing OvrPlatform. Falling back to local avatar", logScope);
+                OvrAvatarLog.LogError($"Error initializing OvrPlatform. Falling back to local avatar", logScope);
                 LoadLocalAvatar();
                 yield break;
             }
@@ -210,18 +205,13 @@ public class SampleAvatarEntity : OvrAvatarEntity
                 else
                 {
                     var e = message.GetError();
-                    OvrAvatarLog.LogError(
-                        $"Error loading CDN avatar: {e.Message}. Falling back to local avatar",
-                        logScope);
+                    OvrAvatarLog.LogError($"Error loading CDN avatar: {e.Message}. Falling back to local avatar", logScope);
                 }
 
                 getUserIdComplete = true;
             });
 
-            while (!getUserIdComplete)
-            {
-                yield return null;
-            }
+            while (!getUserIdComplete) { yield return null; }
         }
 #endif
         yield return LoadUserAvatar();
@@ -269,11 +259,9 @@ public class SampleAvatarEntity : OvrAvatarEntity
             bool isFromZip = (asset.source == AssetSource.Zip);
 
             string assetPostfix = (_underscorePostfix ? "_" : "")
-                                  + OvrAvatarManager.Instance.GetPlatformGLBPostfix(isFromZip)
-                                  + OvrAvatarManager.Instance.GetPlatformGLBVersion(
-                                      _creationInfo.renderFilters.highQualityFlags !=
-                                      CAPI.ovrAvatar2EntityHighQualityFlags.None, isFromZip)
-                                  + OvrAvatarManager.Instance.GetPlatformGLBExtension(isFromZip);
+                + OvrAvatarManager.Instance.GetPlatformGLBPostfix(isFromZip)
+                + OvrAvatarManager.Instance.GetPlatformGLBVersion(_creationInfo.renderFilters.highQualityFlags != CAPI.ovrAvatar2EntityHighQualityFlags.None, isFromZip)
+                + OvrAvatarManager.Instance.GetPlatformGLBExtension(isFromZip);
             if (!String.IsNullOrEmpty(_overridePostfix))
             {
                 assetPostfix = _overridePostfix;
@@ -290,7 +278,6 @@ public class SampleAvatarEntity : OvrAvatarEntity
             }
         }
     }
-
     #endregion
 
     public void ReloadAvatarManually(string newAssetPaths, AssetSource newAssetSource)
@@ -307,11 +294,9 @@ public class SampleAvatarEntity : OvrAvatarEntity
 
         bool isFromZip = (newAssetSource == AssetSource.Zip);
         string assetPostfix = (_underscorePostfix ? "_" : "")
-                              + OvrAvatarManager.Instance.GetPlatformGLBPostfix(isFromZip)
-                              + OvrAvatarManager.Instance.GetPlatformGLBVersion(
-                                  _creationInfo.renderFilters.highQualityFlags !=
-                                  CAPI.ovrAvatar2EntityHighQualityFlags.None, isFromZip)
-                              + OvrAvatarManager.Instance.GetPlatformGLBExtension(isFromZip);
+            + OvrAvatarManager.Instance.GetPlatformGLBPostfix(isFromZip)
+            + OvrAvatarManager.Instance.GetPlatformGLBVersion(_creationInfo.renderFilters.highQualityFlags != CAPI.ovrAvatar2EntityHighQualityFlags.None, isFromZip)
+            + OvrAvatarManager.Instance.GetPlatformGLBExtension(isFromZip);
 
         string[] combinedPaths = new string[newAssetPaths.Length];
         for (var index = 0; index < newAssetPaths.Length; index++)
@@ -334,31 +319,29 @@ public class SampleAvatarEntity : OvrAvatarEntity
         StartLoadTimeCounter();
         bool isFromZip = true;
         string assetPostfix = (_underscorePostfix ? "_" : "")
-                              + OvrAvatarManager.Instance.GetPlatformGLBPostfix(isFromZip)
-                              + OvrAvatarManager.Instance.GetPlatformGLBVersion(
-                                  _creationInfo.renderFilters.highQualityFlags !=
-                                  CAPI.ovrAvatar2EntityHighQualityFlags.None, isFromZip)
-                              + OvrAvatarManager.Instance.GetPlatformGLBExtension(isFromZip);
+            + OvrAvatarManager.Instance.GetPlatformGLBPostfix(isFromZip)
+            + OvrAvatarManager.Instance.GetPlatformGLBVersion(_creationInfo.renderFilters.highQualityFlags != CAPI.ovrAvatar2EntityHighQualityFlags.None, isFromZip)
+            + OvrAvatarManager.Instance.GetPlatformGLBExtension(isFromZip);
 
         var assetPath = $"{namePrefix}{preset}{assetPostfix}";
-        return LoadAssetsFromZipSource(new string[] {assetPath});
+        return LoadAssetsFromZipSource(new string[] { assetPath });
     }
 
     #region Fade/Desat
 
-    private static readonly Color AVATAR_FADE_DEFAULT_COLOR =
-        new Color(33 / 255f, 50 / 255f, 99 / 255f, 0f); // "#213263"
-
+    private static readonly Color AVATAR_FADE_DEFAULT_COLOR = new Color(33 / 255f, 50 / 255f, 99 / 255f, 0f); // "#213263"
     private static readonly float AVATAR_FADE_DEFAULT_COLOR_BLEND = 0.7f; // "#213263"
     private static readonly float AVATAR_FADE_DEFAULT_GRAYSCALE_BLEND = 0;
 
-    [Header("Rendering")] [SerializeField] [Range(0, 1)]
+    [Header("Rendering")]
+    [SerializeField]
+    [Range(0, 1)]
     private float shaderGrayToSolidColorBlend_ = AVATAR_FADE_DEFAULT_COLOR_BLEND;
-
-    [SerializeField] [Range(0, 1)]
+    [SerializeField]
+    [Range(0, 1)]
     private float shaderDesatBlend_ = AVATAR_FADE_DEFAULT_GRAYSCALE_BLEND;
-
-    [SerializeField] private Color shaderSolidColor_ = AVATAR_FADE_DEFAULT_COLOR;
+    [SerializeField]
+    private Color shaderSolidColor_ = AVATAR_FADE_DEFAULT_COLOR;
 
     public float ShaderGrayToSolidColorBlend
     {
@@ -401,19 +384,16 @@ public class SampleAvatarEntity : OvrAvatarEntity
         }
     }
 
-    public void SetShaderDesat(float desatBlend, float? grayToSolidBlend = null,
-        Color? solidColor = null)
+    public void SetShaderDesat(float desatBlend, float? grayToSolidBlend = null, Color? solidColor = null)
     {
         if (solidColor.HasValue)
         {
             shaderSolidColor_ = solidColor.Value;
         }
-
         if (grayToSolidBlend.HasValue)
         {
             shaderGrayToSolidColorBlend_ = grayToSolidBlend.Value;
         }
-
         shaderDesatBlend_ = desatBlend;
         UpdateMaterialsWithDesatModifiers();
     }
@@ -440,8 +420,7 @@ public class SampleAvatarEntity : OvrAvatarEntity
     {
         if (!_criticalJointTypes.Contains(jointType))
         {
-            OvrAvatarLog.LogError(
-                $"Can't access joint {jointType} unless it is in critical joint set");
+            OvrAvatarLog.LogError($"Can't access joint {jointType} unless it is in critical joint set");
             return null;
         }
 
@@ -456,12 +435,10 @@ public class SampleAvatarEntity : OvrAvatarEntity
     #endregion
 
     #region Retry
-
     protected void UserHasNoAvatarFallback()
     {
         OvrAvatarLog.LogError(
-            $"Unable to find user avatar with userId {_userId}. Falling back to local avatar.",
-            logScope, this);
+            $"Unable to find user avatar with userId {_userId}. Falling back to local avatar.", logScope, this);
 
         LoadLocalAvatar();
     }
@@ -479,10 +456,7 @@ public class SampleAvatarEntity : OvrAvatarEntity
         do
         {
             var hasAvatarRequest = OvrAvatarManager.Instance.UserHasAvatarAsync(_userId);
-            while (!hasAvatarRequest.IsCompleted)
-            {
-                yield return null;
-            }
+            while (!hasAvatarRequest.IsCompleted) { yield return null; }
 
             switch (hasAvatarRequest.Result)
             {
@@ -628,7 +602,10 @@ public class SampleAvatarEntity : OvrAvatarEntity
     {
         _loadTime.Start();
 
-        OnUserAvatarLoadedEvent.AddListener((OvrAvatarEntity entity) => { _loadTime.Stop(); });
+        OnUserAvatarLoadedEvent.AddListener((OvrAvatarEntity entity) =>
+        {
+            _loadTime.Stop();
+        });
     }
 
     public long GetLoadTimeMs()
@@ -650,10 +627,7 @@ public class SampleAvatarEntity : OvrAvatarEntity
             yield return waitForPollInterval;
 
             var checkTask = HasAvatarChangedAsync();
-            while (!checkTask.IsCompleted)
-            {
-                yield return null;
-            }
+            while (!checkTask.IsCompleted) { yield return null; }
 
             switch (checkTask.Result)
             {
@@ -716,7 +690,6 @@ public class SampleAvatarEntity : OvrAvatarEntity
     #endregion // Change Check
 
     // Debug
-
     #region Debug
 
 #if UNITY_EDITOR
@@ -730,10 +703,7 @@ public class SampleAvatarEntity : OvrAvatarEntity
 
     private void DrawDebugGazePos()
     {
-        if (!IsCreated)
-        {
-            return;
-        }
+        if (!IsCreated) { return; }
 
         var gazePos = GetGazePosition();
         if (gazePos.HasValue)
@@ -747,6 +717,5 @@ public class SampleAvatarEntity : OvrAvatarEntity
         }
     }
 #endif
-
     #endregion
 }

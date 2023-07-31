@@ -1,6 +1,5 @@
 #ifndef OVR_AVATAR_VERTEX_FETCH_INCLUDED
 #define OVR_AVATAR_VERTEX_FETCH_INCLUDED
-
 // TODO*: Documentation here
 
 #include "OvrDecodeFormats.cginc"
@@ -61,12 +60,10 @@ float3 ovrGetAttributeTexCoord(
 
   const float3 coord = float3(float(column), float(row), slice);
   const float3 invSize = float3(
-      u_AttributeTexInvSizeW,
-      u_AttributeTexInvSizeH,
-      u_AttributeTexInvSizeD);
+      u_AttributeTexInvSizeW, u_AttributeTexInvSizeH, u_AttributeTexInvSizeD);
 
   // Compute texture coordinate for texel center
-  return (2.0 * coord + 1.0) * 0.5 * invSize;
+  return (coord + 0.5) * invSize;
 }
 
 float3 ovrGetPositionTexCoord(uint vid, int numAttributes, float slice) {
@@ -81,14 +78,39 @@ float3 ovrGetTangentTexCoord(uint vid, int numAttributes, float slice) {
   return ovrGetAttributeTexCoord(2, vid, numAttributes, slice);
 }
 
+// The original uvw mechanism for sampling the attributes (position/normal/
+// tangents) would do a linear interpolation between 2 sheets of a texture
+// array(w). However, while this is great for interpolating between two
+// frames for motion smoothing, it is not ideal for picking out the percise
+// pixel values in the uv dimensions. Therefore we use this function to take
+// two point samples in UV and manually interpolate.
+//
+// What follows has been tried and tested for about a year in Horizon Workrooms. 
+float4 GetInterpolatedAttribute(uint attributeIndex, uint vid, int numAttributes, float slice) {
+    float lowerSlice = trunc(slice);
+    float higherSlice = lowerSlice + 1;
+    float delta = slice - lowerSlice;
+    float4 pos1 = tex3Dlod(
+        u_AttributeTexture,
+        float4(
+            ovrGetAttributeTexCoord(
+                attributeIndex, vid, numAttributes, lowerSlice),
+            0));
+    float4 pos2 = tex3Dlod(
+        u_AttributeTexture,
+        float4(
+            ovrGetAttributeTexCoord(
+                attributeIndex, vid, numAttributes, higherSlice),
+            0));
+    return lerp(pos1, pos2, delta);
+}
+
 float4 OvrGetVertexPositionFromTexture(
     uint vid,
     int numAttributes,
     bool applyOffsetAndBias,
     float slice) {
-  float4 pos = tex3Dlod(
-      u_AttributeTexture,
-      float4(ovrGetPositionTexCoord(vid, numAttributes, slice), 0));
+  float4 pos = GetInterpolatedAttribute(0, vid, numAttributes, slice);
   [branch]
   if (applyOffsetAndBias) {
     pos = pos * u_AttributeScaleBias.x + u_AttributeScaleBias.y;
@@ -101,9 +123,7 @@ float4 OvrGetVertexNormalFromTexture(
     int numAttributes,
     bool applyOffsetAndBias,
     float slice) {
-  float4 norm = tex3Dlod(
-      u_AttributeTexture,
-      float4(ovrGetNormalTexCoord(vid, numAttributes, slice), 0));
+  float4 norm = GetInterpolatedAttribute(1, vid, numAttributes, slice);
   [branch]
   if (applyOffsetAndBias) {
     norm = norm * u_AttributeScaleBias.x + u_AttributeScaleBias.y;
@@ -116,9 +136,7 @@ float4 OvrGetVertexTangentFromTexture(
     int numAttributes,
     bool applyOffsetAndBias,
     float slice) {
-  float4 tan = tex3Dlod(
-      u_AttributeTexture,
-      float4(ovrGetTangentTexCoord(vid, numAttributes, slice), 0));
+  float4 tan = GetInterpolatedAttribute(2, vid, numAttributes, slice);
   [branch]
   if (applyOffsetAndBias) {
     tan = tan * u_AttributeScaleBias.x + u_AttributeScaleBias.y;

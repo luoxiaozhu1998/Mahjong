@@ -270,7 +270,7 @@ namespace Oculus.Avatar2
 
         internal CAPI.ovrAvatar2EntityId internalEntityId => entityId;
 
-        protected ulong _userId = 0;
+        protected UInt64 _userId = 0;
 
         protected CAPI.ovrAvatar2EntityViewFlags ActiveView { get; set; }
 

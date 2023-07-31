@@ -1988,13 +1988,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &54239131
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5725,7 +5725,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.17100006
+      value: -0.316
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalRotation.w
@@ -5867,7 +5867,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 164865587}
   m_LocalRotation: {x: 0.5, y: -0.5, z: 0.5, w: 0.5}
-  m_LocalPosition: {x: 0, y: 0, z: 0.24976149}
+  m_LocalPosition: {x: 0, y: 0, z: -0.306}
   m_LocalScale: {x: 0.000426075, y: 0.000426075, z: 0.000426075}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -5877,7 +5877,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 90, y: -90, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.036747396, y: -0.018035114}
+  m_AnchoredPosition: {x: -0.0367, y: -0.018035114}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &164865589
@@ -11090,7 +11090,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.022899985
+      value: -0.023
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.y
@@ -11098,7 +11098,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.17100006
+      value: -0.3218
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalRotation.w
@@ -13832,7 +13832,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 363673645}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b7de468011f35ef46a4a195da10f8db9, type: 3}
   m_Name: 
@@ -13843,7 +13843,6 @@ MonoBehaviour:
     m_Bits: 64
   _camera: {fileID: 1252229077}
   GazeIcon: {fileID: 0}
-  _hand: {fileID: 0}
 --- !u!114 &363673648
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15082,7 +15081,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.022899985
+      value: -0.023
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.y
@@ -15090,7 +15089,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.11640003
+      value: -0.3768
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalRotation.w
@@ -18906,7 +18905,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.11640003
+      value: -0.371
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalRotation.w
@@ -20574,7 +20573,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.022899985
+      value: -0.0229
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.y
@@ -20582,7 +20581,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.17100006
+      value: -0.3848
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalRotation.w
@@ -23184,7 +23183,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 547283172}
   m_LocalRotation: {x: 0.5, y: -0.5, z: 0.5, w: 0.5}
-  m_LocalPosition: {x: 0, y: 0, z: 0.24976149}
+  m_LocalPosition: {x: 0, y: 0, z: -0.26}
   m_LocalScale: {x: 0.000426075, y: 0.000426075, z: 0.000426075}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -24143,7 +24142,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -0.5558
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalRotation.w
@@ -24917,7 +24916,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.022899985
+      value: -0.023
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.y
@@ -24925,7 +24924,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.061700016
+      value: -0.4318
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalRotation.w
@@ -26130,7 +26129,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.17100006
+      value: -0.33876142
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalRotation.w
@@ -26630,7 +26629,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.061700016
+      value: -0.426
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalRotation.w
@@ -39240,7 +39239,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -0.50976145
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalRotation.w
@@ -42211,7 +42210,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.0229
+      value: -0.023
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.y
@@ -42219,7 +42218,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -0.4928
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalRotation.w
@@ -56400,7 +56399,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1322673199}
   m_LocalRotation: {x: 0.5, y: -0.5, z: 0.5, w: 0.5}
-  m_LocalPosition: {x: 0, y: 0, z: 0.24976149}
+  m_LocalPosition: {x: 0, y: 0, z: -0.238}
   m_LocalScale: {x: 0.000426075, y: 0.000426075, z: 0.000426075}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -63719,7 +63718,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1524072580}
   m_LocalRotation: {x: 0.5, y: -0.5, z: 0.5, w: 0.5}
-  m_LocalPosition: {x: 0, y: 0, z: 0.24976149}
+  m_LocalPosition: {x: 0, y: 0, z: -0.2438}
   m_LocalScale: {x: 0.000426075, y: 0.000426075, z: 0.000426075}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -63729,7 +63728,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 90, y: -90, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.036747396, y: -0.018035114}
+  m_AnchoredPosition: {x: -0.037, y: -0.018035114}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1524072582
@@ -71343,7 +71342,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.061700016
+      value: -0.44806147
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalRotation.w
@@ -80143,7 +80142,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -0.487
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalRotation.w
@@ -81245,7 +81244,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.11640003
+      value: -0.39336145
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalRotation.w
@@ -83393,7 +83392,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.022899985
+      value: -0.0229
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.y
@@ -83401,7 +83400,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.061700016
+      value: -0.4941
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalRotation.w
@@ -85876,7 +85875,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.022899985
+      value: -0.0229
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.y
@@ -85884,7 +85883,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.11640003
+      value: -0.4394
       objectReference: {fileID: 0}
     - target: {fileID: 7516989854395125638, guid: d2d6934a666a18d46b8b7a3864dc9f63, type: 3}
       propertyPath: m_LocalRotation.w
@@ -89148,13 +89147,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621053874454
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89169,13 +89168,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621057390395
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89190,13 +89189,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621063462678
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89211,13 +89210,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621110791829
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89232,13 +89231,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621112182494
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89253,13 +89252,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621112982663
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89274,13 +89273,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621117023035
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89295,13 +89294,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621152868290
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89316,13 +89315,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621171333289
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89337,13 +89336,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621180692598
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89358,13 +89357,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621181815440
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89379,13 +89378,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621186278726
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89400,13 +89399,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621199968282
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89421,13 +89420,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621233803987
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89442,13 +89441,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621233973174
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89463,13 +89462,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621235372688
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89484,13 +89483,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621289891595
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89505,13 +89504,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621300382526
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89526,13 +89525,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621313867615
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89547,13 +89546,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621316071018
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89568,13 +89567,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621328472424
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89589,13 +89588,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621364434836
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89610,13 +89609,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621409916541
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89631,13 +89630,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621414483098
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89652,13 +89651,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621426959738
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89673,13 +89672,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621455009884
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89694,13 +89693,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621497789836
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89715,13 +89714,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621503448335
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89736,13 +89735,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621512699421
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89757,13 +89756,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621562497559
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89778,13 +89777,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621598552544
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89799,13 +89798,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621646178392
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89820,13 +89819,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621649363123
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89841,13 +89840,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621664537194
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89862,13 +89861,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621668201723
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89883,13 +89882,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621675815147
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89904,13 +89903,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621714596371
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89925,13 +89924,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621716153285
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89946,13 +89945,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621742406657
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89967,13 +89966,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621747077234
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89988,13 +89987,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621752057195
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90009,13 +90008,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621758012346
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90030,13 +90029,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621759985249
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90051,13 +90050,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621770390419
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90072,13 +90071,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621787911767
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90093,13 +90092,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621819071153
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90114,13 +90113,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621822874495
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90135,13 +90134,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621824531131
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90156,13 +90155,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621838183380
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90177,13 +90176,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621848752952
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90198,13 +90197,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621873053761
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90219,13 +90218,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621877033514
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90240,13 +90239,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621887272041
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90261,13 +90260,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621902865440
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90282,13 +90281,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621905957320
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90303,13 +90302,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621914585467
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90324,13 +90323,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621930483285
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90345,13 +90344,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621945633847
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90366,13 +90365,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621950343094
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90387,13 +90386,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946621974059624
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90408,13 +90407,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622006412511
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90429,13 +90428,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622021867594
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90450,13 +90449,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622069762719
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90471,13 +90470,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622087706002
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90492,13 +90491,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622094284223
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90513,13 +90512,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622113641217
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90534,13 +90533,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622138043685
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90555,13 +90554,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622164892334
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90576,13 +90575,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622165498496
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90597,13 +90596,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622173545587
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90618,13 +90617,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622180846465
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90639,13 +90638,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622202974540
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90660,13 +90659,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622243951580
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90681,13 +90680,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622264895074
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90702,13 +90701,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622286656281
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90723,13 +90722,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622297457082
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90744,13 +90743,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622302480062
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90765,13 +90764,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622355879619
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90786,13 +90785,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622356215289
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90807,13 +90806,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622366469109
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90828,13 +90827,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622407208509
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90849,13 +90848,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622434402420
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90870,13 +90869,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622450229064
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90891,13 +90890,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622453802635
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90912,13 +90911,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622454242135
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90933,13 +90932,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622460978370
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90954,13 +90953,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622478368013
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90975,13 +90974,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622491535776
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90996,13 +90995,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622502060648
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91017,13 +91016,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622519659944
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91038,13 +91037,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622526291624
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91059,13 +91058,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622544865409
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91080,13 +91079,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622546900306
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91101,13 +91100,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622554701411
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91122,13 +91121,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622567989149
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91143,13 +91142,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622579404707
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91164,13 +91163,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622586693468
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91185,13 +91184,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622588052430
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91206,13 +91205,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622589556008
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91227,13 +91226,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622620136033
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91248,13 +91247,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622620391805
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91269,13 +91268,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622622140058
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91290,13 +91289,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622627520794
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91311,13 +91310,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622646756337
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91332,13 +91331,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622687191901
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91353,13 +91352,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622708512002
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91374,13 +91373,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622710686458
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91395,13 +91394,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622739212174
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91416,13 +91415,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622752789574
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91437,13 +91436,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622763454141
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91458,13 +91457,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622806046349
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91479,13 +91478,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622822084282
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91500,13 +91499,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622825290609
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91521,13 +91520,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622832168548
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91542,13 +91541,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622838075396
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91563,13 +91562,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622844475135
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91584,13 +91583,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622855115705
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91605,13 +91604,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622889176183
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91626,13 +91625,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622925087468
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91647,13 +91646,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622932234421
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91668,13 +91667,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622938556214
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91689,13 +91688,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622943759737
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91710,13 +91709,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946622974885467
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91731,13 +91730,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946623000042450
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91752,13 +91751,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946623001648018
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91773,13 +91772,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946623036148584
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91794,13 +91793,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946623060618359
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91815,13 +91814,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946623069227637
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91836,13 +91835,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946623069600064
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91857,13 +91856,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946623085412516
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91878,13 +91877,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946623100439069
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91899,13 +91898,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946623111319135
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91920,13 +91919,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946623176016795
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91941,13 +91940,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!114 &589946623177213704
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91962,13 +91961,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   num: 0
-  canPlay: 1
   pointableUnityEventWrapper: {fileID: 0}
-  inHand: 0
+  inMyHand: 0
+  inOthersHand: 0
   isPut: 0
   isAdd: 0
   onDesk: 1
-  ownerID: 0
+  isThrown: 0
 --- !u!1001 &1048928532058932583
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -92077,6 +92076,10 @@ PrefabInstance:
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 8800268584252719849, guid: aef1c0576292a654d97f787500cf0beb, type: 3}
+      propertyPath: _whenSelectedHovered.m_PersistentCalls.m_Calls.Array.data[1].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8800268584252719849, guid: aef1c0576292a654d97f787500cf0beb, type: 3}
       propertyPath: _whenSelectedHovered.m_PersistentCalls.m_Calls.Array.data[2].m_Mode
       value: 1
       objectReference: {fileID: 0}
@@ -92122,7 +92125,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8800268584252719849, guid: aef1c0576292a654d97f787500cf0beb, type: 3}
       propertyPath: _whenSelectedHovered.m_PersistentCalls.m_Calls.Array.data[1].m_MethodName
-      value: ShowEffect
+      value: ShowEyeGaze
       objectReference: {fileID: 0}
     - target: {fileID: 8800268584252719849, guid: aef1c0576292a654d97f787500cf0beb, type: 3}
       propertyPath: _whenSelectedHovered.m_PersistentCalls.m_Calls.Array.data[2].m_MethodName
@@ -92155,6 +92158,10 @@ PrefabInstance:
     - target: {fileID: 8800268584252719849, guid: aef1c0576292a654d97f787500cf0beb, type: 3}
       propertyPath: _whenSelectedHovered.m_PersistentCalls.m_Calls.Array.data[4].m_TargetAssemblyTypeName
       value: PerspectiveEffectCard, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 8800268584252719849, guid: aef1c0576292a654d97f787500cf0beb, type: 3}
+      propertyPath: _whenSelectedHovered.m_PersistentCalls.m_Calls.Array.data[1].m_Arguments.m_BoolArgument
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8800268584252719849, guid: aef1c0576292a654d97f787500cf0beb, type: 3}
       propertyPath: _whenSelectedHovered.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
@@ -123989,6 +123996,10 @@ PrefabInstance:
       propertyPath: addKongButton
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 8947135833163931255, guid: 2409c0bb008105042b399053d45cf550, type: 3}
+      propertyPath: GazeInteractor
+      value: 
+      objectReference: {fileID: 363673647}
     - target: {fileID: 8947135833163931255, guid: 2409c0bb008105042b399053d45cf550, type: 3}
       propertyPath: playerPanelPrefab
       value: 

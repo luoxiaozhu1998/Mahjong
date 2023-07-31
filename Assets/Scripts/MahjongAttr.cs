@@ -1,8 +1,6 @@
-using System;
 using System.Linq;
 using Controller;
 using Oculus.Interaction;
-using Oculus.Interaction.Grab;
 using Oculus.Interaction.HandGrab;
 using Photon.Pun;
 using Unity.Mathematics;
@@ -13,7 +11,6 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
     private PhotonView _photonView;
     public int id;
     public int num;
-    public bool canPlay;
     private Rigidbody _rigidbody;
     [HideInInspector] public PointableUnityEventWrapper pointableUnityEventWrapper;
     private HandGrabInteractable[] _handGrabInteractable;

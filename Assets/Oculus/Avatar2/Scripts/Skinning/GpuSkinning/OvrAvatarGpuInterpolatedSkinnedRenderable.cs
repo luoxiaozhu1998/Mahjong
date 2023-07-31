@@ -33,7 +33,7 @@ namespace Oculus.Skinning.GpuSkinning
         // and enable bilinear filtering to have hardware to the interpolation
         // between depth texels for us
         protected override string LogScope => "OvrAvatarGpuInterpolatedSkinnedRenderable";
-        protected override FilterMode SkinnerOutputFilterMode => FilterMode.Bilinear;
+        protected override FilterMode SkinnerOutputFilterMode => FilterMode.Point;
         protected override int SkinnerOutputDepthTexelsPerSlice => 2;
         protected override bool InterpolateAttributes => true;
 

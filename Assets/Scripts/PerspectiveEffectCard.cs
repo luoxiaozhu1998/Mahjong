@@ -1,14 +1,18 @@
-﻿using Photon.Pun;
+﻿using System.Collections;
+using Photon.Pun;
 using UnityEngine;
 
 public class PerspectiveEffectCard : MonoBehaviour
 {
     private PhotonView _photonView;
 
+
     private void Awake()
     {
         _photonView = GetComponent<PhotonView>();
     }
+
+
 
     public void DestroyThis()
     {

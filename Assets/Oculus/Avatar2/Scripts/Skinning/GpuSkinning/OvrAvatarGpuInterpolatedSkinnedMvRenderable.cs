@@ -38,7 +38,7 @@ namespace Oculus.Skinning.GpuSkinning
         // and enable bilinear filtering to have hardware to the interpolation
         // between depth texels for us
         protected override string LogScope => "OvrAvatarGpuInterpolatedSkinnedMvRenderable";
-        protected override FilterMode SkinnerOutputFilterMode => FilterMode.Bilinear;
+        protected override FilterMode SkinnerOutputFilterMode => FilterMode.Point;
 
         // 4 slices per "block" 2 for animation frames needed for the "current render frame"
         // and 2 slices needed for animation frames for the "previous render frame"
