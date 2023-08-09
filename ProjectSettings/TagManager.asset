@@ -7,6 +7,9 @@ TagManager:
   - Mahjong
   - Hand
   - EyeInteractor
+  - SamplesInfoPanel
+  - Desk
+  - Ground
   layers:
   - Default
   - TransparentFX

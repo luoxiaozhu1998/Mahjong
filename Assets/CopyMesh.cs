@@ -69,9 +69,19 @@ public class CopyMesh : MonoBehaviour
         return meshCopy;
     }
 
-    private void Update()
+    // private void Update()
+    // {
+    //     GenerateEffect();
+    // }
+
+    public void Test()
     {
-        GenerateEffect();
+        Debug.Log("hover");
+    }
+
+    public void Test2()
+    {
+        Debug.Log("unhover");
     }
 
     public void GenerateEffect()

@@ -8,6 +8,7 @@ using Tools;
 using Unity.Mathematics;
 using UnityEngine;
 using Object = UnityEngine.Object;
+using Random = System.Random;
 
 namespace Manager
 {
@@ -44,6 +45,7 @@ namespace Manager
         private readonly List<Vector3> _playerPutRotations;
         private readonly List<Vector3> _putMoveList;
         private readonly List<Vector3> _putRotateList;
+        private static Random rng = new();
 
         public ResourceManager()
         {
@@ -214,7 +216,7 @@ namespace Manager
             // _mahjongList[0] = new Mahjong(1, "mahjong_tile_" + 1);
             // _mahjongList[1] = new Mahjong(1, "mahjong_tile_" + 1);
             // _mahjongList[2] = new Mahjong(1, "mahjong_tile_" + 1);
-            // _mahjongList[3] = new Mahjong(1, "mahjong_tile_" + 1);
+            // _mahjongList[3] = new Mahjong(11, "mahjong_tile_" + 11);
             // _mahjongList[4] = new Mahjong(11, "mahjong_tile_" + 11);
             // _mahjongList[5] = new Mahjong(15, "mahjong_tile_" + 15);
             // _mahjongList[6] = new Mahjong(16, "mahjong_tile_" + 16);
@@ -234,7 +236,15 @@ namespace Manager
             // _mahjongList[20] = new Mahjong(30, "mahjong_tile_" + 30);
             // _mahjongList[21] = new Mahjong(15, "mahjong_tile_" + 15);
             // _mahjongList[22] = new Mahjong(15, "mahjong_tile_" + 15);
-            _mahjongList = _mahjongList.OrderBy(_ => Guid.NewGuid()).ToList();
+            // _mahjongList[23] = new Mahjong(15, "mahjong_tile_" + 15);
+            // _mahjongList[24] = new Mahjong(15, "mahjong_tile_" + 15);
+            // _mahjongList[25] = new Mahjong(15, "mahjong_tile_" + 15);
+            // _mahjongList[26] = new Mahjong(15, "mahjong_tile_" + 15);
+            // _mahjongList[27] = new Mahjong(16, "mahjong_tile_" + 16);
+            // _mahjongList[28] = new Mahjong(16, "mahjong_tile_" + 16);
+            // _mahjongList[29] = new Mahjong(16, "mahjong_tile_" + 16);
+            // _mahjongList[30] = new Mahjong(16, "mahjong_tile_" + 16);
+            _mahjongList = _mahjongList.OrderBy(_ => rng.Next()).ToList();
             _mahjongList = _mahjongList.ToList();
         }
 

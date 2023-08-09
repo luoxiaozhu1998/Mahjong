@@ -7,31 +7,8 @@ namespace Manager
 {
     public class MenuManager
     {
-        private Dictionary<string, GameObject> _menus;
+        private readonly Dictionary<string, GameObject> _menus = new();
 
-
-        public MenuManager()
-        {
-            _menus = new Dictionary<string, GameObject>();
-        }
-
-        public void Initial()
-        {
-            if (!PhotonNetwork.IsConnected)
-            {
-                foreach (var t in _menus)
-                {
-                    t.Value.SetActive(t.Key == "StartMenu");
-                }
-            }
-            else
-            {
-                foreach (var t in _menus)
-                {
-                    t.Value.SetActive(t.Key == "TitleMenu");
-                }
-            }
-        }
 
         public void OpenMenu(string menuName)
         {
@@ -40,14 +17,6 @@ namespace Manager
             foreach (var t in _menus.Where(t => t.Key != menuName))
             {
                 t.Value.SetActive(false);
-            }
-        }
-
-        public void OpenAllMenus()
-        {
-            foreach (var menu in _menus)
-            {
-                menu.Value.SetActive(true);
             }
         }
 

@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using Controller;
 using Oculus.Interaction;
@@ -12,8 +14,12 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
     public int id;
     public int num;
     private Rigidbody _rigidbody;
+
     [HideInInspector] public PointableUnityEventWrapper pointableUnityEventWrapper;
-    private HandGrabInteractable[] _handGrabInteractable;
+
+    //private HandGrabInteractable[] _handGrabInteractable;
+    private HandGrabInteractable _handGrabInteractable;
+    private TouchHandGrabInteractable _touchHandGrabInteractable;
 
     /// <summary>
     /// 是否在自己手中，如果在自己手中，这个bool为true
@@ -45,6 +51,16 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
     /// </summary>
     public bool isThrown;
 
+    /// <summary>
+    /// 是否被碰过
+    /// </summary>
+    public bool isPonged;
+
+    /// <summary>
+    /// 是否被杠过
+    /// </summary>
+    public bool isKonged;
+
     private Vector3 _originalPos;
     private GameObject _effectGo;
     private GameObject _eyeInteractGo;
@@ -55,68 +71,54 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
     {
         _rigidbody = GetComponent<Rigidbody>();
         _meshRenderer = GetComponent<MeshRenderer>();
-        _handGrabInteractable = GetComponentsInChildren<HandGrabInteractable>();
+        var grabable = GetComponent<Grabbable>();
+        var boxCollider = GetComponent<BoxCollider>();
+        //_handGrabInteractable = GetComponentsInChildren<HandGrabInteractable>();
+        _handGrabInteractable = GetComponent<HandGrabInteractable>();
+        _handGrabInteractable.InjectOptionalPhysicsGrabbable(GetComponent<PhysicsGrabbable>());
+        _touchHandGrabInteractable = GetComponent<TouchHandGrabInteractable>();
+        _touchHandGrabInteractable.InjectOptionalPointableElement(grabable);
+        var colliders = new List<Collider> {boxCollider};
+        _touchHandGrabInteractable.InjectAllTouchHandGrabInteractable(boxCollider, colliders);
         pointableUnityEventWrapper = GetComponent<PointableUnityEventWrapper>();
-        pointableUnityEventWrapper.InjectAllPointableUnityEventWrapper(GetComponent<Grabbable>());
+        pointableUnityEventWrapper.InjectAllPointableUnityEventWrapper(grabable);
         _photonView = photonView;
         pointableUnityEventWrapper.WhenSelect.AddListener(OnGrab);
         pointableUnityEventWrapper.WhenUnselect.AddListener(OnPut);
         _transform = transform;
     }
 
-    public void OnGrab()
+    public void OnPut(PointerEvent evt)
+    {
+        _photonView.RPC(nameof(SetKinematic), RpcTarget.All, false);
+    }
+
+    public void OnGrab(PointerEvent evt)
     {
         _photonView.RPC(nameof(SetKinematic), RpcTarget.Others, true);
         //如果玩家尝试拿起界外的牌，先记录自己的位置，然后当玩家扔牌的时候，如果扔到自己的手牌，强制归位
         if (isPut && isThrown)
         {
-            _originalPos = _transform.position;
+            var position = _transform.position;
+            _originalPos = new Vector3(position.x, position.y + 2f, position.z);
         }
     }
 
-    public void OnPut()
-    {
-        _photonView.RPC(nameof(SetKinematic), RpcTarget.All, false);
-        if (inMyHand && isPut)
-        {
-            var playerController = GameController.Instance.myPlayerController;
-            var playerId = playerController.playerID;
-            //可以出牌，先把牌移除，再整理牌
-            if (GameController.Instance.nowTurn == playerId)
-            {
-                GameObject go = null;
-                foreach (var item in playerController.MyMahjong[id]
-                             .Where(item => item.GetComponent<MahjongAttr>().num == num))
-                {
-                    go = item;
-                }
-
-                if (go != null)
-                {
-                    playerController.MyMahjong[id].Remove(go);
-                }
-
-                GameController.Instance.SortMyMahjong();
-                _photonView.RPC(nameof(PlayTile), RpcTarget.All, playerId, id, gameObject.GetPhotonView().ViewID);
-                _photonView.RPC(nameof(RPCSetIsThrown), RpcTarget.All, true);
-                _photonView.RPC(nameof(RPCSetInMyHand), RpcTarget.All, false);
-                _photonView.RPC(nameof(RPCSetInOthersHand), RpcTarget.All, false);
-                _photonView.RPC(nameof(RPCSetOnDesk), RpcTarget.All, false);
-                _photonView.RPC(nameof(RPCSetLayer), RpcTarget.All, LayerMask.NameToLayer("Ignore Raycast"));
-            }
-            //本回合不能出牌，直接整理牌
-            else
-            {
-                GameController.Instance.SortMyMahjong();
-            }
-        }
-
-        //当玩家尝试把桌子上的牌拿到手牌，强制归位
-        if (isAdd && isThrown)
-        {
-            _transform.position = _originalPos;
-        }
-    }
+    // public void OnGrab()
+    // {
+    //     _photonView.RPC(nameof(SetKinematic), RpcTarget.Others, true);
+    //     //如果玩家尝试拿起界外的牌，先记录自己的位置，然后当玩家扔牌的时候，如果扔到自己的手牌，强制归位
+    //     if (isPut && isThrown)
+    //     {
+    //         var position = _transform.position;
+    //         _originalPos = new Vector3(position.x, position.y + 2f, position.z);
+    //     }
+    // }
+    //
+    // public void OnPut()
+    // {
+    //     _photonView.RPC(nameof(SetKinematic), RpcTarget.All, false);
+    // }
 
     /// <summary>
     /// 设置当前的Rigidbody是否为运动学的
@@ -135,10 +137,11 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
     public void SetState()
     {
         //对所有其他人，麻将不能抓取
-        foreach (var handGrabInteractable in _handGrabInteractable)
-        {
-            handGrabInteractable.enabled = false;
-        }
+        // foreach (var handGrabInteractable in _handGrabInteractable)
+        // {
+        //     handGrabInteractable.enabled = false;
+        // }
+        _handGrabInteractable.enabled = false;
     }
 
     /// <summary>
@@ -194,7 +197,6 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
     [PunRPC]
     private void PlayTile(int playerId, int tileId, int viewID)
     {
-        GameController.Instance.lastTurn = playerId;
         //每个客户端先把把当前轮次的ID设置好（下面代码可能会更改）
         GameController.Instance.nowTurn = playerId == PhotonNetwork.CurrentRoom.PlayerCount
             ? 1
@@ -262,6 +264,61 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
         }
     }
 
+    private void OnCollisionEnter(Collision other)
+    {
+        if (other.gameObject.CompareTag("Desk"))
+        {
+            if (inMyHand && isPut)
+            {
+                var playerController = GameController.Instance.myPlayerController;
+                var playerId = playerController.playerID;
+                //可以出牌，先把牌移除，再整理牌
+                if (GameController.Instance.nowTurn == playerId)
+                {
+                    GameObject go = null;
+                    foreach (var item in playerController.MyMahjong[id]
+                                 .Where(item => item.GetComponent<MahjongAttr>().num == num))
+                    {
+                        go = item;
+                    }
+                    if (go != null)
+                    {
+                        playerController.mahjongMap[playerController.MyMahjong[id].Count].Remove(id);
+                        playerController.MyMahjong[id].Remove(go);
+                        playerController.mahjongMap[playerController.MyMahjong[id].Count].Add(id);
+                    }
+
+                    GameController.Instance.SortMyMahjong(false, false);
+                    isThrown = true;
+                    inMyHand = false;
+                    inOthersHand = false;
+                    onDesk = false;
+                    gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
+                    _photonView.RPC(nameof(PlayTile), RpcTarget.All, playerId, id, gameObject.GetPhotonView().ViewID);
+                    _photonView.RPC(nameof(RPCSetIsThrown), RpcTarget.Others, true);
+                    _photonView.RPC(nameof(RPCSetInMyHand), RpcTarget.Others, false);
+                    _photonView.RPC(nameof(RPCSetInOthersHand), RpcTarget.Others, false);
+                    _photonView.RPC(nameof(RPCSetOnDesk), RpcTarget.Others, false);
+                    _photonView.RPC(nameof(RPCSetLayer), RpcTarget.Others, LayerMask.NameToLayer("Ignore Raycast"));
+                }
+                //本回合不能出牌，直接整理牌
+                else
+                {
+                    GameController.Instance.SortMyMahjong(false, false);
+                }
+
+                //当玩家尝试把桌子上的牌拿到手牌，强制归位
+                if (isAdd && isThrown)
+                {
+                    _transform.position = _originalPos;
+                }
+            }
+        }
+        else if (other.gameObject.CompareTag("Ground") && inMyHand && isPut)
+        {
+            GameController.Instance.SortMyMahjong(false, true);
+        }
+    }
 
     public void OnEyeHoverEnter()
     {

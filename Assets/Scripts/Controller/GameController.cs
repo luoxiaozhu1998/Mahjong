@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,7 @@ using Photon.Pun;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Random = System.Random;
 
 namespace Controller
 {
@@ -24,11 +26,8 @@ namespace Controller
         public Dictionary<int, int> ReadyDict;
         public bool canNext;
         public int nowTurn;
-        public int lastTurn;
         public int nowTile;
         public int tileViewID;
-        public Image bg;
-        public TMP_Text text;
         private List<MahjongAttr> _mahjong;
         private List<Transform> _playerButtons;
         private bool _canPong;
@@ -42,7 +41,7 @@ namespace Controller
         public Transform[] playerPanelContainers;
         public GameObject playerPanelPrefab;
         [SerializeField] private GazeInteractor GazeInteractor;
-        public bool needDestroy;
+        private static Random rng = new();
 
         /// <summary>
         /// 初始化
@@ -61,6 +60,7 @@ namespace Controller
             ReadyDict = new Dictionary<int, int>();
             _mahjong = new List<MahjongAttr>();
             _playerButtons = new List<Transform>();
+
             StartGame();
         }
 
@@ -170,65 +170,7 @@ namespace Controller
         //         PhotonNetwork.LeaveRoom();
         //     });
         // }
-        /// <summary>
-        /// 杠分为杠别人和加杠
-        /// </summary>
-        private void SolveKong()
-        {
-            if (!_canKong) return;
-            _canKong = false;
-            //拿到出牌权，不发牌
-            photonView.RPC(nameof(NextTurn), RpcTarget.All,
-                myPlayerController.playerID, false);
-            //隐藏button
-            photonView.RPC(nameof(ResetButton), RpcTarget.All);
-            //当前是自己回合说明是加杠
-            if (nowTurn == myPlayerController.playerID)
-            {
-                foreach (var pair in myPlayerController.MyMahjong)
-                {
-                    if (pair.Value.Count == 4)
-                    {
-                        foreach (var go in pair.Value)
-                        {
-                            go.transform.DOMove(myPlayerController.putPos, 1f);
-                            go.transform.DORotate(
-                                GameManager.Instance.GetPlayerPutRotations()[myPlayerController.playerID - 1],
-                                1f);
-                            var attr = go.GetComponent<MahjongAttr>();
-                            myPlayerController.putPos -=
-                                GameManager.Instance.GetBias()[myPlayerController.playerID - 1];
-                            attr.num = 0;
-                        }
 
-                        break;
-                    }
-                }
-            }
-            //杠牌
-            else
-            {
-                foreach (var go in myPlayerController.MyMahjong[nowTile])
-                {
-                    var script = go.GetComponent<MahjongAttr>();
-                    go.transform.DOMove(myPlayerController.putPos, 1f);
-                    go.transform.DORotate(GameManager.Instance.GetPlayerPutRotations()[myPlayerController.playerID - 1],
-                        1f);
-                    myPlayerController.putPos -= GameManager.Instance.GetBias()[myPlayerController.playerID - 1];
-                    script.num = 0;
-                }
-
-                var newGo = PhotonNetwork.Instantiate("mahjong_tile_" + nowTile, myPlayerController.putPos,
-                    Quaternion.Euler(GameManager.Instance.GetPlayerPutRotations()[myPlayerController.playerID - 1]));
-                myPlayerController.putPos -= GameManager.Instance.GetBias()[myPlayerController.playerID - 1];
-                newGo.GetComponent<MahjongAttr>().num = 0;
-                myPlayerController.MyMahjong[nowTile].Add(newGo);
-                photonView.RPC(nameof(DestroyItem), RpcTarget.All);
-            }
-
-            SortMyMahjong();
-            EnableHandGrab();
-        }
 
         public override void OnLeftRoom()
         {
@@ -253,12 +195,6 @@ namespace Controller
                     photonView.RPC(nameof(CanK), RpcTarget.All, myPlayerController.playerID);
                 }
             }
-        }
-
-        private IEnumerator Leave()
-        {
-            yield return new WaitForSeconds(20f);
-            PhotonNetwork.LeaveRoom();
         }
 
         [PunRPC]
@@ -288,15 +224,15 @@ namespace Controller
                 var attr = _mahjong[i].GetComponent<MahjongAttr>();
                 attr.id = mahjongList[i].ID;
                 rb.constraints = RigidbodyConstraints.FreezeAll;
-                var grabInteractables = _mahjong[i].GetComponentsInChildren<HandGrabInteractable>();
-                foreach (var grabInteractable in grabInteractables)
-                {
-                    grabInteractable.enabled = false;
-                }
+                _mahjong[i].GetComponent<HandGrabInteractable>().enabled = false;
+                _mahjong[i].GetComponent<TouchHandGrabInteractable>().enabled = false;
             }
 
+            //生成当前玩家的麻将有序字典
             myPlayerController.MyMahjong =
                 GameManager.Instance.GenerateMahjongAtStart(myPlayerController.playerID - 1);
+            SortMyMahjong(true, false);
+
             for (var i = 1; i <= 4; i++)
             {
                 _playerButtons.Add(GameObject.Find("Player" + i + "Button").transform);
@@ -304,26 +240,32 @@ namespace Controller
 
             var pongButton = _playerButtons[myPlayerController.playerID - 1].GetChild(0).GetChild(2)
                 .GetChild(1).GetChild(0).GetChild(0);
-            pongButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect
+            pongButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenUnselect
                 .AddListener(SolvePong);
             var kongButton = _playerButtons[myPlayerController.playerID - 1].GetChild(1).GetChild(2)
                 .GetChild(1).GetChild(0).GetChild(0);
-            kongButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect
+            kongButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenUnselect
                 .AddListener(SolveKong);
             var winButton = _playerButtons[myPlayerController.playerID - 1].GetChild(2).GetChild(2)
                 .GetChild(1).GetChild(0).GetChild(0);
-            winButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect
+            winButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenUnselect
                 .AddListener(SolveWin);
             var skipButton = _playerButtons[myPlayerController.playerID - 1].GetChild(3).GetChild(2)
                 .GetChild(1).GetChild(0).GetChild(0);
-            skipButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenSelect
+            skipButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenUnselect
                 .AddListener(SolveSkip);
+            var leaveButton = _playerButtons[myPlayerController.playerID - 1].GetChild(6).GetChild(2).GetChild(1)
+                .GetChild(0).GetChild(0);
+            leaveButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenUnselect
+                .AddListener(() => { PhotonNetwork.LeaveRoom(); });
             foreach (var playerButton in _playerButtons)
             {
                 for (var i = 0; i < 5; i++)
                 {
                     playerButton.GetChild(i).gameObject.SetActive(false);
                 }
+
+                playerButton.GetChild(6).gameObject.SetActive(false);
             }
 
             nowTurn = 1;
@@ -332,15 +274,11 @@ namespace Controller
         [PunRPC]
         private void SetPoint(int id, string playerName)
         {
-            foreach (var playerButton in _playerButtons)
-            {
-                playerButton.GetChild(5).GetComponentInChildren<TMP_Text>().text =
-                    "Score:" + (id == myPlayerController.playerID ? 20 : 0);
-            }
-
+            _playerButtons[myPlayerController.playerID - 1].GetChild(5).GetComponentInChildren<TMP_Text>().text =
+                "Score:" + (id == myPlayerController.playerID ? 20 : 0);
             var scoreCanvas = _playerButtons[myPlayerController.playerID - 1].GetChild(4).gameObject;
             scoreCanvas.SetActive(true);
-            scoreCanvas.transform.GetChild(2).GetComponent<TMP_Text>().text =
+            scoreCanvas.transform.GetChild(1).GetComponentInChildren<TMP_Text>().text =
                 id == myPlayerController.playerID ? "您赢了！" : "您输了！";
             foreach (var item in PhotonNetwork.CurrentRoom.Players)
             {
@@ -349,6 +287,8 @@ namespace Controller
                 go.transform.GetChild(1).GetComponent<TMP_Text>().text =
                     item.Value.NickName == playerName ? "Score + 10" : "Score - 10";
             }
+
+            photonView.RPC(nameof(ResetButton), RpcTarget.All, true);
         }
 
         private void SolveWin()
@@ -360,14 +300,14 @@ namespace Controller
         private void SolveSkip()
         {
             if (!_canKong && !_canPong && !_canWin) return;
-            photonView.RPC(nameof(NextTurn), RpcTarget.All,
-                nowTurn, true);
+            photonView.RPC(nameof(NextTurn), RpcTarget.All, nowTurn, false);
             _canKong = _canPong = _canWin = false;
-            photonView.RPC(nameof(ResetButton), RpcTarget.All);
+            photonView.RPC(nameof(ResetButton), RpcTarget.All, false);
+            EnableHandGrab();
         }
 
         [PunRPC]
-        private void ResetButton()
+        private void ResetButton(bool flag = false)
         {
             foreach (var playerButton in _playerButtons)
             {
@@ -375,12 +315,9 @@ namespace Controller
                 {
                     playerButton.GetChild(i).gameObject.SetActive(false);
                 }
-            }
-        }
 
-        [PunRPC]
-        private void RPCShowEffect(int id)
-        {
+                playerButton.GetChild(6).gameObject.SetActive(flag);
+            }
         }
 
         private void AddMahjongToHand(MahjongAttr attr)
@@ -393,7 +330,6 @@ namespace Controller
 
             attr.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.None;
             attr.num = 1;
-            attr.inMyHand = true;
             attr.inOthersHand = false;
             attr.photonView.RPC(nameof(attr.RPCSetInMyHand), RpcTarget.Others, false);
             attr.photonView.RPC(nameof(attr.RPCSetInOthersHand), RpcTarget.Others, true);
@@ -407,14 +343,11 @@ namespace Controller
             attr.pointableUnityEventWrapper.WhenSelect.RemoveAllListeners();
             attr.pointableUnityEventWrapper.WhenUnselect.AddListener(attr.OnPut);
             attr.pointableUnityEventWrapper.WhenSelect.AddListener(attr.OnGrab);
-            foreach (var item in attr.GetComponentsInChildren<HandGrabInteractable>())
-            {
-                item.enabled = true;
-            }
-
+            attr.GetComponent<HandGrabInteractable>().enabled = true;
             photonView.RPC(nameof(RemoveMahjong), RpcTarget.All);
             if (myPlayerController.MyMahjong[attr.id].Count == 4)
             {
+                DisableHandGrab();
                 photonView.RPC(CheckWin(attr.id) ? nameof(CanKAndH) : nameof(CanK), RpcTarget.All,
                     myPlayerController.playerID);
             }
@@ -438,6 +371,7 @@ namespace Controller
                 {
                     _mahjong[0].GetComponent<PhotonView>()
                         .TransferOwnership(PhotonNetwork.LocalPlayer);
+                    var ID = _mahjong[0].id;
                     DOTween.Sequence().Insert(0f,
                                 _mahjong[0].transform.DOMove(myPlayerController.putPos, 1f)).Insert(
                                 0f, _mahjong[0].transform.DORotate(GameManager.Instance.GetRotateList()[id - 1], 1f))
@@ -459,21 +393,10 @@ namespace Controller
                             script.num = idx++;
                         }
                     }
+
+                    myPlayerController.mahjongMap[myPlayerController.MyMahjong[ID].Count - 1].Remove(ID);
+                    myPlayerController.mahjongMap[myPlayerController.MyMahjong[ID].Count].Add(ID);
                 }
-            }
-        }
-
-        private void ActivateHandGrab()
-        {
-            photonView.RPC(nameof(RPCActivateHandGrab), RpcTarget.Others);
-        }
-
-        [PunRPC]
-        private void RPCActivateHandGrab()
-        {
-            foreach (var item in _mahjong[0].GetComponentsInChildren<HandGrabInteractable>())
-            {
-                item.enabled = true;
             }
         }
 
@@ -498,12 +421,30 @@ namespace Controller
                 GameManager.Instance.MahjongSplit(players.Count);
                 var a = JsonConvert.SerializeObject(GameManager.Instance.GetMahjongList());
                 var b = JsonConvert.SerializeObject(GameManager.Instance.GetUserMahjongLists());
+                for (var i = 1; i <= 4; i++)
+                {
+                    if (i == myPlayerController.playerID)
+                    {
+                        continue;
+                    }
+
+                    GameObject.Find("PickPos" + i).SetActive(false);
+                }
+
                 photonView.RPC(nameof(SetList), RpcTarget.All, a, b);
             }
         }
 
         /// <summary>
         /// 让主客户端每回合处理牌
+        /// 0：无操作
+        /// 1：碰
+        /// 2：杠
+        /// 3：胡
+        /// 4：碰/杠
+        /// 5：碰/赢
+        /// 6：杠/赢
+        /// 7：碰/杠/赢
         /// </summary>
         private void Update()
         {
@@ -518,7 +459,7 @@ namespace Controller
                 {
                     case 0:
                         continue;
-                    //To Do:该客户端可以处理牌
+                    //该客户端可以处理牌
                     //给他处理
                     //可以碰牌
                     case 1:
@@ -585,11 +526,7 @@ namespace Controller
             {
                 foreach (var mahjong in pair.Value)
                 {
-                    var handGrabInteractables = mahjong.GetComponentsInChildren<HandGrabInteractable>();
-                    foreach (var handGrabInteractable in handGrabInteractables)
-                    {
-                        handGrabInteractable.enabled = false;
-                    }
+                    mahjong.GetComponent<HandGrabInteractable>().enabled = false;
                 }
             }
         }
@@ -600,11 +537,7 @@ namespace Controller
             {
                 foreach (var mahjong in pair.Value)
                 {
-                    var handGrabInteractables = mahjong.GetComponentsInChildren<HandGrabInteractable>();
-                    foreach (var handGrabInteractable in handGrabInteractables)
-                    {
-                        handGrabInteractable.enabled = true;
-                    }
+                    mahjong.GetComponent<HandGrabInteractable>().enabled = true;
                 }
             }
         }
@@ -692,42 +625,109 @@ namespace Controller
         [PunRPC]
         public void NoOneWin()
         {
-            text.text = "No one Win!";
-            bg.gameObject.SetActive(true);
+            var scoreCanvas = _playerButtons[myPlayerController.playerID - 1].GetChild(4).gameObject;
+            scoreCanvas.SetActive(true);
+            scoreCanvas.transform.GetChild(1).GetComponentInChildren<TMP_Text>().text = "流局";
+            photonView.RPC(nameof(ResetButton), RpcTarget.All, true);
         }
 
-        [PunRPC]
-        public void NotMyTurn()
-        {
-            myPlayerController.isMyTurn = false;
-        }
-
-        public void SortMyMahjong()
+        public void SortMyMahjong(bool random, bool disableCollider)
         {
             var num = 1;
-            foreach (var item in myPlayerController.MyMahjong)
+            //做出手势，随机摆放
+            if (random)
             {
-                foreach (var go in item.Value)
+                foreach (var pair in myPlayerController.mahjongMap)
                 {
-                    var script = go.GetComponent<MahjongAttr>();
-                    if (script.num == 0)
+                    pair.Value.Clear();
+                }
+
+                foreach (var pair in myPlayerController.MyMahjong)
+                {
+                    myPlayerController.mahjongMap[pair.Value.Count].Add(pair.Key);
+                }
+
+                foreach (var pair in myPlayerController.mahjongMap)
+                {
+                    var list = pair.Value.OrderBy(_ => rng.Next()).ToList();
+                    for (var i = 0; i < pair.Value.Count; i++)
                     {
-                        continue;
+                        pair.Value[i] = list[i];
                     }
-
-                    script.num = num++;
-
-                    DOTween.Sequence().Insert(0f, go.transform.DOMove(
-                                GameManager.Instance.GetPickPoses()[myPlayerController.playerID - 1]
-                                    .position +
-                                GameManager.Instance.GetBias()[myPlayerController.playerID - 1] *
-                                (script.num - 1), 1f)).Insert(0f, go.transform.DORotate(
-                                GameManager.Instance.GetRotateList()[
-                                    myPlayerController.playerID - 1], 1f))
-                            .SetEase(Ease.Linear).onComplete +=
-                        go.GetComponent<Rigidbody>().Sleep;
                 }
             }
+            for (var i = 4; i >= 1; i--)
+            {
+                myPlayerController.mahjongMap.TryGetValue(i, out var list);
+                if (list == null) continue;
+                foreach (var index in list)
+                {
+                    foreach (var go in myPlayerController.MyMahjong[index])
+                    {
+                        var script = go.GetComponent<MahjongAttr>();
+                        if (script.num == 0)
+                        {
+                            continue;
+                        }
+
+                        if (disableCollider)
+                        {
+                            go.GetComponent<BoxCollider>().enabled = false;
+                        }
+
+                        script.num = num++;
+                        var t = DOTween.Sequence()
+                            .Insert(0f,
+                                go.transform.DOMove(
+                                    GameManager.Instance.GetPickPoses()[myPlayerController.playerID - 1].position +
+                                    GameManager.Instance.GetBias()[myPlayerController.playerID - 1] *
+                                    (script.num - 1),
+                                    1f)).Insert(0f,
+                                go.transform.DORotate(
+                                    GameManager.Instance.GetRotateList()[myPlayerController.playerID - 1], 1f))
+                            .SetEase(Ease.Linear);
+                        t.onComplete += go.GetComponent<Rigidbody>().Sleep;
+                        if (disableCollider)
+                        {
+                            t.onComplete += () => { go.GetComponent<BoxCollider>().enabled = true; };
+                        }
+                    }
+                }
+            }
+
+
+            // foreach (var item in myPlayerController.MyMahjong)
+            // {
+            //     foreach (var go in item.Value)
+            //     {
+            //         var script = go.GetComponent<MahjongAttr>();
+            //         if (script.num == 0)
+            //         {
+            //             continue;
+            //         }
+            //
+            //         if (flag)
+            //         {
+            //             go.GetComponent<BoxCollider>().enabled = false;
+            //         }
+            //
+            //         script.num = num++;
+            //         var t = DOTween.Sequence()
+            //             .Insert(0f,
+            //                 go.transform.DOMove(
+            //                     GameManager.Instance.GetPickPoses()[myPlayerController.playerID - 1].position +
+            //                     GameManager.Instance.GetBias()[myPlayerController.playerID - 1] * (script.num - 1),
+            //                     1f)).Insert(0f,
+            //                 go.transform.DORotate(
+            //                     GameManager.Instance.GetRotateList()[myPlayerController.playerID - 1], 1f))
+            //             .SetEase(Ease.Linear);
+            //         t.onComplete += go.GetComponent<Rigidbody>().Sleep;
+            //         if (flag)
+            //         {
+            //             t.onComplete += () => { go.GetComponent<BoxCollider>().enabled = true; };
+            //         }
+            //     }
+            // }
         }
 
         /// <summary>
@@ -743,41 +743,137 @@ namespace Controller
             photonView.RPC(nameof(NextTurn), RpcTarget.All,
                 myPlayerController.playerID, false);
             //向所有人RPC，隐藏所有按钮
-            photonView.RPC(nameof(ResetButton), RpcTarget.All);
+            photonView.RPC(nameof(ResetButton), RpcTarget.All, false);
             //遍历自己的所有与被碰的牌相同的牌
             foreach (var go in myPlayerController.MyMahjong[nowTile])
             {
                 var script = go.GetComponent<MahjongAttr>();
                 //这些牌不能再被拿起来
                 script.photonView.RPC(nameof(script.SetState), RpcTarget.All);
+                go.GetComponent<HandGrabInteractable>().enabled = false;
                 //把牌移动到指定的位置
                 go.transform.DOMove(myPlayerController.putPos, 1f);
                 //旋转牌
-                go.transform.DORotate(
-                    GameManager.Instance.GetPlayerPutRotations()[
-                        myPlayerController.playerID - 1], 1f);
+                go.transform.DORotate(GameManager.Instance.GetPlayerPutRotations()[myPlayerController.playerID - 1],
+                    1f);
                 //自己的位置减去一个牌的距离
-                myPlayerController.putPos -=
-                    GameManager.Instance.GetBias()[myPlayerController.playerID - 1];
+                myPlayerController.putPos -= GameManager.Instance.GetBias()[myPlayerController.playerID - 1];
                 script.num = 0;
+                script.isPonged = true;
+                script.inMyHand = false;
             }
 
             //再生成一个相同的牌，放到指定位置
-            var newGo = PhotonNetwork.Instantiate("mahjong_tile_" + nowTile,
-                myPlayerController.putPos,
-                Quaternion.Euler(GameManager.Instance.GetPlayerPutRotations()[
-                    myPlayerController.playerID - 1]));
+            var newGo = PhotonNetwork.Instantiate("mahjong_tile_" + nowTile, myPlayerController.putPos,
+                Quaternion.Euler(GameManager.Instance.GetPlayerPutRotations()[myPlayerController.playerID - 1]));
             var attr = newGo.GetComponent<MahjongAttr>();
+            newGo.GetComponent<HandGrabInteractable>().enabled = false;
+            attr.inMyHand = false;
             attr.num = 0;
+            attr.isPonged = true;
             //这个牌也不能在被抓取
             attr.photonView.RPC(nameof(attr.SetState), RpcTarget.All);
             myPlayerController.MyMahjong[nowTile].Add(newGo);
             //整理牌
-            SortMyMahjong();
+            SortMyMahjong(false, false);
             //销毁场上的那个牌
             photonView.RPC(nameof(DestroyItem), RpcTarget.All);
-            myPlayerController.putPos -=
-                GameManager.Instance.GetBias()[myPlayerController.playerID - 1];
+            myPlayerController.putPos -= GameManager.Instance.GetBias()[myPlayerController.playerID - 1];
+            EnableHandGrab();
+        }
+
+        /// <summary>
+        /// 杠分为杠别人和加杠
+        /// </summary>
+        private void SolveKong()
+        {
+            if (!_canKong) return;
+            _canKong = false;
+
+            //隐藏button
+            photonView.RPC(nameof(ResetButton), RpcTarget.All, false);
+            foreach (var pair in myPlayerController.MyMahjong)
+            {
+                if (pair.Value.Count == 4)
+                {
+                    var temp = pair.Value[0].GetComponent<MahjongAttr>();
+                    //这种情况是加杠
+                    if (temp.num == 0 && temp.isPonged)
+                    {
+                        pair.Value[3].transform
+                            .DOMove(pair.Value[1].transform.position + pair.Value[1].transform.up * 0.5f, 1f);
+                        pair.Value[3].transform.DORotate(
+                            GameManager.Instance.GetPlayerPutRotations()[myPlayerController.playerID - 1], 1f);
+                        var attr = pair.Value[3].GetComponent<MahjongAttr>();
+                        attr.num = 0;
+                        attr.inMyHand = false;
+                        attr.GetComponent<HandGrabInteractable>().enabled = false;
+                        foreach (var go in pair.Value)
+                        {
+                            go.GetComponent<MahjongAttr>().isPonged = false;
+                            go.GetComponent<MahjongAttr>().isKonged = true;
+                        }
+                    }
+                    //跳过已经杠过的
+                    else if (temp.num == 0 && temp.isKonged)
+                    {
+                        continue;
+                    }
+                    //手上有4张牌，按顺序摆好
+                    else
+                    {
+                        foreach (var go in pair.Value)
+                        {
+                            go.transform.DOMove(myPlayerController.putPos, 1f);
+                            go.transform.DORotate(
+                                GameManager.Instance.GetPlayerPutRotations()[myPlayerController.playerID - 1],
+                                1f);
+                            var attr = go.GetComponent<MahjongAttr>();
+                            myPlayerController.putPos -=
+                                GameManager.Instance.GetBias()[myPlayerController.playerID - 1];
+                            attr.num = 0;
+                            attr.inMyHand = false;
+                            attr.isKonged = true;
+                            go.GetComponent<HandGrabInteractable>().enabled = false;
+                        }
+                    }
+
+                    SortMyMahjong(false, false);
+                    //拿到出牌权，看情况发牌
+                    photonView.RPC(nameof(NextTurn), RpcTarget.All,
+                        myPlayerController.playerID, true);
+                    EnableHandGrab();
+                    return;
+                }
+            }
+
+            //杠牌
+            foreach (var go in myPlayerController.MyMahjong[nowTile])
+            {
+                var script = go.GetComponent<MahjongAttr>();
+                go.transform.DOMove(myPlayerController.putPos, 1f);
+                go.transform.DORotate(GameManager.Instance.GetPlayerPutRotations()[myPlayerController.playerID - 1],
+                    1f);
+                myPlayerController.putPos -= GameManager.Instance.GetBias()[myPlayerController.playerID - 1];
+                script.num = 0;
+                script.inMyHand = false;
+                script.isKonged = true;
+                go.GetComponent<HandGrabInteractable>().enabled = false;
+            }
+
+            var newGo = PhotonNetwork.Instantiate("mahjong_tile_" + nowTile, myPlayerController.putPos,
+                Quaternion.Euler(GameManager.Instance.GetPlayerPutRotations()[myPlayerController.playerID - 1]));
+            myPlayerController.putPos -= GameManager.Instance.GetBias()[myPlayerController.playerID - 1];
+            newGo.GetComponent<MahjongAttr>().num = 0;
+            newGo.GetComponent<MahjongAttr>().inMyHand = false;
+            newGo.GetComponent<MahjongAttr>().isKonged = true;
+            newGo.GetComponent<HandGrabInteractable>().enabled = false;
+            myPlayerController.MyMahjong[nowTile].Add(newGo);
+            photonView.RPC(nameof(DestroyItem), RpcTarget.All);
+            SortMyMahjong(false, false);
+            //拿到出牌权，看情况发牌
+            photonView.RPC(nameof(NextTurn), RpcTarget.All,
+                myPlayerController.playerID, true);
             EnableHandGrab();
         }
 
@@ -787,9 +883,15 @@ namespace Controller
             var destroyGo =
                 (from go in FindObjectsOfType<PhotonView>() where go.ViewID == tileViewID select go.gameObject)
                 .FirstOrDefault();
-
             Destroy(destroyGo);
         }
+        //1：碰
+        //2：杠
+        //3：胡
+        //4：碰/杠
+        //5：碰/赢
+        //6：杠/赢
+        //7：碰/杠/赢
 
         public int CheckMyState(int id)
         {
@@ -806,30 +908,37 @@ namespace Controller
                 if (myPlayerController.MyMahjong[id].Count == 3 &&
                     myPlayerController.MyMahjong[id][0].GetComponent<MahjongAttr>().num != 0)
                 {
+                    //可以碰，也可以杠
                     if (ans == 1)
                     {
                         ans = 4;
                     }
+                    //可以杠
                     else
                     {
                         ans = 2;
                     }
                 }
 
+                //是否赢了
                 if (CheckWin(id))
                 {
+                    //可以赢，也可以碰
                     if (ans == 1)
                     {
                         ans = 5;
                     }
+                    //可以杠，也可以赢
                     else if (ans == 2)
                     {
                         ans = 6;
                     }
+                    //可以同时碰，杠，赢
                     else if (ans == 4)
                     {
                         ans = 7;
                     }
+                    //只能赢
                     else
                     {
                         ans = 3;
@@ -840,7 +949,7 @@ namespace Controller
             return ans;
         }
 
-        public bool CheckWin(int id = 0)
+        private bool CheckWin(int id = 0)
         {
             var cnt2 = 0;
             var cnt3 = 0;
@@ -892,6 +1001,21 @@ namespace Controller
         {
             yield return new WaitForSeconds(20f);
             GazeInteractor.enabled = false;
+        }
+
+        public void PongTest()
+        {
+            Debug.Log("碰");
+        }
+
+        public void KongTest()
+        {
+            Debug.Log("杠");
+        }
+
+        public void RongTest()
+        {
+            Debug.Log("胡");
         }
     }
 }

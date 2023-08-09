@@ -4,25 +4,24 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    private float _verticalRotation;
-    private bool _grounded;
-    private Vector3 _smoothMoveVelocity;
-    private Vector3 _moveAmount;
-    private PhotonView _pv;
+    //存储当前玩家的所有麻将
     public SortedDictionary<int, List<GameObject>> MyMahjong;
-    public bool isMyTurn = true;
+
+    //存储当前玩家所有麻将的个数到麻将的映射,key表示麻将个数，value表示有key个麻将的麻将的集合
+    public Dictionary<int, List<int>> mahjongMap;
     public int playerID;
     public Vector3 putPos;
-    public Vector3 putRotate;
-    private Transform _mainCamera;
-    private Transform _xrOriginTransform;
-    private ulong _userId;
-    private SampleAvatarEntity _sampleAvatarEntity;
 
     private void Awake()
     {
-        _pv = GetComponent<PhotonView>();
-        _sampleAvatarEntity = GetComponent<SampleAvatarEntity>();
         MyMahjong = new SortedDictionary<int, List<GameObject>>();
+        mahjongMap = new Dictionary<int, List<int>>
+        {
+            {0, new List<int>()},
+            {1, new List<int>()},
+            {2, new List<int>()},
+            {3, new List<int>()},
+            {4, new List<int>()}
+        };
     }
 }

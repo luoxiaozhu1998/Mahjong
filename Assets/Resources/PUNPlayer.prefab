@@ -70,10 +70,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 44a3e820a8308b54597455ccab5f92c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isMyTurn: 1
   playerID: 0
   putPos: {x: 0, y: 0, z: 0}
-  putRotate: {x: 0, y: 0, z: 0}
 --- !u!114 &-4019040032181034188
 MonoBehaviour:
   m_ObjectHideFlags: 0
