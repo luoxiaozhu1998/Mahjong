@@ -26,63 +26,43 @@ MonoBehaviour:
     Protocol: 0
     EnableProtocolFallback: 1
     AuthMode: 0
-    EnableLobbyStatistics: 0
-    NetworkLogging: 1
+    EnableLobbyStatistics: 1
+    NetworkLogging: 5
   DevRegion: hk
-  PunLogging: 0
+  PunLogging: 2
   EnableSupportLogger: 0
   RunInBackground: 1
   StartInOfflineMode: 0
   RpcList:
-  - AddKong
   - ApplyAvatarData
   - CanH
   - CanK
   - CanKAndH
-  - CanNext
   - CanP
   - CanPAndH
   - CanPAndK
   - CanPAndKAndH
   - CantHearYou
-  - ChangeColour
   - ClickRpc
   - DestroyItem
   - DestroyRpc
-  - DestroySpaceship
-  - Fire
   - HeresWhy
-  - HideButton
   - NextTurn
   - NoOneWin
-  - NotMyTurn
   - PlayTile
-  - RespawnSpaceship
-  - Send
-  - SendMaxId
-  - SetList
-  - ShowResult
-  - StoreTile
-  - OnGrab
-  - SetKinematic
-  - SetState
   - RemoveMahjong
-  - RPCActivateHandGrab
   - ResetButton
-  - SendEffect
-  - SetPoint
-  - ShowEffect
-  - RPCShowEffect
-  - SetOwnerID
-  - DestroyThis
   - RPCDestroyThis
-  - InHand
-  - RPCSetInHand
-  - RPCSetOnDesk
-  - RPCSetLayer
-  - RPCSetIsThrown
   - RPCSetInMyHand
   - RPCSetInOthersHand
+  - RPCSetIsThrown
+  - RPCSetLayer
+  - RPCSetOnDesk
+  - Send
+  - SetKinematic
+  - SetList
+  - SetPoint
+  - SetState
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 0

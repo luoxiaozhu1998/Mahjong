@@ -5,16 +5,44 @@ using System.Linq;
 using DG.Tweening;
 using Manager;
 using Newtonsoft.Json;
+using Oculus.Avatar2;
 using Oculus.Interaction;
 using Oculus.Interaction.HandGrab;
+using Oculus.Interaction.Input;
 using Photon.Pun;
 using TMPro;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UI;
 using Random = System.Random;
 
 namespace Controller
 {
+    public class Card
+    {
+        private int number;
+
+        public int Number
+        {
+            get { return number; }
+            set { number = value; }
+        }
+
+        private int type;
+
+        public int Type
+        {
+            get { return type; }
+            set { type = value; }
+        }
+
+        public Card(int n, int t)
+        {
+            number = n;
+            type = t;
+        }
+    }
+
     /// <summary>
     /// 负责管理整个游戏的逻辑,单例
     /// </summary>
@@ -36,12 +64,30 @@ namespace Controller
         private Button _confirmButton;
         public Material[] transparentMaterials;
         public Material[] normalMaterials;
+        [SerializeField] private GameObject WinnerHat;
+
+        [SerializeField] private GameObject LoserNose;
         public GameObject effectPrefab;
         public GameObject bubbleEffect;
         public Transform[] playerPanelContainers;
         public GameObject playerPanelPrefab;
         [SerializeField] private GazeInteractor GazeInteractor;
         private static Random rng = new();
+        public GameObject nowMahjong;
+        public AudioTrigger changeMahjongAudio;
+        private bool isWin;
+
+        [SerializeField, Interface(typeof(IHand))]
+        public MonoBehaviour _leftHand;
+
+        [SerializeField, Interface(typeof(IHand))]
+        public MonoBehaviour _rightHand;
+
+        [SerializeField, Interface(typeof(ITrackingToWorldTransformer))]
+        [Tooltip("Transformer is required so calculations can be done in Tracking space")]
+        public UnityEngine.Object _transformer;
+
+        public OVRCameraRig OvrCameraRig;
 
         /// <summary>
         /// 初始化
@@ -60,117 +106,10 @@ namespace Controller
             ReadyDict = new Dictionary<int, int>();
             _mahjong = new List<MahjongAttr>();
             _playerButtons = new List<Transform>();
-
+            isWin = false;
             StartGame();
+            FindObjectOfType<OvrAvatarManager>().GetComponent<AvatarInputManager>().Init();
         }
-
-        // private void Start()
-        // {
-        //     pongButton.onClick.AddListener(() =>
-        //     {
-        //         //得到出牌权（但是不发牌）
-        //         _gameManagerPhotonView.RPC(nameof(GameManager.Instance.NextTurn), RpcTarget.All,
-        //             myPlayerController.playerID, false);
-        //         _gameManagerPhotonView.RPC(nameof(GameManager.Instance.HideButton), RpcTarget.All);
-        //         SolvePong();
-        //     });
-        //     kongButton.onClick.AddListener(() =>
-        //     {
-        //         //得到出牌权（同时发牌）
-        //         _gameManagerPhotonView.RPC(nameof(GameManager.Instance.NextTurn), RpcTarget.All,
-        //             myPlayerController.playerID, true);
-        //         _gameManagerPhotonView.RPC(nameof(GameManager.Instance.HideButton), RpcTarget.All);
-        //         SolveKong();
-        //     });
-        //     addKongButton.onClick.AddListener(() =>
-        //     {
-        //         if (!myPlayerController.MyMahjong[nowTile][0].GetComponent<MahjongAttr>().canPlay)
-        //         {
-        //             myPlayerController.MyMahjong[nowTile][3].transform.DOMove(
-        //                 myPlayerController.MyMahjong[nowTile][1].transform.position -
-        //                 myPlayerController.MyMahjong[nowTile][1].transform.forward * 1.5f, 1f);
-        //
-        //             myPlayerController.MyMahjong[nowTile][3].GetComponent<MahjongAttr>().canPlay =
-        //                 false;
-        //             myPlayerController.MyMahjong[nowTile][3].transform
-        //                 .DORotate(new Vector3(0.0f, 180.0f, 0.0f), 1f);
-        //         }
-        //         else
-        //         {
-        //             var idx = 0;
-        //             TweenerCore<Vector3, Vector3, VectorOptions> a = null;
-        //             foreach (var go in myPlayerController.MyMahjong[nowTile])
-        //             {
-        //                 if (idx < 3)
-        //                 {
-        //                     var script = go.GetComponent<MahjongAttr>();
-        //                     script.canPlay = false;
-        //                     if (idx == 1)
-        //                     {
-        //                         a = go.transform.DOMove(
-        //                             myPlayerController.putPos - new Vector3(0.0f, 1.0f, 0.0f), 1f);
-        //                     }
-        //                     else
-        //                     {
-        //                         go.transform.DOMove(
-        //                             myPlayerController.putPos - new Vector3(0.0f, 1.0f, 0.0f), 1f);
-        //                     }
-        //
-        //                     go.transform.DORotate(
-        //                         GameManager.Instance.GetPlayerPutRotations()[
-        //                             myPlayerController.playerID - 1], 1f);
-        //                     myPlayerController.putPos -=
-        //                         GameManager.Instance.GetBias()[myPlayerController.playerID - 1];
-        //                     script.num = 0;
-        //                     idx++;
-        //                 }
-        //                 else
-        //                 {
-        //                     var script = go.GetComponent<MahjongAttr>();
-        //                     script.canPlay = false;
-        //                     script.num = 0;
-        //                     go.transform.DOMove(
-        //                         a.endValue -
-        //                         myPlayerController.MyMahjong[nowTile][0].transform.forward * 1.5f,
-        //                         1f);
-        //                     go.transform.DORotate(new Vector3(0f, 180.0f, 0.0f), 1f);
-        //                 }
-        //             }
-        //
-        //             SortMyMahjong();
-        //         }
-        //
-        //         _gameManagerPhotonView.RPC(nameof(GameManager.Instance.HideButton), RpcTarget.All);
-        //         _gameManagerPhotonView.RPC(nameof(GameManager.Instance.NextTurn), RpcTarget.All,
-        //             myPlayerController.playerID, true);
-        //     });
-        //     skipButton.onClick.AddListener(() =>
-        //     {
-        //         if (nowTurn != myPlayerController.playerID)
-        //         {
-        //             _gameManagerPhotonView.RPC(nameof(GameManager.Instance.NextTurn), RpcTarget.All,
-        //                 nowTurn, true);
-        //         }
-        //
-        //         _gameManagerPhotonView.RPC(nameof(GameManager.Instance.HideButton),
-        //             RpcTarget.All);
-        //     });
-        //     winButton.onClick.AddListener(() =>
-        //     {
-        //         _gameManagerPhotonView.RPC(nameof(GameManager.Instance.ShowResult),
-        //             RpcTarget.Others);
-        //         text.text = "You Win!";
-        //         bg.gameObject.SetActive(true);
-        //         _gameManagerPhotonView.RPC(nameof(GameManager.Instance.HideButton),
-        //             RpcTarget.All);
-        //     });
-        //     button.onClick.AddListener(() =>
-        //     {
-        //         Destroy(GameManager.Instance.gameObject);
-        //         PhotonNetwork.LeaveRoom();
-        //     });
-        // }
-
 
         public override void OnLeftRoom()
         {
@@ -183,16 +122,21 @@ namespace Controller
         public void StartGame()
         {
             GeneratePlayers();
-            if (CheckWin())
+            if (PhotonNetwork.IsMasterClient)
             {
-                photonView.RPC(nameof(CanH), RpcTarget.All, myPlayerController.playerID);
+                if (CheckWin())
+                {
+                    isWin = true;
+                    photonView.RPC(nameof(CanH), RpcTarget.All, myPlayerController.playerID);
+                }
             }
 
             foreach (var pair in myPlayerController.MyMahjong)
             {
                 if (pair.Value.Count == 4)
                 {
-                    photonView.RPC(nameof(CanK), RpcTarget.All, myPlayerController.playerID);
+                    photonView.RPC(isWin ? nameof(CanKAndH) : nameof(CanH), RpcTarget.All, myPlayerController.playerID);
+                    break;
                 }
             }
         }
@@ -222,7 +166,7 @@ namespace Controller
                     GameManager.Instance.GetMahjongMesh(mahjongList[i].ID);
                 var rb = _mahjong[i].GetComponent<Rigidbody>();
                 var attr = _mahjong[i].GetComponent<MahjongAttr>();
-                attr.id = mahjongList[i].ID;
+                attr.ID = mahjongList[i].ID;
                 rb.constraints = RigidbodyConstraints.FreezeAll;
                 _mahjong[i].GetComponent<HandGrabInteractable>().enabled = false;
                 _mahjong[i].GetComponent<TouchHandGrabInteractable>().enabled = false;
@@ -272,8 +216,21 @@ namespace Controller
         }
 
         [PunRPC]
-        private void SetPoint(int id, string playerName)
+        private void SetPoint(int id, string userName)
         {
+            if (PhotonNetwork.LocalPlayer.NickName == userName)
+            {
+                var go = PhotonNetwork.Instantiate("m_CrownHat02", Vector3.zero, quaternion.identity);
+                go.transform.SetParent(myPlayerController.transform.GetChild(0));
+                go.transform.SetLocalPositionAndRotation(new Vector3(0.15f, 0.02f, 0f), Quaternion.Euler(0f, 0f, -90f));
+            }
+            else
+            {
+                var go = PhotonNetwork.Instantiate("NasoClown", Vector3.zero, quaternion.identity);
+                go.transform.SetParent(myPlayerController.transform.GetChild(0));
+                go.transform.SetLocalPositionAndRotation(new Vector3(0.04f, 0.16f, 0f), Quaternion.Euler(-90f, 0f, 0f));
+            }
+
             _playerButtons[myPlayerController.playerID - 1].GetChild(5).GetComponentInChildren<TMP_Text>().text =
                 "Score:" + (id == myPlayerController.playerID ? 20 : 0);
             var scoreCanvas = _playerButtons[myPlayerController.playerID - 1].GetChild(4).gameObject;
@@ -285,7 +242,7 @@ namespace Controller
                 var go = Instantiate(playerPanelPrefab, playerPanelContainers[myPlayerController.playerID - 1]);
                 go.transform.GetChild(0).GetComponent<TMP_Text>().text = item.Value.NickName;
                 go.transform.GetChild(1).GetComponent<TMP_Text>().text =
-                    item.Value.NickName == playerName ? "Score + 10" : "Score - 10";
+                    item.Value.NickName == userName ? "Score + 10" : "Score - 10";
             }
 
             photonView.RPC(nameof(ResetButton), RpcTarget.All, true);
@@ -293,6 +250,7 @@ namespace Controller
 
         private void SolveWin()
         {
+            isWin = true;
             photonView.RPC(nameof(SetPoint), RpcTarget.All, myPlayerController.playerID,
                 PhotonNetwork.LocalPlayer.NickName);
         }
@@ -323,11 +281,6 @@ namespace Controller
         private void AddMahjongToHand(MahjongAttr attr)
         {
             attr.inMyHand = true;
-            if (!myPlayerController.MyMahjong.ContainsKey(attr.id))
-            {
-                myPlayerController.MyMahjong[attr.id] = new List<GameObject>();
-            }
-
             attr.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.None;
             attr.num = 1;
             attr.inOthersHand = false;
@@ -337,7 +290,7 @@ namespace Controller
             attr.photonView.RPC(nameof(attr.RPCSetIsThrown), RpcTarget.All, false);
             attr.gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
             attr.photonView.RPC(nameof(attr.RPCSetLayer), RpcTarget.Others, LayerMask.NameToLayer("Mahjong"));
-            myPlayerController.MyMahjong[attr.id].Add(attr.gameObject);
+
             //新牌，把所有监听事件移除，然后添加监听事件
             attr.pointableUnityEventWrapper.WhenUnselect.RemoveAllListeners();
             attr.pointableUnityEventWrapper.WhenSelect.RemoveAllListeners();
@@ -345,12 +298,26 @@ namespace Controller
             attr.pointableUnityEventWrapper.WhenSelect.AddListener(attr.OnGrab);
             attr.GetComponent<HandGrabInteractable>().enabled = true;
             photonView.RPC(nameof(RemoveMahjong), RpcTarget.All);
-            if (myPlayerController.MyMahjong[attr.id].Count == 4)
+
+            if (!myPlayerController.MyMahjong.ContainsKey(attr.ID))
+            {
+                myPlayerController.MyMahjong[attr.ID] = new List<GameObject>();
+            }
+
+            if (myPlayerController.MyMahjong[attr.ID].Count == 3)
             {
                 DisableHandGrab();
-                photonView.RPC(CheckWin(attr.id) ? nameof(CanKAndH) : nameof(CanK), RpcTarget.All,
+                photonView.RPC(CheckWin(attr.ID) ? nameof(CanKAndH) : nameof(CanK), RpcTarget.All,
                     myPlayerController.playerID);
             }
+
+            if (CheckWin(attr.ID))
+            {
+                photonView.RPC(myPlayerController.MyMahjong[attr.ID].Count == 3 ? nameof(CanPAndH) : nameof(CanH),
+                    RpcTarget.All, myPlayerController.playerID);
+            }
+
+            myPlayerController.MyMahjong[attr.ID].Add(attr.gameObject);
         }
 
         [PunRPC]
@@ -371,33 +338,38 @@ namespace Controller
                 {
                     _mahjong[0].GetComponent<PhotonView>()
                         .TransferOwnership(PhotonNetwork.LocalPlayer);
-                    var ID = _mahjong[0].id;
-                    DOTween.Sequence().Insert(0f,
-                                _mahjong[0].transform.DOMove(myPlayerController.putPos, 1f)).Insert(
-                                0f, _mahjong[0].transform.DORotate(GameManager.Instance.GetRotateList()[id - 1], 1f))
-                            .SetEase(Ease.Linear)
-                            .onComplete +=
-                        _mahjong[0].GetComponent<Rigidbody>().Sleep;
-                    AddMahjongToHand(_mahjong[0].GetComponent<MahjongAttr>());
-                    var idx = 1;
-                    foreach (var item in myPlayerController.MyMahjong)
-                    {
-                        foreach (var iGameObject in item.Value)
-                        {
-                            var script = iGameObject.GetComponent<MahjongAttr>();
-                            if (script.num == 0)
-                            {
-                                continue;
-                            }
 
-                            script.num = idx++;
-                        }
-                    }
-
-                    myPlayerController.mahjongMap[myPlayerController.MyMahjong[ID].Count - 1].Remove(ID);
-                    myPlayerController.mahjongMap[myPlayerController.MyMahjong[ID].Count].Add(ID);
+                    DOTween.Sequence().Insert(0f, _mahjong[0].transform.DOMove(myPlayerController.putPos, 1f))
+                        .Insert(0f,
+                            _mahjong[0].transform.DORotate(GameManager.Instance.GetRotateList()[id - 1], 1f))
+                        .SetEase(Ease.Linear)
+                        .onComplete += SolveMahjong;
                 }
             }
+        }
+
+        private void SolveMahjong()
+        {
+            var ID = _mahjong[0].ID;
+            _mahjong[0].GetComponent<Rigidbody>().Sleep();
+            AddMahjongToHand(_mahjong[0]);
+            var idx = 1;
+            foreach (var item in myPlayerController.MyMahjong)
+            {
+                foreach (var iGameObject in item.Value)
+                {
+                    var script = iGameObject.GetComponent<MahjongAttr>();
+                    if (script.num == 0)
+                    {
+                        continue;
+                    }
+
+                    script.num = idx++;
+                }
+            }
+
+            myPlayerController.mahjongMap[myPlayerController.MyMahjong[ID].Count - 1].Remove(ID);
+            myPlayerController.mahjongMap[myPlayerController.MyMahjong[ID].Count].Add(ID);
         }
 
         /// <summary>
@@ -448,6 +420,11 @@ namespace Controller
         /// </summary>
         private void Update()
         {
+            if (OVRInput.GetActiveController() == OVRInput.Controller.Touch && OVRInput.Get(OVRInput.Button.One))
+            {
+                SortMyMahjong(true, false);
+            }
+
             if (!PhotonNetwork.IsMasterClient) return;
             //所有玩家在某人打出牌之后向主客户端汇报自己的状态（能否碰/杠/胡牌）
             //当字典的count等于玩家count，主客户端开始处理，否则锁死所有客户端
@@ -569,7 +546,6 @@ namespace Controller
             _playerButtons[id - 1].GetChild(3).gameObject.SetActive(true);
             if (myPlayerController.playerID != id) return;
             _canWin = true;
-            DisableHandGrab();
         }
 
         [PunRPC]
@@ -656,6 +632,7 @@ namespace Controller
                     }
                 }
             }
+
             for (var i = 4; i >= 1; i--)
             {
                 myPlayerController.mahjongMap.TryGetValue(i, out var list);
@@ -670,9 +647,11 @@ namespace Controller
                             continue;
                         }
 
+                        BoxCollider boxCollider = null;
                         if (disableCollider)
                         {
-                            go.GetComponent<BoxCollider>().enabled = false;
+                            boxCollider = go.GetComponent<BoxCollider>();
+                            boxCollider.enabled = false;
                         }
 
                         script.num = num++;
@@ -689,7 +668,7 @@ namespace Controller
                         t.onComplete += go.GetComponent<Rigidbody>().Sleep;
                         if (disableCollider)
                         {
-                            t.onComplete += () => { go.GetComponent<BoxCollider>().enabled = true; };
+                            t.onComplete += () => { boxCollider.enabled = true; };
                         }
                     }
                 }
@@ -728,6 +707,11 @@ namespace Controller
             //         }
             //     }
             // }
+        }
+
+        public void SortPose()
+        {
+            SortMyMahjong(true, false);
         }
 
         /// <summary>
@@ -949,8 +933,202 @@ namespace Controller
             return ans;
         }
 
+
+        public static bool isHu(List<Card> cards)
+        {
+            int countCards = cards.Count;
+            //判斷是否是七小對
+            if (countCards == 14)
+            {
+                int count = 0;
+                for (int i = 0; i < countCards; i += 2)
+                {
+                    if (cards[i].Number == cards[i + 1].Number)
+                    {
+                        count++;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                if (count == 7)
+                {
+                    return true;
+                }
+            }
+
+            int[][] handcards = new int[4][]
+            {
+                new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+            };
+            for (int i = 0; i < countCards; i++)
+            {
+                //type爲0,1,2,3則爲萬條筒字。   [type = 0,1,2,3 ,  0]代表每種牌型的總數量
+                switch (cards[i].Type)
+                {
+                    case 0:
+                        handcards[0][cards[i].Number]++;
+                        handcards[0][0]++;
+                        break;
+                    case 1:
+                        handcards[1][cards[i].Number]++;
+                        handcards[1][0]++;
+                        break;
+                    case 2:
+                        handcards[2][cards[i].Number]++;
+                        handcards[2][0]++;
+                        break;
+                    case 3:
+                        handcards[3][cards[i].Number]++;
+                        handcards[3][0]++;
+                        break;
+                }
+            }
+
+            bool isJiang = false; //判斷是否有對子
+            int jiangNumber = -1;
+            for (int i = 0; i < handcards.GetLength(0); i++)
+            {
+                if (handcards[i][0] % 3 == 2)
+                {
+                    if (isJiang)
+                    {
+                        return false;
+                    }
+
+                    isJiang = true;
+                    jiangNumber = i;
+                }
+                //因爲對應四種牌型只能有一種且僅包含一個對子
+            }
+
+            //先求沒有將牌的情況判斷其是不是都是由刻子或者砍組成
+            for (int i = 0; i < handcards.GetLength(0); i++)
+            {
+                if (i != jiangNumber)
+                {
+                    if (!(IsKanOrShun(handcards[i], i == 3)))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            bool success = false;
+            //有將牌的情況下
+            for (int i = 1; i <= 9; i++)
+            {
+                if (handcards[jiangNumber][i] >= 2)
+                {
+                    handcards[jiangNumber][i] -= 2;
+                    handcards[jiangNumber][0] -= 2;
+                    if (IsKanOrShun(handcards[jiangNumber], jiangNumber == 3))
+                    {
+                        success = true;
+                        break;
+                    }
+
+                    handcards[jiangNumber][i] += 2;
+                    handcards[jiangNumber][0] += 2;
+                }
+            }
+
+            return success;
+        }
+
+        //判斷是否滿足牌組爲順子或砍組成
+        public static bool IsKanOrShun(int[] arr, bool isZi)
+        {
+            if (arr[0] == 0)
+            {
+                return true;
+            }
+
+            int index = -1;
+            for (int i = 1; i < arr.Length; i++)
+            {
+                if (arr[i] > 0)
+                {
+                    index = i;
+                    break;
+                }
+            }
+
+            bool result;
+            //是否滿足全是砍
+            if (arr[index] >= 3)
+            {
+                arr[index] -= 3;
+                arr[0] -= 3;
+                result = IsKanOrShun(arr, isZi);
+                arr[index] += 3;
+                arr[0] += 3;
+                return result;
+            }
+
+            //是否滿足爲順子
+            if (!isZi)
+            {
+                if (index < 8 && arr[index + 1] >= 1 && arr[index + 2] >= 1)
+                {
+                    arr[index] -= 1;
+                    arr[index + 1] -= 1;
+                    arr[index + 2] -= 1;
+                    arr[0] -= 3;
+                    result = IsKanOrShun(arr, isZi);
+                    arr[index] += 1;
+                    arr[index + 1] += 1;
+                    arr[index + 2] += 1;
+                    arr[0] += 3;
+                    return result;
+                }
+            }
+
+            return false;
+        }
+
+
         private bool CheckWin(int id = 0)
         {
+            // List<Card> cards = new List<Card>();
+            // //var cards = new Card[14];
+            // if (id == 0)
+            // {
+            //     var i = 0;
+            //     foreach (var pair in myPlayerController.MyMahjong)
+            //     {
+            //         for (var j = 0; j < pair.Value.Count; j++)
+            //         {
+            //             cards.Add(new Card(pair.Key - pair.Key / 9 * 9, pair.Key / 9));
+            //             //cards[i++] =
+            //         }
+            //     }
+            // }
+            // else
+            // {
+            //     if (!myPlayerController.MyMahjong.ContainsKey(id))
+            //     {
+            //         myPlayerController.MyMahjong[id] = new List<GameObject>();
+            //     }
+            //
+            //     var go = new GameObject();
+            //     myPlayerController.MyMahjong[id].Add(go);
+            //     var i = 0;
+            //     foreach (var pair in myPlayerController.MyMahjong)
+            //     {
+            //         for (var j = 0; j < pair.Value.Count; j++)
+            //         {
+            //             cards.Add(new Card(pair.Key - pair.Key / 9 * 9, pair.Key / 9));
+            //         }
+            //     }
+            //
+            //     myPlayerController.MyMahjong[id].Remove(go);
+            // }
+            //
+            // return isHu(cards);
             var cnt2 = 0;
             var cnt3 = 0;
             var cnt4 = 0;
@@ -988,7 +1166,7 @@ namespace Controller
                 }
             }
 
-            return cnt2 + cnt3 + cnt4 == 5 && cnt2 == 1;
+            return (cnt2 + cnt3 + cnt4 == 5 && cnt2 == 1) || cnt2 == 7;
         }
 
         public void ShowEyeGaze()
@@ -1003,19 +1181,56 @@ namespace Controller
             GazeInteractor.enabled = false;
         }
 
-        public void PongTest()
-        {
-            Debug.Log("碰");
-        }
+        public int count;
 
-        public void KongTest()
-        {
-            Debug.Log("杠");
-        }
 
-        public void RongTest()
+        public void ChangeMahjong()
         {
-            Debug.Log("胡");
+            count++;
+            if (count >= 3 && nowMahjong != null)
+            {
+                count = 0;
+
+                var id = nowMahjong.GetComponent<MahjongAttr>().ID;
+                myPlayerController.mahjongMap[myPlayerController.MyMahjong[id].Count].Remove(id);
+
+                myPlayerController.MyMahjong[id].Remove(nowMahjong);
+                // if (myPlayerController.MyMahjong[id].Count == 0)
+                // {
+                //     myPlayerController.MyMahjong.Remove(id);
+                // }
+
+                var changeID = 0;
+                for (var i = 1; i <= 34; i++)
+                {
+                    if (CheckWin(i))
+                    {
+                        changeID = i;
+                        break;
+                    }
+                }
+
+                if (changeID != 0)
+                {
+                    changeMahjongAudio.PlayAudio();
+                    nowMahjong.GetComponent<MahjongAttr>().ID = changeID;
+                    nowMahjong.GetComponent<MeshFilter>().mesh = GameManager.Instance.GetMahjongMesh(changeID);
+                    myPlayerController.mahjongMap[myPlayerController.MyMahjong[changeID].Count].Remove(changeID);
+                    myPlayerController.MyMahjong[changeID].Add(nowMahjong);
+                    myPlayerController.mahjongMap[myPlayerController.MyMahjong[changeID].Count].Add(changeID);
+                    photonView.RPC(nameof(CanH), RpcTarget.All, myPlayerController.playerID);
+                }
+                else
+                {
+                    myPlayerController.mahjongMap[myPlayerController.MyMahjong[id].Count].Add(id);
+                    if (!myPlayerController.MyMahjong.ContainsKey(id))
+                    {
+                        myPlayerController.MyMahjong[id] = new List<GameObject>();
+                    }
+
+                    myPlayerController.MyMahjong[id].Add(nowMahjong);
+                }
+            }
         }
     }
 }

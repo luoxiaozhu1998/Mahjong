@@ -1,3 +1,4 @@
+using Photon.Pun;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -33,6 +34,8 @@ public class GazeInteractor : MonoBehaviour
             _transform.position = _camera.position;
         }
 
+        Debug.DrawRay(_transform.position, _transform.forward * maxDistance, Color.red);
+
         switch (_layerMask.value)
         {
             //如果是UI，layerMask为32
@@ -40,8 +43,9 @@ public class GazeInteractor : MonoBehaviour
                 if (Physics.Raycast(_transform.position, _transform.forward * maxDistance, out _hit, maxDistance,
                         _layerMask))
                 {
-                    GazeIcon.transform.position = _hit.point;
+                    GazeIcon.transform.position = _hit.point + _hit.normal * 0.005f;
                     _nowHoveredTransform = _hit.transform;
+
                 }
                 else
                 {

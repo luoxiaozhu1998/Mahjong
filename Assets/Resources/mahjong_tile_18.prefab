@@ -106,7 +106,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f1cde68c2616c914dac3350b56693d41, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  id: 0
+  ID: 0
   num: 0
   pointableUnityEventWrapper: {fileID: 0}
   inMyHand: 0
@@ -115,6 +115,9 @@ MonoBehaviour:
   isAdd: 0
   onDesk: 0
   isThrown: 0
+  isPonged: 0
+  isKonged: 0
+  flag: 0
 --- !u!54 &2323563579684519432
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -169,7 +172,7 @@ MonoBehaviour:
   m_SynchronizePosition: 1
   m_SynchronizeRotation: 1
   m_SynchronizeScale: 0
-  m_UseLocal: 0
+  m_UseLocal: 1
 --- !u!114 &-4922842826583029424
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -285,7 +288,7 @@ BoxCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4991824015918021279}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: 99d019c762c5bcc4d9a795dc26731d9c, type: 2}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2

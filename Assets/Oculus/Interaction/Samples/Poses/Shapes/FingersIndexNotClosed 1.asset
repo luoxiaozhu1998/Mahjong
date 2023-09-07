@@ -14,12 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _shapeName: All Fingers Not Closed
   _thumbFeatureConfigs:
-    _value: []
+    _value:
+    - _mode: 0
+      _feature: 0
+      _state: 1
   _indexFeatureConfigs:
     _value:
     - _mode: 0
       _feature: 0
-      _state: 0
+      _state: 1
   _middleFeatureConfigs:
     _value: []
   _ringFeatureConfigs:

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Manager;
+using Oculus.Interaction;
 using Photon.Pun;
 using Photon.Realtime;
 using TMPro;
@@ -36,6 +37,10 @@ public class PunStuff : MonoBehaviourPunCallbacks
     private bool _isRoomListContentNull;
     private const string UserNameKey = "UserName";
     private const string IPAddressKey = "IPAddress";
+    [SerializeField] private GazeInteractor gazeInteractor;
+    [SerializeField] private GameObject leftRayInteractor;
+    [SerializeField] private GameObject rightRayInteractor;
+    [SerializeField] private Transform gazeIcon;
 
     private void Start()
     {
@@ -47,6 +52,8 @@ public class PunStuff : MonoBehaviourPunCallbacks
     {
         ipAddressInputField.text = PlayerPrefs.GetString(IPAddressKey, "192.168.137.1");
         userNameInputField.text = PlayerPrefs.GetString(UserNameKey, "FuDan-TA-01");
+        PhotonNetwork.NetworkingClient.LoadBalancingPeer.SerializationProtocolType = ExitGames.Client.Photon.SerializationProtocol.GpBinaryV16;
+
         GameManager.Instance.AddMenu(LoadingMenuName, loadingMenu);
         GameManager.Instance.AddMenu(TitleMenuName, titleMenu);
         GameManager.Instance.AddMenu(CreateRoomMenuName, createRoomMenu);
@@ -78,6 +85,27 @@ public class PunStuff : MonoBehaviourPunCallbacks
         Debug.Log("OnJoinedLobby()");
         PhotonNetwork.LocalPlayer.NickName = GameManager.Instance.GetPlayerName();
         //PhotonNetwork.NickName = "Player" + Random.Range(0, 1000).ToString("0000");
+    }
+
+    public void EnableEyeGaze()
+    {
+        if (!gazeInteractor.enabled)
+        {
+            gazeInteractor.enabled = true;
+            rightRayInteractor.gameObject.SetActive(false);
+            leftRayInteractor.gameObject.SetActive(false);
+        }
+    }
+
+    public void DisableEyeGaze()
+    {
+        if (gazeInteractor.enabled)
+        {
+            gazeInteractor.enabled = false;
+            rightRayInteractor.gameObject.SetActive(true);
+            leftRayInteractor.gameObject.SetActive(true);
+            gazeIcon.position = Vector3.zero;
+        }
     }
 
     public void CreateRoom()
@@ -169,6 +197,8 @@ public class PunStuff : MonoBehaviourPunCallbacks
     {
         //只有房主能点击
         GameManager.Instance.OpenMenu("LoadingMenu");
+        PhotonNetwork.CurrentRoom.IsOpen = false;
+        PhotonNetwork.CurrentRoom.IsVisible = false;
         PhotonNetwork.LoadLevel(2);
     }
 

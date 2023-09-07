@@ -380,6 +380,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Voice
       objectReference: {fileID: 0}
+    - target: {fileID: 1403184467309264321, guid: 298c3092e5dfa904886a6f6e11853378, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1403184467309264332, guid: 298c3092e5dfa904886a6f6e11853378, type: 3}
       propertyPath: m_RootOrder
       value: 2
@@ -902,6 +906,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 3865823349605503150, guid: d0377a811c2a95841ba015ae0b2c8d45, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3865823349605503150, guid: d0377a811c2a95841ba015ae0b2c8d45, type: 3}
       propertyPath: _ovrCameraRig
       value: 
       objectReference: {fileID: 0}
@@ -988,6 +996,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 27d9ca4252a965544a4613f39f18d361, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1548627117
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1548627109}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2f0f54970423fb44a4e5f6b1138f3ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _useAsyncBodySolver: 0
+  _debugDrawTrackingLocations: 0
 --- !u!1 &1852981902
 GameObject:
   m_ObjectHideFlags: 0

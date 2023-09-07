@@ -182,7 +182,178 @@ namespace Manager
         public void LoadMahjong()
         {
             _mahjongList.Clear();
-            for (var i = 1; i <= Constants.MaxId; i++)
+
+            //1个1万
+            _mahjongList.Add(
+                new Mahjong(1, "mahjong_tile_" + 1));
+            //4个2万
+            for (var j = 0; j < Constants.MaxPlayer; j++)
+            {
+                _mahjongList.Add(
+                    new Mahjong(2, "mahjong_tile_" + 2));
+            }
+
+            //4个3万
+            for (var j = 0; j < Constants.MaxPlayer; j++)
+            {
+                _mahjongList.Add(
+                    new Mahjong(3, "mahjong_tile_" + 3));
+            }
+
+            //4个4万
+            for (var j = 0; j < Constants.MaxPlayer; j++)
+            {
+                _mahjongList.Add(
+                    new Mahjong(4, "mahjong_tile_" + 4));
+            }
+
+            //4个5万
+            for (var j = 0; j < Constants.MaxPlayer; j++)
+            {
+                _mahjongList.Add(
+                    new Mahjong(5, "mahjong_tile_" + 5));
+            }
+
+            //4个6万
+            for (var j = 0; j < Constants.MaxPlayer; j++)
+            {
+                _mahjongList.Add(
+                    new Mahjong(6, "mahjong_tile_" + 6));
+            }
+
+            //4个7万
+            for (var j = 0; j < Constants.MaxPlayer; j++)
+            {
+                _mahjongList.Add(
+                    new Mahjong(7, "mahjong_tile_" + 7));
+            }
+
+            //4个8万
+            for (var j = 0; j < Constants.MaxPlayer; j++)
+            {
+                _mahjongList.Add(
+                    new Mahjong(8, "mahjong_tile_" + 8));
+            }
+
+            //4个9万
+            for (var j = 0; j < Constants.MaxPlayer; j++)
+            {
+                _mahjongList.Add(
+                    new Mahjong(9, "mahjong_tile_" + 9));
+            }
+
+            //4个1条
+            for (var j = 0; j < Constants.MaxPlayer; j++)
+            {
+                _mahjongList.Add(
+                    new Mahjong(10, "mahjong_tile_" + 10));
+            }
+
+            //1个2条
+            _mahjongList.Add(
+                new Mahjong(11, "mahjong_tile_" + 11));
+            _mahjongList.Add(
+                new Mahjong(11, "mahjong_tile_" + 11));
+            //4个3条
+            for (var j = 0; j < Constants.MaxPlayer; j++)
+            {
+                _mahjongList.Add(
+                    new Mahjong(12, "mahjong_tile_" + 12));
+            }
+
+            //1个4条
+            _mahjongList.Add(
+                new Mahjong(13, "mahjong_tile_" + 13));
+            //4个5条
+            for (var j = 0; j < Constants.MaxPlayer; j++)
+            {
+                _mahjongList.Add(
+                    new Mahjong(14, "mahjong_tile_" + 14));
+            }
+
+            for (var j = 0; j < Constants.MaxPlayer; j++)
+            {
+                _mahjongList.Add(
+                    new Mahjong(15, "mahjong_tile_" + 15));
+            }
+
+            for (var j = 0; j < Constants.MaxPlayer; j++)
+            {
+                _mahjongList.Add(
+                    new Mahjong(16, "mahjong_tile_" + 16));
+            }
+
+            for (var j = 0; j < Constants.MaxPlayer; j++)
+            {
+                _mahjongList.Add(
+                    new Mahjong(17, "mahjong_tile_" + 17));
+            }
+
+            for (var j = 0; j < Constants.MaxPlayer; j++)
+            {
+                _mahjongList.Add(
+                    new Mahjong(18, "mahjong_tile_" + 18));
+            }
+
+            //1个4条
+            _mahjongList.Add(
+                new Mahjong(19, "mahjong_tile_" + 19));
+
+            for (var j = 0; j < Constants.MaxPlayer; j++)
+            {
+                _mahjongList.Add(
+                    new Mahjong(20, "mahjong_tile_" + 20));
+            }
+
+            for (var j = 0; j < 3; j++)
+            {
+                _mahjongList.Add(
+                    new Mahjong(21, "mahjong_tile_" + 21));
+            }
+
+            for (var j = 0; j < Constants.MaxPlayer; j++)
+            {
+                _mahjongList.Add(
+                    new Mahjong(22, "mahjong_tile_" + 22));
+            }
+
+            for (var j = 0; j < Constants.MaxPlayer; j++)
+            {
+                _mahjongList.Add(
+                    new Mahjong(23, "mahjong_tile_" + 23));
+            }
+
+            for (var j = 0; j < Constants.MaxPlayer; j++)
+            {
+                _mahjongList.Add(
+                    new Mahjong(24, "mahjong_tile_" + 24));
+            }
+
+            for (var j = 0; j < Constants.MaxPlayer - 1; j++)
+            {
+                _mahjongList.Add(
+                    new Mahjong(25, "mahjong_tile_" + 25));
+            }
+
+            for (var j = 0; j < Constants.MaxPlayer; j++)
+            {
+                _mahjongList.Add(
+                    new Mahjong(26, "mahjong_tile_" + 26));
+            }
+
+            for (var j = 0; j < Constants.MaxPlayer; j++)
+            {
+                _mahjongList.Add(
+                    new Mahjong(27, "mahjong_tile_" + 27));
+            }
+
+            for (var j = 0; j < Constants.MaxPlayer; j++)
+            {
+                _mahjongList.Add(
+                    new Mahjong(28, "mahjong_tile_" + 28));
+            }
+
+            for (var i = 29; i <= Constants.MaxId; i++)
             {
                 for (var j = 0; j < Constants.MaxPlayer; j++)
                 {
@@ -191,60 +362,45 @@ namespace Manager
                 }
             }
 
-            // for (var j = 1; j <= 3; j++)
-            // {
-            //     _mahjongList[j - 1] = new Mahjong(1, "mahjong_tile_" + 1);
-            // }
-            //
-            // for (var j = 1; j <= 3; j++)
-            // {
-            //     _mahjongList[3 + j - 1] = new Mahjong(10, "mahjong_tile_" + 10);
-            // }
-            //
-            // for (var j = 1; j <= 3; j++)
-            // {
-            //     _mahjongList[6 + j - 1] = new Mahjong(14, "mahjong_tile_" + 14);
-            // }
-            //
-            // for (var j = 1; j <= 3; j++)
-            // {
-            //     _mahjongList[9 + j - 1] = new Mahjong(15, "mahjong_tile_" + 16);
-            // }
-            //
-            // _mahjongList[12] = new Mahjong(5, "mahjong_tile_" + 5);
-            // _mahjongList[13] = new Mahjong(5, "mahjong_tile_" + 5);
-            // _mahjongList[0] = new Mahjong(1, "mahjong_tile_" + 1);
-            // _mahjongList[1] = new Mahjong(1, "mahjong_tile_" + 1);
-            // _mahjongList[2] = new Mahjong(1, "mahjong_tile_" + 1);
-            // _mahjongList[3] = new Mahjong(11, "mahjong_tile_" + 11);
-            // _mahjongList[4] = new Mahjong(11, "mahjong_tile_" + 11);
-            // _mahjongList[5] = new Mahjong(15, "mahjong_tile_" + 15);
-            // _mahjongList[6] = new Mahjong(16, "mahjong_tile_" + 16);
-            // _mahjongList[7] = new Mahjong(16, "mahjong_tile_" + 16);
-            // _mahjongList[8] = new Mahjong(22, "mahjong_tile_" + 22);
-            // _mahjongList[9] = new Mahjong(22, "mahjong_tile_" + 22);
-            // _mahjongList[10] = new Mahjong(24, "mahjong_tile_" + 24);
-            // _mahjongList[11] = new Mahjong(24, "mahjong_tile_" + 24);
-            // _mahjongList[12] = new Mahjong(26, "mahjong_tile_" + 26);
-            // _mahjongList[13] = new Mahjong(26, "mahjong_tile_" + 26);
-            // _mahjongList[14] = new Mahjong(1, "mahjong_tile_" + 1);
-            // _mahjongList[15] = new Mahjong(16, "mahjong_tile_" + 16);
-            // _mahjongList[16] = new Mahjong(22, "mahjong_tile_" + 22);
-            // _mahjongList[17] = new Mahjong(24, "mahjong_tile_" + 24);
-            // _mahjongList[18] = new Mahjong(26, "mahjong_tile_" + 26);
-            // _mahjongList[19] = new Mahjong(30, "mahjong_tile_" + 30);
-            // _mahjongList[20] = new Mahjong(30, "mahjong_tile_" + 30);
-            // _mahjongList[21] = new Mahjong(15, "mahjong_tile_" + 15);
-            // _mahjongList[22] = new Mahjong(15, "mahjong_tile_" + 15);
-            // _mahjongList[23] = new Mahjong(15, "mahjong_tile_" + 15);
-            // _mahjongList[24] = new Mahjong(15, "mahjong_tile_" + 15);
-            // _mahjongList[25] = new Mahjong(15, "mahjong_tile_" + 15);
-            // _mahjongList[26] = new Mahjong(15, "mahjong_tile_" + 15);
-            // _mahjongList[27] = new Mahjong(16, "mahjong_tile_" + 16);
-            // _mahjongList[28] = new Mahjong(16, "mahjong_tile_" + 16);
-            // _mahjongList[29] = new Mahjong(16, "mahjong_tile_" + 16);
-            // _mahjongList[30] = new Mahjong(16, "mahjong_tile_" + 16);
             _mahjongList = _mahjongList.OrderBy(_ => rng.Next()).ToList();
+            //前面放三个1万
+            for (var j = 1; j <= 3; j++)
+            {
+                _mahjongList.Insert(0, new Mahjong(1, "mahjong_tile_" + 1));
+            }
+
+            //前面放三个2条
+            for (var j = 1; j <= 2; j++)
+            {
+                _mahjongList.Insert(0, new Mahjong(11, "mahjong_tile_" + 11));
+            }
+
+            //前面放三个4条
+            for (var j = 1; j <= 3; j++)
+            {
+                _mahjongList.Insert(0, new Mahjong(13, "mahjong_tile_" + 13));
+            }
+
+            //前面放三个1饼
+            for (var j = 1; j <= 3; j++)
+            {
+                _mahjongList.Insert(0, new Mahjong(19, "mahjong_tile_" + 19));
+            }
+
+            // _mahjongList.Insert(0, new Mahjong(1, "mahjong_tile_" + 1));
+            // _mahjongList.Insert(0, new Mahjong(1, "mahjong_tile_" + 1));
+            // _mahjongList.Insert(0, new Mahjong(1, "mahjong_tile_" + 1));
+            // _mahjongList.Insert(0, new Mahjong(2, "mahjong_tile_" + 2));
+            // _mahjongList.Insert(0, new Mahjong(3, "mahjong_tile_" + 3));
+            // _mahjongList.Insert(0, new Mahjong(4, "mahjong_tile_" + 4));
+            // _mahjongList.Insert(0, new Mahjong(5, "mahjong_tile_" + 5));
+            // _mahjongList.Insert(0, new Mahjong(6, "mahjong_tile_" + 6));
+            // _mahjongList.Insert(0, new Mahjong(7, "mahjong_tile_" + 7));
+            // _mahjongList.Insert(0, new Mahjong(8, "mahjong_tile_" + 8));
+            // _mahjongList.Insert(0, new Mahjong(9, "mahjong_tile_" + 9));
+            // _mahjongList.Insert(0, new Mahjong(9, "mahjong_tile_" + 9));
+            _mahjongList.Insert(0, new Mahjong(21, "mahjong_tile_" + 21));
+            _mahjongList.Insert(0, new Mahjong(25, "mahjong_tile_" + 25));
             _mahjongList = _mahjongList.ToList();
         }
 
@@ -292,14 +448,14 @@ namespace Manager
             go.transform.SetParent(rig);
             go.transform.localRotation = Quaternion.identity;
             go.transform.localPosition = Vector3.zero;
-            var centerEyeAnchor = rig.Find("TrackingSpace/CenterEyeAnchor");
-            var voiceSetup = PhotonNetwork.Instantiate(PhotonVoiceSetupPrefabName, centerEyeAnchor.position,
-                centerEyeAnchor.rotation);
-            voiceSetup.transform.SetParent(centerEyeAnchor);
-            voiceSetup.transform.localPosition = Vector3.zero;
-            voiceSetup.transform.localRotation = Quaternion.identity;
-            go.GetComponent<StreamingAvatar>().SetLipSync(voiceSetup.GetComponent<OvrAvatarLipSyncContext>());
-            voiceSetup.GetComponent<OvrAvatarLipSyncContext>().CaptureAudio = true;
+            // var centerEyeAnchor = rig.Find("TrackingSpace/CenterEyeAnchor");
+            // var voiceSetup = PhotonNetwork.Instantiate(PhotonVoiceSetupPrefabName, centerEyeAnchor.position,
+            //     centerEyeAnchor.rotation);
+            // voiceSetup.transform.SetParent(centerEyeAnchor);
+            // voiceSetup.transform.localPosition = Vector3.zero;
+            // voiceSetup.transform.localRotation = Quaternion.identity;
+            // go.GetComponent<StreamingAvatar>().SetLipSync(voiceSetup.GetComponent<OvrAvatarLipSyncContext>());
+            // voiceSetup.GetComponent<OvrAvatarLipSyncContext>().CaptureAudio = true;
             return go;
         }
 
@@ -330,7 +486,7 @@ namespace Manager
                 pv.RPC(nameof(attr.RPCSetOnDesk), RpcTarget.All, false);
                 pv.RPC(nameof(attr.RPCSetIsThrown), RpcTarget.All, false);
                 pv.RPC(nameof(attr.RPCSetLayer), RpcTarget.Others, LayerMask.NameToLayer("Mahjong"));
-                attr.id = _userMahjongLists[id][i].ID;
+                attr.ID = _userMahjongLists[id][i].ID;
                 pos += _bias[id];
                 if (!ret.ContainsKey(_userMahjongLists[id][i].ID))
                 {
@@ -339,6 +495,10 @@ namespace Manager
 
                 ret[_userMahjongLists[id][i].ID].Add(go);
                 attr.num = i + 1;
+                if (!pv.IsMine)
+                {
+                    pv.GetComponent<MeshFilter>().mesh = GameManager.Instance.GetMahjongMesh(34);
+                }
             }
 
             return ret;

@@ -1,7 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Controller;
+using Manager;
 using Oculus.Interaction;
 using Oculus.Interaction.HandGrab;
 using Photon.Pun;
@@ -11,8 +11,17 @@ using UnityEngine;
 public class MahjongAttr : MonoBehaviourPunCallbacks
 {
     private PhotonView _photonView;
-    public int id;
-    public int num;
+
+    /// <summary>
+    /// 麻将牌的ID标识符，每种ID对应一种麻将
+    /// </summary>
+    [HideInInspector] public int ID;
+
+    /// <summary>
+    ///  麻将在自己手牌中的序号，用于系统自动摆牌时确定位置
+    /// </summary>
+    [HideInInspector] public int num;
+
     private Rigidbody _rigidbody;
 
     [HideInInspector] public PointableUnityEventWrapper pointableUnityEventWrapper;
@@ -20,6 +29,7 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
     //private HandGrabInteractable[] _handGrabInteractable;
     private HandGrabInteractable _handGrabInteractable;
     private TouchHandGrabInteractable _touchHandGrabInteractable;
+    private PhysicMaterial _physicMaterial;
 
     /// <summary>
     /// 是否在自己手中，如果在自己手中，这个bool为true
@@ -61,11 +71,13 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
     /// </summary>
     public bool isKonged;
 
+    public bool flag = false;
     private Vector3 _originalPos;
     private GameObject _effectGo;
     private GameObject _eyeInteractGo;
     private Transform _transform;
     private MeshRenderer _meshRenderer;
+    public int Type => ID / 9;
 
     private void Awake()
     {
@@ -73,6 +85,7 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
         _meshRenderer = GetComponent<MeshRenderer>();
         var grabable = GetComponent<Grabbable>();
         var boxCollider = GetComponent<BoxCollider>();
+        _physicMaterial = GetComponent<PhysicMaterial>();
         //_handGrabInteractable = GetComponentsInChildren<HandGrabInteractable>();
         _handGrabInteractable = GetComponent<HandGrabInteractable>();
         _handGrabInteractable.InjectOptionalPhysicsGrabbable(GetComponent<PhysicsGrabbable>());
@@ -102,6 +115,13 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
             var position = _transform.position;
             _originalPos = new Vector3(position.x, position.y + 2f, position.z);
         }
+
+        if (GameController.Instance.nowMahjong == null)
+        {
+            GameController.Instance.count = 0;
+        }
+
+        GameController.Instance.nowMahjong = gameObject;
     }
 
     // public void OnGrab()
@@ -268,6 +288,12 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
     {
         if (other.gameObject.CompareTag("Desk"))
         {
+            if (GameController.Instance.nowMahjong == gameObject)
+            {
+                GameController.Instance.nowMahjong = null;
+                GameController.Instance.count = 0;
+            }
+
             if (inMyHand && isPut)
             {
                 var playerController = GameController.Instance.myPlayerController;
@@ -276,16 +302,19 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
                 if (GameController.Instance.nowTurn == playerId)
                 {
                     GameObject go = null;
-                    foreach (var item in playerController.MyMahjong[id]
-                                 .Where(item => item.GetComponent<MahjongAttr>().num == num))
+                    foreach (var item in playerController.MyMahjong[ID])
                     {
-                        go = item;
+                        if (item.GetComponent<MahjongAttr>().num == num)
+                        {
+                            go = item;
+                        }
                     }
+
                     if (go != null)
                     {
-                        playerController.mahjongMap[playerController.MyMahjong[id].Count].Remove(id);
-                        playerController.MyMahjong[id].Remove(go);
-                        playerController.mahjongMap[playerController.MyMahjong[id].Count].Add(id);
+                        playerController.mahjongMap[playerController.MyMahjong[ID].Count].Remove(ID);
+                        playerController.MyMahjong[ID].Remove(go);
+                        playerController.mahjongMap[playerController.MyMahjong[ID].Count].Add(ID);
                     }
 
                     GameController.Instance.SortMyMahjong(false, false);
@@ -293,8 +322,13 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
                     inMyHand = false;
                     inOthersHand = false;
                     onDesk = false;
+                    if (!_photonView.IsMine)
+                    {
+                        GetComponent<MeshFilter>().mesh = GameManager.Instance.GetMahjongMesh(ID);
+                    }
+
                     gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
-                    _photonView.RPC(nameof(PlayTile), RpcTarget.All, playerId, id, gameObject.GetPhotonView().ViewID);
+                    _photonView.RPC(nameof(PlayTile), RpcTarget.All, playerId, ID, gameObject.GetPhotonView().ViewID);
                     _photonView.RPC(nameof(RPCSetIsThrown), RpcTarget.Others, true);
                     _photonView.RPC(nameof(RPCSetInMyHand), RpcTarget.Others, false);
                     _photonView.RPC(nameof(RPCSetInOthersHand), RpcTarget.Others, false);
@@ -310,6 +344,12 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
                 //当玩家尝试把桌子上的牌拿到手牌，强制归位
                 if (isAdd && isThrown)
                 {
+                    if (GameController.Instance.nowMahjong == gameObject)
+                    {
+                        GameController.Instance.nowMahjong = null;
+                        GameController.Instance.count = 0;
+                    }
+
                     _transform.position = _originalPos;
                 }
             }

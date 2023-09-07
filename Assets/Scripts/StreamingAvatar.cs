@@ -107,10 +107,21 @@ public class StreamingAvatar : OvrAvatarEntity
     protected override void Awake()
     {
         _photonView = GetComponent<PhotonView>();
+        OnUserAvatarLoadedEvent.AddListener(_ =>
+        {
+            var anchor = transform.GetChild(0);
+            var playerNamePrefab = PhotonNetwork.Instantiate("PlayerNamePrefab", Vector3.zero, quaternion.identity)
+                .transform;
+            playerNamePrefab.SetParent(anchor);
+            playerNamePrefab.SetLocalPositionAndRotation(Vector3.zero, quaternion.identity);
+            playerNamePrefab.GetComponentInChildren<TMP_Text>().text = _userName;
+            var rect = playerNamePrefab as RectTransform;
+            if (rect != null) rect.anchoredPosition3D = Vector3.zero;
+        });
         if (_photonView.IsMine)
         {
             SetIsLocal(true);
-            var inputManager = FindObjectOfType<SampleInputManager>();
+            var inputManager = FindObjectOfType<AvatarInputManager>();
             SetBodyTracking(inputManager);
             SetLipSync(FindObjectOfType<OvrAvatarLipSyncContext>());
             SetFacePoseProvider(inputManager.GetComponent<SampleFacePoseBehavior>());
@@ -194,6 +205,7 @@ public class StreamingAvatar : OvrAvatarEntity
     {
         var instantiationData = _photonView.InstantiationData;
         _userId = Convert.ToUInt64(instantiationData[0]);
+        OvrAvatarLog.LogInfo("ID是" + _userId, logScope, this);
         _userName = instantiationData[1].ToString();
         yield return LoadUserAvatar();
     }
@@ -554,14 +566,7 @@ public class StreamingAvatar : OvrAvatarEntity
             StartCoroutine(StreamAvatarData());
         }
 
-        var anchor = transform.GetChild(0);
-        var playerNamePrefab = PhotonNetwork.Instantiate("PlayerNamePrefab", Vector3.zero, quaternion.identity)
-            .transform;
-        playerNamePrefab.SetParent(anchor);
-        playerNamePrefab.SetLocalPositionAndRotation(Vector3.zero, quaternion.identity);
-        playerNamePrefab.GetComponentInChildren<TMP_Text>().text = _userName;
-        var rect = playerNamePrefab as RectTransform;
-        if (rect != null) rect.anchoredPosition3D = Vector3.zero;
+
         // Check for changes unless a local asset is configured, user could create one later
         // If a local asset is loaded, it will currently conflict w/ the CDN asset
         if (_autoCheckChanges && (hasFoundAvatar || !HasLocalAvatarConfigured))

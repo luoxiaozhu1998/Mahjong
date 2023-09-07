@@ -7,8 +7,11 @@ public class AddTrigger : MonoBehaviour
         if (other.CompareTag("Mahjong"))
         {
             var attr = other.GetComponent<MahjongAttr>();
-            attr.isPut = false;
-            attr.isAdd = true;
+            if (attr != null)
+            {
+                attr.isPut = false;
+                attr.isAdd = true;
+            }
         }
     }
 
@@ -17,8 +20,11 @@ public class AddTrigger : MonoBehaviour
         if (other.CompareTag("Mahjong"))
         {
             var attr = other.GetComponent<MahjongAttr>();
-            attr.isPut = true;
-            attr.isAdd = false;
+            if (attr != null)
+            {
+                attr.isPut = true;
+                attr.isAdd = false;
+            }
         }
     }
 }
