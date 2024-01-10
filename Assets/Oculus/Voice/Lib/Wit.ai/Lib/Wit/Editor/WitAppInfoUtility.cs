@@ -9,6 +9,7 @@
 using System;
 using System.Text;
 using System.Collections.Generic;
+using System.Linq;
 using Meta.WitAi.Data.Info;
 using Meta.WitAi.Requests;
 
@@ -172,11 +173,12 @@ namespace Meta.WitAi.Lib
                 UpdateClientToken(configuration, appInfo, warnings, onUpdateComplete);
             });
         }
-        private static void UpdateExportInfo(IWitRequestConfiguration configuration,
+
+        private static void UpdateVersionTagList(IWitRequestConfiguration configuration,
             WitAppInfo appInfo, StringBuilder warnings,
             Action<WitAppInfo, string> onUpdateComplete)
         {
-            GetRequest(configuration).RequestAppExportInfo(appInfo.id, (exportInfo, error) =>
+            GetRequest(configuration).RequestAppVersionTags(appInfo.id, (versionTagsBySnapshot, error) =>
             {
                 if (!String.IsNullOrEmpty(error))
                 {
@@ -184,22 +186,18 @@ namespace Meta.WitAi.Lib
                     UpdateComplete(configuration, appInfo, warnings, onUpdateComplete);
                     return;
                 }
-                GetRequest(configuration).RequestAppExportZip(exportInfo.uri, (exportZip, downloadError) =>
+
+                int totalTagCount = versionTagsBySnapshot.Sum(snap =>snap.Length);
+                appInfo.versionTags = new WitVersionTagInfo[totalTagCount];
+
+                for (int snapshot = 0, currentTag = 0; snapshot < versionTagsBySnapshot.Length; snapshot++)
                 {
-                    // Failed to update client token
-                    if (!string.IsNullOrEmpty(downloadError))
+                    for (var tag = 0; tag < versionTagsBySnapshot[snapshot].Length; tag++, currentTag++)
                     {
-                        warnings.AppendLine($"App export download failed ({downloadError})");
+                        appInfo.versionTags[currentTag] = versionTagsBySnapshot[snapshot][tag];
                     }
-                    // Got download
-                    else
-                    {
-                        var ep = new ExportParser(exportZip);
-                        appInfo.composer = ep.ImportComposerInfo(); //TODO: split out to composer-only lib.
-                    }
-                    // Complete
-                    UpdateComplete(configuration, appInfo, warnings, onUpdateComplete);
-                });
+                }
+                UpdateComplete(configuration, appInfo, warnings, onUpdateComplete);
             });
         }
 
@@ -420,7 +418,8 @@ namespace Meta.WitAi.Lib
                         appInfo.voices = voiceList.ToArray();
                     }
 
-                    UpdateExportInfo(configuration, appInfo, warnings, onUpdateComplete);
+                    // Complete
+                    UpdateVersionTagList(configuration, appInfo, warnings, onUpdateComplete);
 
                 });
         }

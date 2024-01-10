@@ -35,12 +35,6 @@ namespace Photon.Voice.IOS
             }
         }
 
-        public class MonoPInvokeCallbackAttribute : System.Attribute
-        {
-            private Type type;
-            public MonoPInvokeCallbackAttribute(Type t) { type = t; }
-        }
-
         // IL2CPP does not support marshaling delegates that point to instance methods to native code.
         // Using static method and per instance table.
         static int instanceCnt;

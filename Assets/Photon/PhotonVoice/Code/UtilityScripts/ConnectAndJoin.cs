@@ -39,13 +39,9 @@ namespace Photon.Voice.Unity.UtilityScripts
 
         public bool IsConnected { get { return this.voiceConnection.Client.IsConnected; } }
 
-        private void Awake()
-        {
+        private void Start()
+       {
             this.voiceConnection = this.GetComponent<VoiceConnection>();
-        }
-
-        private void OnEnable()
-        {
             this.voiceConnection.Client.AddCallbackTarget(this);
             if (this.autoConnect)
             {
@@ -53,7 +49,7 @@ namespace Photon.Voice.Unity.UtilityScripts
             }
         }
 
-        private void OnDisable()
+        private void OnDestroy()
         {
             this.voiceConnection.Client.RemoveCallbackTarget(this);
         }

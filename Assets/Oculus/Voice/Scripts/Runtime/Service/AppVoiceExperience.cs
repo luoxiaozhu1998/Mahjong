@@ -59,8 +59,7 @@ namespace Oculus.Voice
         private IVoiceService voiceServiceImpl;
         private IVoiceSDKLogger voiceSDKLoggerImpl;
 
-        // This version is auto-updated for a release build
-        public const string PACKAGE_VERSION = "55.0.0.126.272";
+        private static string PACKAGE_VERSION => VoiceSDKConstants.SdkVersion;
 
         private bool Initialized => null != voiceServiceImpl;
 
@@ -93,7 +92,7 @@ namespace Oculus.Voice
 
         public bool EnableConsoleLogging => enableConsoleLogging;
 
-        public bool UsePlatformIntegrations
+        public override bool UsePlatformIntegrations
         {
             get => usePlatformServices;
             set
@@ -114,7 +113,7 @@ namespace Oculus.Voice
         #region Voice Service Text Methods
         public override bool CanSend()
         {
-            return base.CanSend() && voiceServiceImpl.CanSend();
+            return base.CanSend() && null != voiceServiceImpl && voiceServiceImpl.CanSend();
         }
 
         public override VoiceServiceRequest Activate(string text, WitRequestOptions requestOptions, VoiceServiceRequestEvents requestEvents)
@@ -174,6 +173,12 @@ namespace Oculus.Voice
 
         private void InitVoiceSDK()
         {
+            // Check voice sdk version
+            if (string.IsNullOrEmpty(PACKAGE_VERSION))
+            {
+                VLog.E("No SDK Version Set");
+            }
+
             // Clean up if we're switching to native C# wit impl
             if (!UsePlatformIntegrations)
             {
@@ -435,7 +440,7 @@ namespace Oculus.Voice
             }
             else if (request.State == VoiceRequestState.Canceled)
             {
-                VLog.W($"Request Canceled\nMessage: {request.Results.Message}");
+                VLog.D($"Request Canceled\nMessage: {request.Results.Message}");
                 voiceSDKLoggerImpl.LogInteractionEndFailure("aborted");
             }
             else

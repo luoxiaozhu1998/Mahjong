@@ -18,6 +18,6 @@ MonoBehaviour:
   tileImage: {fileID: 2800000, guid: 8d4779f100af3f5458fcd579406b3c9a, type: 3}
   screenshot: {fileID: 0}
   sceneReference: {fileID: 102900000, guid: bc6c1dc4788d56e40bd6ed2286344a1b, type: 3}
-  packageSampleName: Chess
+  packageSampleName: Chess with Conduit
   sampleSetId: Voice SDK Samples
   priority: 6

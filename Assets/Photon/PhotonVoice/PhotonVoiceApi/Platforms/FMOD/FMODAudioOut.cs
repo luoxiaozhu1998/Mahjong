@@ -9,7 +9,8 @@ namespace Photon.Voice.FMOD
     // Plays back input audio via FMOD Sound
     public class AudioOut<T> : AudioOutDelayControl<T>
     {
-        protected readonly int sizeofT = Marshal.SizeOf(default(T));
+        protected int channels;
+        protected int frequency;
 
         FMODLib.System coreSystem;
         FMODLib.Sound sound;
@@ -43,6 +44,9 @@ namespace Photon.Voice.FMOD
 
         override public void OutCreate(int samplingRate, int channels, int bufferSamples)
         {
+            this.channels = channels;
+            this.frequency = samplingRate;
+
             FMODLib.RESULT res;
             FMODLib.CREATESOUNDEXINFO exinfo = new FMODLib.CREATESOUNDEXINFO();
             exinfo.cbsize = Marshal.SizeOf(exinfo);
@@ -127,7 +131,6 @@ namespace Photon.Voice.FMOD
             {
                 Error = "failed to unlock sound buffer: " + res;
                 logger.LogError(logPrefix + Error);
-                return;
             }
         }
 
@@ -189,7 +192,7 @@ namespace Photon.Voice.FMOD
             logger.LogInfo(logPrefix + "Event Started");
         }
 
-        [AOT.MonoPInvokeCallback(typeof(FMODLib.Studio.EVENT_CALLBACK))]
+        [MonoPInvokeCallback(typeof(FMODLib.Studio.EVENT_CALLBACK))]
         static FMODLib.RESULT FMODEventCallback(FMODLib.Studio.EVENT_CALLBACK_TYPE type, IntPtr instance, IntPtr parameterPtr)
         {
             var evDummy = new FMODLib.Studio.EventInstance();
@@ -206,6 +209,7 @@ namespace Photon.Voice.FMOD
             }
             return audioOut.fmodEventCallback(type, instance, parameterPtr);
         }
+
         FMODLib.RESULT fmodEventCallback(FMODLib.Studio.EVENT_CALLBACK_TYPE type, IntPtr instance, IntPtr parameterPtr)
         {
             logger.LogInfo(logPrefix + "EventCallback " + type);

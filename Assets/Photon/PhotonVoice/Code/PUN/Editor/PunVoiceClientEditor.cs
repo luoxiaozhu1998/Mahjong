@@ -8,11 +8,10 @@ namespace Photon.Voice.PUN.Editor
     using UnityEngine;
     using Pun;
 
-    [CustomEditor(typeof(PunVoiceClient))]
+    [CustomEditor(typeof(PunVoiceClient), true)]
     public class PunVoiceClientEditor : VoiceConnectionEditor
     {
         private SerializedProperty autoConnectAndJoinSp;
-        private SerializedProperty autoLeaveAndDisconnectSp;
         private SerializedProperty usePunAppSettingsSp;
         private SerializedProperty usePunAuthValuesSp;
 
@@ -20,7 +19,6 @@ namespace Photon.Voice.PUN.Editor
         {
             base.OnEnable();
             this.autoConnectAndJoinSp = this.serializedObject.FindProperty("AutoConnectAndJoin");
-            this.autoLeaveAndDisconnectSp = this.serializedObject.FindProperty("AutoLeaveAndDisconnect");
             this.usePunAppSettingsSp = this.serializedObject.FindProperty("usePunAppSettings");
             this.usePunAuthValuesSp = this.serializedObject.FindProperty("usePunAuthValues");
         }
@@ -49,24 +47,9 @@ namespace Photon.Voice.PUN.Editor
             base.ShowHeader();
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(this.autoConnectAndJoinSp, new GUIContent("Auto Connect And Join", "Auto connect voice client and join a voice room when PUN client is joined to a PUN room"));
-            EditorGUILayout.PropertyField(this.autoLeaveAndDisconnectSp, new GUIContent("Auto Leave And Disconnect", "Auto disconnect voice client when PUN client is not joined to a PUN room"));
             if (EditorGUI.EndChangeCheck())
             {
                 this.serializedObject.ApplyModifiedProperties();
-            }
-        }
-
-        protected override void ShowAssetVersions()
-        {
-            base.ShowAssetVersions();
-            string version = this.GetVersionString(this.punChangelogVersion).TrimStart('v');
-            if (!PhotonNetwork.PunVersion.Equals(version, StringComparison.OrdinalIgnoreCase))
-            {
-                EditorGUILayout.LabelField(string.Format("PUN2, Inside Voice: {0} != Imported Separately: {1}", version, PhotonNetwork.PunVersion));
-            }
-            else
-            {
-                EditorGUILayout.LabelField(string.Format("PUN2: {0}", version));
             }
         }
     }

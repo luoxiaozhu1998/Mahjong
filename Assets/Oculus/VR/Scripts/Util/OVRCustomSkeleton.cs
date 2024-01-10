@@ -21,9 +21,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[HelpURL("https://developer.oculus.com/reference/unity/latest/class_o_v_r_custom_skeleton")]
 public class OVRCustomSkeleton : OVRSkeleton, ISerializationCallbackReceiver
 {
-    [HideInInspector] [SerializeField] private List<Transform> _customBones_V2;
+    [HideInInspector][SerializeField] private List<Transform> _customBones_V2;
     public List<Transform> CustomBones => _customBones_V2;
 
     /// <summary>
@@ -77,9 +78,9 @@ public class OVRCustomSkeleton : OVRSkeleton, ISerializationCallbackReceiver
 #endif
     }
 
-    internal void SetSkeletonType(SkeletonType skeletonType)
+    internal override void SetSkeletonType(SkeletonType skeletonType)
     {
-        _skeletonType = skeletonType;
+        base.SetSkeletonType(skeletonType);
         _customBones_V2 ??= new List<Transform>();
 
         AllocateBones();

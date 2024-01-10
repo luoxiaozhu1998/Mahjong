@@ -19,6 +19,8 @@
  */
 
 using Meta.WitAi;
+using Meta.WitAi.Json;
+using Meta.WitAi.Requests;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -28,6 +30,17 @@ namespace Oculus.VoiceSDK.UX
     public class VoiceTranscriptionLabel : MonoBehaviour
     {
         // The label to be updated
+        public Text Label
+        {
+            get
+            {
+                if (_label == null)
+                {
+                    _label = gameObject.GetComponent<Text>();
+                }
+                return _label;
+            }
+        }
         private Text _label;
 
         [Header("Listen Settings")]
@@ -67,8 +80,8 @@ namespace Oculus.VoiceSDK.UX
                     service.VoiceEvents.OnStartListening.AddListener(OnStartListening);
                     service.VoiceEvents.OnPartialTranscription.AddListener(OnTranscriptionChange);
                     service.VoiceEvents.OnFullTranscription.AddListener(OnTranscriptionChange);
-                    service.VoiceEvents.OnCanceled.AddListener(OnCanceled);
                     service.VoiceEvents.OnError.AddListener(OnError);
+                    service.VoiceEvents.OnComplete.AddListener(OnComplete);
                 }
             }
         }
@@ -82,8 +95,8 @@ namespace Oculus.VoiceSDK.UX
                     service.VoiceEvents.OnStartListening.RemoveListener(OnStartListening);
                     service.VoiceEvents.OnPartialTranscription.RemoveListener(OnTranscriptionChange);
                     service.VoiceEvents.OnFullTranscription.RemoveListener(OnTranscriptionChange);
-                    service.VoiceEvents.OnCanceled.RemoveListener(OnCanceled);
                     service.VoiceEvents.OnError.RemoveListener(OnError);
+                    service.VoiceEvents.OnComplete.RemoveListener(OnComplete);
                 }
             }
         }
@@ -109,31 +122,25 @@ namespace Oculus.VoiceSDK.UX
         {
             SetText(text, _transcriptionColor);
         }
-        // Reset text if canceled
-        private void OnCanceled(string reason)
-        {
-            SetText(_promptDefault, _promptColor);
-        }
         // Apply error
         private void OnError(string status, string error)
         {
             SetText($"[{status}] {error}", _errorColor);
         }
+        // If no text came through, show prompt
+        private void OnComplete(VoiceServiceRequest request)
+        {
+            if (Label != null && string.Equals(Label?.text, _promptListening))
+            {
+                SetText(_promptDefault, _promptColor);
+            }
+        }
 
         // Refresh text
         private void SetText(string newText, Color newColor)
         {
-            // Get text
-            if (_label == null)
-            {
-                _label = GetComponent<Text>();
-                if (_label == null)
-                {
-                    return;
-                }
-            }
             // Ignore if same
-            if (string.Equals(newText, _label.text) && newColor == _label.color)
+            if (Label == null || string.Equals(newText, Label.text) && newColor == Label.color)
             {
                 return;
             }

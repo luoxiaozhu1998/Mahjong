@@ -6,12 +6,6 @@ using System.Runtime.InteropServices;
 
 namespace Photon.Voice.IOS
 {
-    public class MonoPInvokeCallbackAttribute : System.Attribute
-    {
-        private Type type;
-        public MonoPInvokeCallbackAttribute(Type t) { type = t; }
-    }
-
     public class AudioInPusher : IAudioPusher<float>, IResettable
     {
         const string lib_name = "__Internal";

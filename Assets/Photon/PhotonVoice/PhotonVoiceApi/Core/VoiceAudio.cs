@@ -89,20 +89,20 @@ namespace Photon.Voice
         /// <summary>Create a new LocalVoiceAudio{T} instance.</summary>
         /// <param name="voiceClient">The VoiceClient to use for this outgoing stream.</param>
         /// <param name="voiceId">Numeric ID for this voice.</param>
-        /// <param name="encoder">Encoder to use for this voice.</param>
         /// <param name="voiceInfo">Outgoing stream parameters.</param>
         /// <param name="audioSourceDesc">Audio source parameters.</param>
-        /// <param name="channelId">Voice transport channel ID to use for this voice.</param>
+        /// <param name="channelId">Transport channel specific to transport.</param>
+        /// <param name="options">Voice creation options.</param>
         /// <returns>The new LocalVoiceAudio{T} instance.</returns>
-        public static LocalVoiceAudio<T> Create(VoiceClient voiceClient, byte voiceId, IEncoder encoder, VoiceInfo voiceInfo, IAudioDesc audioSourceDesc, int channelId)
+        internal static LocalVoiceAudio<T> Create(VoiceClient voiceClient, byte voiceId, VoiceInfo voiceInfo, IAudioDesc audioSourceDesc, int channelId, VoiceCreateOptions options = default(VoiceCreateOptions))
         {
             if (typeof(T) == typeof(float))
             {
-                return new LocalVoiceAudioFloat(voiceClient, encoder, voiceId, voiceInfo, audioSourceDesc, channelId) as LocalVoiceAudio<T>;
+                return new LocalVoiceAudioFloat(voiceClient, voiceId, voiceInfo, audioSourceDesc, channelId, options) as LocalVoiceAudio<T>;
             }
             else if (typeof(T) == typeof(short))
             {
-                return new LocalVoiceAudioShort(voiceClient, encoder, voiceId, voiceInfo, audioSourceDesc, channelId) as LocalVoiceAudio<T>;
+                return new LocalVoiceAudioShort(voiceClient, voiceId, voiceInfo, audioSourceDesc, channelId, options) as LocalVoiceAudio<T>;
             }
             else
             {
@@ -129,26 +129,14 @@ namespace Photon.Voice
         public bool VoiceDetectorCalibrating { get { return voiceDetectorCalibration.IsCalibrating; } }
 
         protected int channels;
-        protected bool resampleSource;
 
-        internal LocalVoiceAudio(VoiceClient voiceClient, IEncoder encoder, byte id, VoiceInfo voiceInfo, IAudioDesc audioSourceDesc, int channelId)
-            : base(voiceClient, encoder, id, voiceInfo, channelId,
-                  voiceInfo.SamplingRate != 0 ? voiceInfo.FrameSize * audioSourceDesc.SamplingRate / voiceInfo.SamplingRate : voiceInfo.FrameSize
-                  )
+        internal LocalVoiceAudio(VoiceClient voiceClient, byte id, VoiceInfo voiceInfo, IAudioDesc audioSourceDesc, int channelId, VoiceCreateOptions opt)
+            : base(voiceClient, id, voiceInfo, audioSourceDesc.SamplingRate, channelId, opt)
         {
             this.channels = voiceInfo.Channels;
-            if (audioSourceDesc.SamplingRate != voiceInfo.SamplingRate)
-            {
-                this.resampleSource = true;
-                this.voiceClient.logger.LogWarning("[PV] Local voice #" + this.id + " audio source frequency " + audioSourceDesc.SamplingRate + " and encoder sampling rate " + voiceInfo.SamplingRate + " do not match. Resampling will occur before encoding.");
-            }
         }
         protected void initBuiltinProcessors()
         {
-            if (this.resampleSource)
-            {
-                AddPostProcessor(new AudioUtil.Resampler<T>(this.info.FrameSize, channels));
-            }
             this.voiceDetectorCalibration = new AudioUtil.VoiceDetectorCalibration<T>(voiceDetector, levelMeter, this.info.SamplingRate, (int)this.channels);
             AddPostProcessor(levelMeter, voiceDetectorCalibration, voiceDetector); // level meter and calibration should be processed even if no signal detected
         }
@@ -178,8 +166,8 @@ namespace Photon.Voice
     /// <summary>Specialization of <see cref="LocalVoiceAudio{T}"></see> for float audio</summary>
     public class LocalVoiceAudioFloat : LocalVoiceAudio<float>
     {
-        internal LocalVoiceAudioFloat(VoiceClient voiceClient, IEncoder encoder, byte id, VoiceInfo voiceInfo, IAudioDesc audioSourceDesc, int channelId)
-            : base(voiceClient, encoder, id, voiceInfo, audioSourceDesc, channelId)
+        internal LocalVoiceAudioFloat(VoiceClient voiceClient, byte id, VoiceInfo voiceInfo, IAudioDesc audioSourceDesc, int channelId, VoiceCreateOptions opt)
+            : base(voiceClient, id, voiceInfo, audioSourceDesc, channelId, opt)
         {
             // these 2 processors go after resampler
             this.levelMeter = new AudioUtil.LevelMeterFloat(this.info.SamplingRate, this.info.Channels);
@@ -191,8 +179,8 @@ namespace Photon.Voice
     /// <summary>Specialization of <see cref="LocalVoiceAudio{T}"></see> for short audio</summary>
     public class LocalVoiceAudioShort : LocalVoiceAudio<short>
     {
-        internal LocalVoiceAudioShort(VoiceClient voiceClient, IEncoder encoder, byte id, VoiceInfo voiceInfo, IAudioDesc audioSourceDesc, int channelId)
-            : base(voiceClient, encoder, id, voiceInfo, audioSourceDesc, channelId)
+        internal LocalVoiceAudioShort(VoiceClient voiceClient, byte id, VoiceInfo voiceInfo, IAudioDesc audioSourceDesc, int channelId, VoiceCreateOptions opt)
+            : base(voiceClient, id, voiceInfo, audioSourceDesc, channelId, opt)
         {
             // these 2 processors go after resampler
             this.levelMeter = new AudioUtil.LevelMeterShort(this.info.SamplingRate, this.info.Channels); //1/2 sec

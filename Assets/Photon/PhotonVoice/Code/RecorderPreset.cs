@@ -60,9 +60,5 @@ namespace Photon.Voice.Unity
                 }
             }
         }
-
-        void Update()
-        {
-        }
     }
 }

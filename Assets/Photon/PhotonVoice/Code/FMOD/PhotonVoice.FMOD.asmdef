@@ -4,7 +4,8 @@
         "PhotonVoice",
         "PhotonVoice.API",
         "PhotonVoiceApi.FMOD",
-        "FMODUnity"
+        "FMODUnity",
+        "PhotonVoice.Editor"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

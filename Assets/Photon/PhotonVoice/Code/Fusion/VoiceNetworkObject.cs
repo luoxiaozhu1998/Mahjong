@@ -126,10 +126,6 @@ namespace Photon.Voice.Fusion
                     {
                         this.Logger.LogWarning("VoiceNetworkObject.RecorderInUse.TransmitEnabled is false, don't forget to set it to true to enable transmission.");
                     }
-                    if (!this.RecorderInUse.isActiveAndEnabled)
-                    {
-                        this.Logger.LogWarning("VoiceNetworkObject.RecorderInUse may not work properly as RecordOnlyWhenEnabled is set to true and recorder is disabled or attached to an inactive GameObject.");
-                    }
                 }
             }
 

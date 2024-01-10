@@ -448,14 +448,14 @@ namespace Manager
             go.transform.SetParent(rig);
             go.transform.localRotation = Quaternion.identity;
             go.transform.localPosition = Vector3.zero;
-            // var centerEyeAnchor = rig.Find("TrackingSpace/CenterEyeAnchor");
-            // var voiceSetup = PhotonNetwork.Instantiate(PhotonVoiceSetupPrefabName, centerEyeAnchor.position,
-            //     centerEyeAnchor.rotation);
-            // voiceSetup.transform.SetParent(centerEyeAnchor);
-            // voiceSetup.transform.localPosition = Vector3.zero;
-            // voiceSetup.transform.localRotation = Quaternion.identity;
-            // go.GetComponent<StreamingAvatar>().SetLipSync(voiceSetup.GetComponent<OvrAvatarLipSyncContext>());
-            // voiceSetup.GetComponent<OvrAvatarLipSyncContext>().CaptureAudio = true;
+            var centerEyeAnchor = rig.Find("TrackingSpace/CenterEyeAnchor");
+            var voiceSetup = PhotonNetwork.Instantiate(PhotonVoiceSetupPrefabName, centerEyeAnchor.position,
+                centerEyeAnchor.rotation);
+            voiceSetup.transform.SetParent(centerEyeAnchor);
+            voiceSetup.transform.localPosition = Vector3.zero;
+            voiceSetup.transform.localRotation = Quaternion.identity;
+            go.GetComponent<StreamingAvatar>().SetLipSync(voiceSetup.GetComponent<OvrAvatarLipSyncContext>());
+            voiceSetup.GetComponent<OvrAvatarLipSyncContext>().CaptureAudio = true;
             return go;
         }
 

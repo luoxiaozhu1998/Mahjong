@@ -31,7 +31,7 @@
 
         #endregion
 
-        private void OnEnable()
+        public virtual void OnEnable()
         {
             this.speaker = this.target as Speaker;
             this.audioSource = this.speaker.GetComponent<AudioSource>();

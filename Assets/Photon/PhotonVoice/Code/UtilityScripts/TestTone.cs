@@ -23,7 +23,7 @@ namespace Photon.Voice.Unity.UtilityScripts
             rec.SourceType = Recorder.InputSourceType.Factory;
             rec.InputFactory = () =>
             {
-                return new AudioUtil.ToneAudioReader<float>(null, 440, 24000, 1);
+                return new AudioUtil.ToneAudioPusher<float>(440, 100, 24000, 1);
             };
         }
     }

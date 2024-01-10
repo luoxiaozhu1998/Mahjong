@@ -8,8 +8,6 @@
 // <author>developer@photonengine.com</author>
 // ----------------------------------------------------------------------------
 
-#define USE_NEW_TRANSPORT
-
 using System;
 using System.Collections.Generic;
 using ExitGames.Client.Photon;
@@ -32,7 +30,7 @@ namespace Photon.Voice.Unity
         [field: SerializeField]
         public bool UseVoiceAppSettings = false;
 
-        protected void Start()
+        protected virtual void Start()
         {
             if (this.PrimaryRecorder != null)
             {
@@ -67,6 +65,12 @@ namespace Photon.Voice.Unity
     /// <summary> Component that represents a Voice client. </summary>
     public class VoiceConnection : ConnectionHandler
     {
+        /// <summary>Recommended Photon Transport channel for audio. Chosen not to interfere with video and default channel.</summary>
+        public const int ChannelAudio = 1;
+
+        /// <summary>Recommended Photon Transport channel for video. Chosen not to interfere with audio and default channel.</summary>
+        public const int ChannelVideo = 2;
+
         #region Private Fields
 
         // VoiceComponentImpl instance instead if VoiceComponent inheritance
@@ -110,6 +114,10 @@ namespace Photon.Voice.Unity
         [Tooltip("Use primary recorder directly by Voice Client")]
         private bool usePrimaryRecorder;
 
+        [SerializeField]
+        [Tooltip("Use the protocol compatible with Photon Voice C++ API")]
+        private bool cppCompatibilityMode;
+
         // to allow VoiceConnection ignore usePrimaryRecorder and do not show it in Editor
         public virtual bool AlwaysUsePrimaryRecorder => false;
 
@@ -118,15 +126,9 @@ namespace Photon.Voice.Unity
 
         #endregion
 
-        public VoiceConnection()
+        private void Init()
         {
-#if USE_NEW_TRANSPORT
-            this.client = new LoadBalancingTransport2(this.Logger);
-#else
-            this.client = new LoadBalancingTransport(this.Logger);
-#endif
-            this.client.VoiceClient.ThreadingEnabled = Application.platform != RuntimePlatform.WebGLPlayer;
-
+            this.client = new LoadBalancingTransport2(this.Logger, ConnectionProtocol.Udp, cppCompatibilityMode);
             this.client.ClientType = ClientAppType.Voice;
             this.client.VoiceClient.OnRemoteVoiceInfoAction += this.OnRemoteVoiceInfo;
             this.client.StateChanged += this.OnVoiceStateChanged;
@@ -149,7 +151,7 @@ namespace Photon.Voice.Unity
         /// <summary> Fires when a remote voice stream is added</summary>
         public event Action<RemoteVoiceLink> RemoteVoiceAdded;
 
-#if UNITY_PS4 || UNITY_SHARLIN
+#if UNITY_PS4 || UNITY_PS5
         /// <summary>PlayStation user ID of the local user</summary>
         /// <remarks>Pass the userID of the local PlayStation user who should receive any incoming audio. This value is used by Photon Voice when sending output to the headphones on the PlayStation.
         /// If you don't provide a user ID, then Photon Voice uses the user ID of the user at index 0 in the list of local users
@@ -300,6 +302,8 @@ namespace Photon.Voice.Unity
         {
             base.Awake();
             voiceComponentImpl.Awake(this);
+
+            Init();
 
             if (this.ApplyDontDestroyOnLoad)
             {
@@ -525,8 +529,8 @@ namespace Photon.Voice.Unity
 
         private void LinkSpeaker(Speaker speaker, RemoteVoiceLink remoteVoice)
         {
-#if UNITY_PS4 || UNITY_SHARLIN
-                speaker.PlayStationUserID = this.PlayStationUserID;
+#if UNITY_PS4 || UNITY_PS5
+            speaker.PlayStationUserID = this.PlayStationUserID;
 #endif
             if (speaker.Link(remoteVoice))
             {

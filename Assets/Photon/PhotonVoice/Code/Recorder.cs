@@ -12,6 +12,7 @@ using System;
 using POpusCodec.Enums;
 using UnityEngine;
 using UnityEngine.Serialization;
+using System.Linq;
 
 namespace Photon.Voice.Unity
 {
@@ -48,6 +49,12 @@ namespace Photon.Voice.Unity
         [SerializeField]
         [FormerlySerializedAs("audioGroup")]
         private byte interestGroup;
+
+        [SerializeField]
+        private bool useTargetPlayers; // to distinguish between null and empty targetPlayers array
+
+        [SerializeField]
+        private int[] targetPlayers;
 
         [SerializeField]
         private bool debugEchoMode;
@@ -102,23 +109,8 @@ namespace Photon.Voice.Unity
         private EditorIosAudioSessionPreset editorAudioSessionPreset;
 #endif
 
-        [System.Serializable]
-        struct NativeAndroidMicrophoneSettings
-        {
-            public bool AcousticEchoCancellation;
-            public bool AutomaticGainControl;
-            public bool NoiseSuppression;
-
-            public AndroidAudioInParameters BuildAndroidAudioInParameters()
-            {
-                return new AndroidAudioInParameters() { EnableAEC = AcousticEchoCancellation, EnableAGC = AutomaticGainControl, EnableNS = NoiseSuppression };
-            }
-
-            public static NativeAndroidMicrophoneSettings Default = new NativeAndroidMicrophoneSettings() { AcousticEchoCancellation = true, AutomaticGainControl = true, NoiseSuppression = true };
-        }
-
         [SerializeField]
-        private NativeAndroidMicrophoneSettings androidNativeMicrophoneSettings = NativeAndroidMicrophoneSettings.Default;
+        private AndroidAudioInParameters androidMicrophoneSettings = AndroidAudioInParameters.Default;
 
         private bool isPausedOrInBackground;
 
@@ -165,52 +157,37 @@ namespace Photon.Voice.Unity
         }
 
         /// <summary>If true, voice stream is sent encrypted.</summary>
+        /// <remarks>Initialized with serialized field and can be updated by Editor at runtime.</remarks>
         public bool Encrypt
         {
-            get { return this.encrypt; }
+            get => this.voice.Encrypt;
             set
             {
-                if (this.encrypt == value)
-                {
-                    return;
-                }
-                this.encrypt = value;
                 this.voice.Encrypt = value;
+                this.encrypt = value;
             }
         }
 
         /// <summary>If true, outgoing stream routed back to client via server same way as for remote client's streams.</summary>
+        /// <remarks>Initialized with serialized field and can be updated by Editor at runtime.</remarks>
         public bool DebugEchoMode
         {
-            get
-            {
-
-                return this.debugEchoMode;
-            }
+            get => this.voice.DebugEchoMode;
             set
             {
-                if (this.debugEchoMode == value)
-                {
-                    return;
-                }
-                this.debugEchoMode = value;
                 this.voice.DebugEchoMode = value;
+                this.debugEchoMode = value;
             }
         }
 
         /// <summary>If true, stream data sent in reliable mode.</summary>
+        /// <remarks>Initialized with serialized field and can be updated by Editor at runtime.</remarks>
         public bool ReliableMode
         {
-            get
-            {
-                return this.reliableMode;
-            }
+            get => this.voice.Reliable;
             set
             {
-                if (this.voice != LocalVoiceAudioDummy.Dummy)
-                {
-                    this.voice.Reliable = value;
-                }
+                this.voice.Reliable = value;
                 this.reliableMode = value;
             }
         }
@@ -322,26 +299,31 @@ namespace Photon.Voice.Unity
         }
 
         /// <summary>Target interest group that will receive transmitted audio.</summary>
-        /// <remarks>If InterestGroup != 0, recorder's audio data is sent only to clients listening to this group.</remarks>
+        /// <remarks>
+        /// If InterestGroup != 0, recorder's audio data is sent only to clients listening to this group.
+        /// Initialized with serialized field and can be updated by Editor at runtime.
+        /// </remarks>
         public byte InterestGroup
         {
-            get
-            {
-                if (this.voice.InterestGroup != this.interestGroup)
-                {
-                    // interest group probably set via GlobalInterestGroup!
-                    this.interestGroup = this.voice.InterestGroup;
-                }
-                return this.interestGroup;
-            }
+            get => this.voice.InterestGroup;
             set
             {
-                if (this.interestGroup == value)
-                {
-                    return;
-                }
-                this.interestGroup = value;
                 this.voice.InterestGroup = value;
+                this.interestGroup = value;
+            }
+        }
+
+        /// <summary>Target players which will receive transmitted audio.</summary>
+        /// <remarks>Initialized with serialized field and can be updated by Editor at runtime </remarks>
+        public int[] TargetPlayers
+        {
+            get => this.voice.TargetPlayers;
+            set
+            {
+                var x = value;
+                this.voice.TargetPlayers = x;
+                this.targetPlayers = x;
+                this.useTargetPlayers = x != null;
             }
         }
 
@@ -382,7 +364,14 @@ namespace Photon.Voice.Unity
         {
             get
             {
-                return this.microphoneType;
+                if (Application.platform == RuntimePlatform.WebGLPlayer)
+                {
+                    return MicType.Photon; // force Photon type on WebGL
+                }
+                else
+                {
+                    return this.microphoneType;
+                }
             }
             set
             {
@@ -592,6 +581,22 @@ namespace Photon.Voice.Unity
             }
         }
 
+        public bool AndroidMicrophoneAGC {
+			get {
+				return this.androidMicrophoneSettings.EnableAGC;
+			}
+		}
+        public bool AndroidMicrophoneAEC {
+			get {
+				return this.androidMicrophoneSettings.EnableAEC;
+			}
+		}
+        public bool AndroidMicrophoneNS  {
+			get {
+				return this.androidMicrophoneSettings.EnableNS;
+			}
+		}
+
         #endregion
 
         #region Public Methods
@@ -630,7 +635,7 @@ namespace Photon.Voice.Unity
         int restartRecordingPending = 0;
 
         /// <summary>
-        /// Restarts recording if <see cref="Recorder.IsRecoring"/> is true
+        /// Restarts recording if <see cref="Recorder.RecordingEnabled"/> is true
         /// </summary>
         public bool RestartRecording()
         {
@@ -698,10 +703,6 @@ namespace Photon.Voice.Unity
                 this.VoiceDetector.ActivityDelayMs = this.voiceDetectionDelayMs;
                 this.VoiceDetector.On = this.voiceDetection;
             }
-            this.voice.InterestGroup = this.InterestGroup;
-            this.voice.DebugEchoMode = this.DebugEchoMode;
-            this.voice.Encrypt = this.Encrypt;
-            this.voice.Reliable = this.ReliableMode;
             this.SendPhotonVoiceCreatedMessage();
             this.voice.TransmitEnabled = this.TransmitEnabled;
         }
@@ -711,7 +712,6 @@ namespace Photon.Voice.Unity
             this.Logger.LogInfo("Stopping recording");
             if (this.voice != LocalVoiceAudioDummy.Dummy)
             {
-                this.interestGroup = this.voice.InterestGroup;
                 this.voice.RemoveSelf();
                 this.voice = LocalVoiceAudioDummy.Dummy;
                 this.gameObject.SendMessage("PhotonVoiceRemoved", SendMessageOptions.DontRequireReceiver);
@@ -778,18 +778,27 @@ namespace Photon.Voice.Unity
         /// <returns>If a change has been made.</returns>
         public bool SetAndroidNativeMicrophoneSettings(bool aec = false, bool agc = false, bool ns = false)
         {
-            if (this.androidNativeMicrophoneSettings.AcousticEchoCancellation != aec ||
-                this.androidNativeMicrophoneSettings.AutomaticGainControl != agc ||
-                this.androidNativeMicrophoneSettings.NoiseSuppression != ns)
+            if (this.androidMicrophoneSettings.EnableAEC != aec ||
+                this.androidMicrophoneSettings.EnableAGC != agc ||
+                this.androidMicrophoneSettings.EnableNS != ns)
             {
+                this.androidMicrophoneSettings.EnableAEC = aec;
+                this.androidMicrophoneSettings.EnableAGC = agc;
+                this.androidMicrophoneSettings.EnableNS = ns;
+
                 this.Logger.LogInfo("Recorder.nativeAndroidMicrophoneSettings changed to aec = {0}, agc = {1}, ns = {2}", aec, agc, ns);
+
                 if (this.SourceType == InputSourceType.Microphone && this.MicrophoneType == MicType.Photon)
                 {
                     this.RestartRecording();
                 }
+
                 return true;
             }
-            return false;
+            else
+            {
+                return false;
+            }
         }
         //#endif
 
@@ -893,7 +902,7 @@ namespace Photon.Voice.Unity
                                     this.Logger.LogInfo("Setting recorder's source to Switch.AudioInPusher");
                                     break;
                                 case RuntimePlatform.Android:
-                                    otherParams = androidNativeMicrophoneSettings.BuildAndroidAudioInParameters();
+                                    otherParams = androidMicrophoneSettings;
                                     this.Logger.LogInfo("Setting recorder's source to UnityAndroidAudioInAEC");
                                     break;
                                 case RuntimePlatform.WebGLPlayer:
@@ -954,7 +963,7 @@ namespace Photon.Voice.Unity
                         // this.Logger.LogError("Recorder.InputFactory must be specified if Recorder.Source set to Factory");
                         // return LocalVoiceAudioDummy.Dummy;
                         this.Logger.LogWarning("Recorder.Source is Factory but Recorder.InputFactory is not set. Setting it to ToneAudioReader.");
-                        this.InputFactory = () => new AudioUtil.ToneAudioReader<float>();
+                        this.InputFactory = () => new AudioUtil.ToneAudioPusher<float>();
                     }
                     this.inputSource = this.InputFactory();
                     if (this.inputSource.Error != null)
@@ -986,7 +995,15 @@ namespace Photon.Voice.Unity
                 dsp.AdjustVoiceInfo(ref voiceInfo, ref audioSampleType);
             }
 
-            return this.voiceConnection.VoiceClient.CreateLocalVoiceAudioFromSource(voiceInfo, this.inputSource, audioSampleType);
+            VoiceCreateOptions opt = new VoiceCreateOptions()
+            {
+                InterestGroup = this.interestGroup,
+                TargetPlayers = this.useTargetPlayers ? this.targetPlayers : null,
+                DebugEchoMode = this.debugEchoMode,
+                Encrypt = this.encrypt,
+                Reliable = this.reliableMode,
+            };
+            return this.voiceConnection.VoiceClient.CreateLocalVoiceAudioFromSource(voiceInfo, this.inputSource, audioSampleType, VoiceConnection.ChannelAudio, opt);
         }
 
         protected virtual void SendPhotonVoiceCreatedMessage()

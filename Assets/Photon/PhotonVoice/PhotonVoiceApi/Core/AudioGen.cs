@@ -150,7 +150,7 @@ namespace Photon.Voice
 #if NETFX_CORE
                 timer = new DispatcherTimer();
                 timer.Tick += OnTimedEvent;
-                timer.Interval = new TimeSpan(10000000 * bufSizeSamples / SamplingRate); // ticks (10 000 000 per sec) in single buffer
+                timer.Interval = new TimeSpan(10000000 * bufSamples / SamplingRate); // ticks (10 000 000 per sec) in single buffer
 #else
                 timer = new System.Timers.Timer(1000.0 * bufSamples / SamplingRate);
                 timer.Elapsed += new System.Timers.ElapsedEventHandler(OnTimedEvent);

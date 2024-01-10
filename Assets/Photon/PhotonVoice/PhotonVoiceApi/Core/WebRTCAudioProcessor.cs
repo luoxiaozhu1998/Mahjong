@@ -181,9 +181,16 @@ namespace Photon.Voice
                         return;
                     }
 
-                    int size = processFrameSize * reverseSamplingRate / samplingRate * reverseChannels;
-                    reverseFramer = new Framer<float>(size);
-                    reverseBufferFactory = new FactoryPrimitiveArrayPool<short>(REVERSE_BUFFER_POOL_CAPACITY, "WebRTCAudioProcessor Reverse Buffers", this.inFrameSize);
+                    int size = processFrameSize * reverseChannels;
+                    if (samplingRate != reverseSamplingRate)
+                    {
+                        reverseFramer = new FramerResampler<float>(size, reverseChannels, samplingRate, reverseSamplingRate, true);
+                    }
+                    else
+                    {
+                        reverseFramer = new Framer<float>(size);
+                    }
+                    reverseBufferFactory = new FactoryPrimitiveArrayPool<short>(REVERSE_BUFFER_POOL_CAPACITY, "WebRTCAudioProcessor Reverse Buffers", size);
 
                     logger.LogInfo("[PV] WebRTCAudioProcessor Init reverse stream: frame size {0}, reverseSamplingRate {1}, reverseChannels {2}", size, reverseSamplingRate, reverseChannels);
 
@@ -218,16 +225,17 @@ namespace Photon.Voice
 
             if (buf.Length != this.inFrameSize)
             {
-                this.logger.LogError("[PV] WebRTCAudioProcessor Process: frame size expected: {0}, passed: {1}", this.inFrameSize, buf);
+                this.logger.LogError("[PV] WebRTCAudioProcessor Process: frame size expected: {0}, passed: {1}", this.inFrameSize, buf.Length);
                 return buf;
             }
             bool voiceDetected = false;
             for (int offset = 0; offset < inFrameSize; offset += processFrameSize)
             {
-                bool vd = true;
-                int err = webrtc_audio_processor_process(proc, buf, offset, out vd);
+                int err = webrtc_audio_processor_process(proc, buf, offset, out bool vd);
                 if (vd)
+                {
                     voiceDetected = true;
+                }
                 if (lastProcessErr != err)
                 {
                     lastProcessErr = err;
@@ -256,14 +264,7 @@ namespace Photon.Voice
             foreach (var reverseBufFloat in reverseFramer.Frame(data))
             {
                 var reverseBuf = reverseBufferFactory.New();
-                if (reverseBufFloat.Length != reverseBuf.Length)
-                {
-                    AudioUtil.ResampleAndConvert(reverseBufFloat, reverseBuf, reverseBuf.Length, this.reverseChannels);
-                }
-                else
-                {
-                    AudioUtil.Convert(reverseBufFloat, reverseBuf, reverseBuf.Length);
-                }
+                AudioUtil.Convert(reverseBufFloat, reverseBuf, reverseBuf.Length);
 
                 lock (reverseStreamQueue)
                 {
@@ -290,10 +291,6 @@ namespace Photon.Voice
                 while (!disposed)
                 {
                     reverseStreamQueueReady.WaitOne(); // Wait until data is pushed to the queue or Dispose signals.
-
-#if UNITY_5_3_OR_NEWER // #if UNITY
-                    // UnityEngine.Profiling.Profiler.BeginSample("Encoder");
-#endif
 
                     while (true) // Dequeue and process while the queue is not empty
                     {

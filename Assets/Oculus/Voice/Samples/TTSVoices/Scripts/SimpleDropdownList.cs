@@ -7,6 +7,7 @@
  */
 
 using System.Collections.Generic;
+using Meta.WitAi;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -83,7 +84,12 @@ namespace Meta.Voice.Samples.TTSVoices
         /// </summary>
         protected virtual void Awake()
         {
-            // Find existing toggle if no prefab is assigned
+            FindCellPrefab();
+        }
+
+        // Find existing toggle if no prefab is assigned
+        private void FindCellPrefab()
+        {
             if (_dropdownListCellPrefab == null)
             {
                 _dropdownListCellPrefab = _dropdownListScrollRect.content.GetComponentInChildren<Toggle>();
@@ -131,6 +137,36 @@ namespace Meta.Voice.Samples.TTSVoices
             _dropdownToggle.onValueChanged.RemoveListener(OnToggleClick);
         }
 
+        #if ENABLE_LEGACY_INPUT_MANAGER
+        /// <summary>
+        /// Hide if touch outside of the scroll rect & toggle button
+        /// </summary>
+        protected virtual void Update()
+        {
+            if (IsShowing && Input.GetMouseButtonDown(0) && _dropdownListScrollRect != null && _dropdownToggle != null)
+            {
+                Vector2 touchPosition = Input.mousePosition;
+                if (!IsInRect(_dropdownListScrollRect.viewport, touchPosition)
+                    && !IsInRect(_dropdownToggle.GetComponent<RectTransform>(), touchPosition))
+                {
+                    SetShowing(false);
+                }
+            }
+        }
+        // Check for rect
+        private static bool IsInRect(RectTransform rectTransform, Vector2 touchPosition)
+        {
+            // No main camera or rect
+            Camera cam = Camera.main;
+            if (cam == null || rectTransform == null)
+            {
+                return false;
+            }
+            // Check mouse position screen point
+            return RectTransformUtility.RectangleContainsScreenPoint(rectTransform, touchPosition, cam);
+        }
+        #endif
+
         #region LOAD
         /// <summary>
         /// Load dropdown with specified options
@@ -145,6 +181,14 @@ namespace Meta.Voice.Samples.TTSVoices
             foreach (var cell in _cells)
             {
                 cell.gameObject.SetActive(false);
+            }
+
+            // Setup if needed, or log error
+            FindCellPrefab();
+            if (_dropdownListCellPrefab == null)
+            {
+                VLog.W($"Cannot load {gameObject.name} without a cell prefab");
+                return;
             }
 
             // Iterate all options

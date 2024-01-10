@@ -18,22 +18,27 @@ MonoBehaviour:
     AppIdChat: 
     AppIdVoice: 1bba8402-4aff-4755-be31-85edd56ce646
     AppVersion: 
-    UseNameServer: 0
-    FixedRegion: 
-    Server: 192.168.137.1
-    Port: 5055
+    UseNameServer: 1
+    FixedRegion: jp
+    Server: 
+    Port: 0
     ProxyServer: 
     Protocol: 0
     EnableProtocolFallback: 1
     AuthMode: 0
-    EnableLobbyStatistics: 1
-    NetworkLogging: 5
-  DevRegion: hk
-  PunLogging: 2
+    EnableLobbyStatistics: 0
+    NetworkLogging: 1
+  DevRegion: jp
+  PunLogging: 0
   EnableSupportLogger: 0
   RunInBackground: 1
   StartInOfflineMode: 0
   RpcList:
+  - CantHearYou
+  - ChangeColour
+  - ClickRpc
+  - DestroyRpc
+  - HeresWhy
   - ApplyAvatarData
   - CanH
   - CanK
@@ -42,11 +47,7 @@ MonoBehaviour:
   - CanPAndH
   - CanPAndK
   - CanPAndKAndH
-  - CantHearYou
-  - ClickRpc
   - DestroyItem
-  - DestroyRpc
-  - HeresWhy
   - NextTurn
   - NoOneWin
   - PlayTile
@@ -65,4 +66,4 @@ MonoBehaviour:
   - SetState
   DisableAutoOpenWizard: 1
   ShowSettings: 1
-  DevRegionSetOnce: 0
+  DevRegionSetOnce: 1

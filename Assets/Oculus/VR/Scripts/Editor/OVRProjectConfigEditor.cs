@@ -148,6 +148,10 @@ public class OVRProjectConfigEditor : Editor
                 OVREditorUtil.SetupEnumField(projectConfig, "Hand Tracking Version",
                     ref projectConfig.handTrackingVersion, ref hasModified);
 
+                // Concurrent hands and controllers support
+                OVREditorUtil.SetupEnumField(projectConfig, new GUIContent("Concurrent Hands/Controllers Support",
+                        "Allows the application to use concurrent hands and controllers functionality. This option must be enabled at build time."),
+                    ref projectConfig.multimodalHandsControllersSupport, ref hasModified);
 
                 // Enable Render Model Support
                 bool renderModelSupportAvailable = OVRPluginInfo.IsOVRPluginOpenXRActivated();
@@ -208,11 +212,22 @@ public class OVRProjectConfigEditor : Editor
                     OVREditorUtil.SetupEnumField(projectConfig, new GUIContent("Virtual Keyboard Support",
                             "Provides a consistent typing experience across Meta Quest VR applications."),
                         ref projectConfig.virtualKeyboardSupport, ref hasModified);
+
+                    if (projectConfig.requiresSystemKeyboard)
+                    {
+                        EditorGUILayout.HelpBox(
+                            "Using the System Keyboard with Virtual Keyboard is not recommended.",
+                            MessageType.Warning);
+                    }
                 }
 
                 // Anchor Support - linked to Shared Spatial Anchors and Scene
                 var anchorSupportRequired = projectConfig.sharedAnchorSupport != OVRProjectConfig.FeatureSupport.None;
                 var anchorSupportTooltip = "Anchor Support is required for Shared Spatial Anchor Support.";
+                anchorSupportRequired = anchorSupportRequired ||
+                                        projectConfig.sceneSupport != OVRProjectConfig.FeatureSupport.None;
+                anchorSupportTooltip =
+                    "Anchor Support is required for Shared Spatial Anchor Support and/or Scene Support.";
                 using (new EditorGUI.DisabledScope(anchorSupportRequired))
                 {
                     var tooltip = anchorSupportRequired ? anchorSupportTooltip : "";
@@ -233,6 +248,18 @@ public class OVRProjectConfigEditor : Editor
                 }
 
 
+                // Scene Support
+                var sceneTooltip =
+                    "Enable support for scene understanding. This requires Anchor Support to be enabled.";
+                OVREditorUtil.SetupEnumField(projectConfig, new GUIContent("Scene Support", sceneTooltip),
+                    ref projectConfig.sceneSupport, ref hasModified);
+                // enable anchor support if scene requires it
+                if (projectConfig.sceneSupport != OVRProjectConfig.FeatureSupport.None &&
+                    projectConfig.anchorSupport != OVRProjectConfig.AnchorSupport.Enabled)
+                {
+                    projectConfig.anchorSupport = OVRProjectConfig.AnchorSupport.Enabled;
+                    hasModified = true;
+                }
 
                 // Body Tracking Support
                 OVREditorUtil.SetupEnumField(projectConfig, "Body Tracking Support",
@@ -317,6 +344,11 @@ public class OVRProjectConfigEditor : Editor
                         "Allows the application to use passthrough functionality. This option must be enabled at build time, otherwise initializing passthrough and creating passthrough layers in application scenes will fail."),
                     ref projectConfig._insightPassthroughSupport, ref hasModified);
 
+                // Processor favor (cpu/gpu level trading)
+                OVREditorUtil.SetupEnumField(projectConfig, new GUIContent("Processor Favor",
+                        "If selected, will increase the frequency of one processor at the expense of decreasing the frequency of the other on supported devices"),
+                    ref projectConfig._processorFavor, ref hasModified);
+
                 break;
 
             case eProjectConfigTab.BuildSettings:
@@ -351,6 +383,7 @@ public class OVRProjectConfigEditor : Editor
                 OVREditorUtil.SetupBoolField(projectConfig, new GUIContent("Experimental Features Enabled",
                         "If checked, this application can use experimental features. Note that such features are for developer use only. This option must be disabled when submitting to the Oculus Store."),
                     ref projectConfig.experimentalFeaturesEnabled, ref hasModified);
+
 
                 break;
         }

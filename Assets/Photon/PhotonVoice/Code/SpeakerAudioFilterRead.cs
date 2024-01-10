@@ -15,7 +15,7 @@ namespace Photon.Voice.Unity
         protected override IAudioOut<float> CreateAudioOut()
         {
             // default implementation
-            this.outBuffer = new AudioSyncBuffer<float>(this.playDelayConfig.Low, this.Logger, string.Empty, true);
+            this.outBuffer = new AudioSyncBuffer<float>(this.playDelayConfig, this.Logger, string.Empty, true);
             this.outputSampleRate = AudioSettings.outputSampleRate;
             return this.outBuffer;
         }

@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Manager;
-using Oculus.Interaction;
 using Photon.Pun;
 using Photon.Realtime;
 using TMPro;
@@ -52,7 +50,6 @@ public class PunStuff : MonoBehaviourPunCallbacks
     {
         ipAddressInputField.text = PlayerPrefs.GetString(IPAddressKey, "192.168.137.1");
         userNameInputField.text = PlayerPrefs.GetString(UserNameKey, "FuDan-TA-01");
-        PhotonNetwork.NetworkingClient.LoadBalancingPeer.SerializationProtocolType = ExitGames.Client.Photon.SerializationProtocol.GpBinaryV16;
 
         GameManager.Instance.AddMenu(LoadingMenuName, loadingMenu);
         GameManager.Instance.AddMenu(TitleMenuName, titleMenu);
@@ -65,11 +62,12 @@ public class PunStuff : MonoBehaviourPunCallbacks
 
     public void JoinLobby()
     {
-        serverSettings.AppSettings.Server = ipAddressInputField.text;
+        //serverSettings.AppSettings.Server = ipAddressInputField.text;
         GameManager.Instance.SetPlayerName(userNameInputField.text);
         PlayerPrefs.SetString(IPAddressKey, ipAddressInputField.text);
         PlayerPrefs.SetString(UserNameKey, userNameInputField.text);
         GameManager.Instance.OpenMenu("LoadingMenu");
+        //PhotonNetwork.NetworkingClient.LoadBalancingPeer.SerializationProtocolType = ExitGames.Client.Photon.SerializationProtocol.GpBinaryV16;
         PhotonNetwork.ConnectUsingSettings();
     }
 

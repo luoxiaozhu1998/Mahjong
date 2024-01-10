@@ -57,10 +57,10 @@ namespace Photon.Voice.Unity
             get { return audioOutput != null && this.audioOutput.IsPlaying; }
         }
 
-        /// <summary>Smoothed difference between (jittering) stream and (clock-driven) audioOutput.</summary>
+        /// <summary>The current difference between positions in the buffer of (jittery) stream writer and (clock-driven) audio output reader in ms.</summary>
         public int Lag
         {
-            get { return this.IsPlaying ? this.audioOutput.Lag : -1; }
+            get { return this.audioOutput == null ? 0 : this.audioOutput.Lag; }
         }
 
         /// <summary>
@@ -106,8 +106,8 @@ namespace Photon.Voice.Unity
             set
             {
                 var l = value;
-                var h = value * 2;
-                var m = value * 5;
+                var h = value; // rely on automatic tolerance value
+                var m = 1000; // as in PlayDelayConfig.Default
                 if (this.playDelayConfig.Low != l || this.playDelayConfig.High != h || this.playDelayConfig.Max != m)
                 {
                     this.playDelayConfig.Low = l;
@@ -232,7 +232,7 @@ namespace Photon.Voice.Unity
             return true;
         }
 
-        private void OnDestroy()
+        protected virtual void OnDestroy()
         {
             this.Logger.LogInfo("OnDestroy");
             this.StopPlayback();

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -42,6 +42,7 @@ using Debug = UnityEngine.Debug;
 /// <see cref="LoadUnboundAnchors"/>.
 /// </remarks>
 [DisallowMultipleComponent]
+[HelpURL("https://developer.oculus.com/reference/unity/latest/class_o_v_r_spatial_anchor")]
 public class OVRSpatialAnchor : MonoBehaviour
 {
     private bool _startCalled;
@@ -817,7 +818,8 @@ public class OVRSpatialAnchor : MonoBehaviour
 
     internal static bool TryGetPose(OVRSpace space, out OVRPose pose)
     {
-        if (!OVRPlugin.TryLocateSpace(space, OVRPlugin.GetTrackingOriginType(), out var posef))
+        var tryLocateSpace = OVRPlugin.TryLocateSpace(space, OVRPlugin.GetTrackingOriginType(), out var posef, out var locationFlags);
+        if (!tryLocateSpace || !locationFlags.IsOrientationValid() || !locationFlags.IsPositionValid())
         {
             pose = OVRPose.identity;
             return false;
@@ -1585,6 +1587,7 @@ public class OVRSpatialAnchor : MonoBehaviour
 
         /// <summary>Network operation failed.</summary>
         Failure_SpaceNetworkRequestFailed = -2004,
+
     }
 
     /// <summary>
@@ -1617,6 +1620,13 @@ public class OVRSpatialAnchor : MonoBehaviour
         }
     }
 
+}
+
+public static class OperationResultExtensions
+{
+    public static bool IsSuccess(this OVRSpatialAnchor.OperationResult res) => res == OVRSpatialAnchor.OperationResult.Success;
+    public static bool IsError(this OVRSpatialAnchor.OperationResult res) => res < 0;
+    public static bool IsWarning(this OVRSpatialAnchor.OperationResult res) => res > 0;
 }
 
 /// <summary>

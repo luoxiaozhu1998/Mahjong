@@ -8,7 +8,7 @@ namespace Photon.Voice.Fusion.Editor
     using UnityEngine;
     using global::Fusion;
 
-    [CustomEditor(typeof(FusionVoiceClient))]
+    [CustomEditor(typeof(FusionVoiceClient), true)]
     public class FusionVoiceClientEditor : VoiceConnectionEditor
     {
         private SerializedProperty useFusionAppSettingsSp;

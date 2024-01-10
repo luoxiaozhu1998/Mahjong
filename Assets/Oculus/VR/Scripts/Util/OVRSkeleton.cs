@@ -207,10 +207,11 @@ public class OVRSkeleton : MonoBehaviour
         return _skeletonType;
     }
 
-    internal void SetSkeletonType(SkeletonType type)
+    internal virtual void SetSkeletonType(SkeletonType type)
     {
         _skeletonType = type;
     }
+
 
     public bool IsValidBone(BoneId bone)
     {
@@ -356,6 +357,12 @@ public class OVRSkeleton : MonoBehaviour
                 {
                     bone.Transform = new GameObject(BoneLabelFromBoneId(_skeletonType, bone.Id)).transform;
                 }
+            }
+
+            // if allocated bone here before, make sure the name is correct.
+            if (GetBoneTransform(bone.Id) == null)
+            {
+                bone.Transform.name = BoneLabelFromBoneId(_skeletonType, bone.Id);
             }
 
             var pose = _skeleton.Bones[i].Pose;

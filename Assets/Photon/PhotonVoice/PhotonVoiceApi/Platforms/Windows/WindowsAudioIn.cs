@@ -5,14 +5,6 @@ using System.Runtime.InteropServices;
 
 namespace Photon.Voice.Windows
 {
-#pragma warning disable 0414
-    public class MonoPInvokeCallbackAttribute : System.Attribute
-    {
-        private Type type;
-        public MonoPInvokeCallbackAttribute(Type t) { type = t; }
-    }
-#pragma warning restore 0414
-
     public class WindowsAudioInPusher : IAudioPusher<short>
     {
         enum SystemMode

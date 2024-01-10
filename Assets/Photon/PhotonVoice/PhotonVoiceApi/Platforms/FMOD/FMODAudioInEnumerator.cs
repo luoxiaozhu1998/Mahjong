@@ -38,6 +38,11 @@ namespace Photon.Voice.FMOD
                 }
                 devices.Add(new DeviceInfo(id, name));
             }
+
+            if (OnReady != null)
+            {
+                OnReady();
+            }
         }
 
         public override void Dispose()

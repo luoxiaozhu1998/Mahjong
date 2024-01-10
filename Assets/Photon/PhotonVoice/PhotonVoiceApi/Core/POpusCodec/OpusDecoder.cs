@@ -112,7 +112,7 @@ namespace POpusCodec
                     if (packetInvalid)
                     {
                         // no fec data, conceal previous frame
-                        decodePacket( new FrameBuffer(),  0, channels, false);
+                        decodePacket(new FrameBuffer(), 0, channels, false);
                     }
                     else
                     {
@@ -149,7 +149,11 @@ namespace POpusCodec
 
     public class OpusDecoderAsync<T> : OpusDecoder<T>
     {
-        [AOT.MonoPInvokeCallbackAttribute(typeof(Action<IntPtr, IntPtr, int, bool>))]
+        // For Unity versions before 2021, IL2CPP fails to compile with error: System.ArgumentOutOfRangeException: Specified argument was out of the range of valid values.
+        // 2021.3 is the oldest 2021 LTS
+#if !UNITY_5_3_OR_NEWER || UNITY_2021_3_OR_NEWER // #if !UNITY || UNITY_2021_3_OR_NEWER
+        [MonoPInvokeCallbackAttribute(typeof(Action<IntPtr, IntPtr, int, bool>))]
+#endif
         static public void DataCallbackStatic(IntPtr handle, IntPtr p, int count, bool endOfStream)
         {
             if (handles.TryGetValue(handle, out var obj))
@@ -160,7 +164,7 @@ namespace POpusCodec
 
         static protected Dictionary<IntPtr, OpusDecoderAsync<T>> handles = new Dictionary<IntPtr, OpusDecoderAsync<T>>();
 
-        public OpusDecoderAsync(Action<FrameOut<T>> output, SamplingRate outputSamplingRateHz, Channels numChannels, int frameDurationSamples) 
+        public OpusDecoderAsync(Action<FrameOut<T>> output, SamplingRate outputSamplingRateHz, Channels numChannels, int frameDurationSamples)
             : base(output, outputSamplingRateHz, numChannels, frameDurationSamples)
         {
             handles[handle] = this;

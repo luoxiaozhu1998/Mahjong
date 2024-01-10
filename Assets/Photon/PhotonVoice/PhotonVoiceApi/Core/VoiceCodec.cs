@@ -18,7 +18,14 @@ namespace Photon.Voice
         Config = 1,
         KeyFrame = 2,
         PartialFrame = 4,
-        EndOfStream = 8
+        EndOfStream = 8,
+        FragNotBeg = 16,
+        FragNotEnd = 32,
+        FEC = 64,
+
+        // 00 for unfragmented
+        // 01 11 11 .. 11 10 for fragmented
+        MaskFrag = FragNotBeg | FragNotEnd,
     }
 
     /// <summary>Generic encoder interface.</summary>
@@ -117,7 +124,9 @@ namespace Photon.Voice
 #if PHOTON_VOICE_VIDEO_ENABLE
         VideoVP8 = 21,
         VideoVP9 = 22,
+//        VideoAV1 = 23,
         VideoH264 = 31,
+//        VideoH265 = 32,
 #endif
     }
 
@@ -340,8 +349,52 @@ namespace Photon.Voice
         }
     }
 
-    // Acquires byte[] plane via GHandle. Optimized for single plane images.
-    // Supports releasing to image pool after freeing GHandle (object itself reused only)
+    // Encapsulates managed byte arrays containing image planes and GHandles pinning them.
+    // Supports releasing to an image pool.
+    public class ImageBufferNativeGCHandleBytes : ImageBufferNative, IDisposable
+    {
+        ImageBufferNativePool<ImageBufferNativeGCHandleBytes> pool;
+        readonly GCHandle[] planeHandle;
+        readonly byte[][] planeBytes;
+
+        public ImageBufferNativeGCHandleBytes(ImageBufferNativePool<ImageBufferNativeGCHandleBytes> pool, ImageBufferInfo info) : base(info)
+        {
+            this.pool = pool;
+            planeBytes = new byte[info.Stride.Length][];
+            planeHandle = new GCHandle[info.Stride.Length];
+            for (int i = 0; i < info.Stride.Length; i++)
+            {
+                planeBytes[i] = new byte[info.Stride[i] * info.Height];
+                planeHandle[i] = GCHandle.Alloc(planeBytes[i], GCHandleType.Pinned);
+                Planes[i] = planeHandle[i].AddrOfPinnedObject();
+            }
+        }
+
+        public byte[][] PlaneBytes => planeBytes;
+
+        public override void Release()
+        {
+            if (pool != null)
+            {
+                pool.Release(this);
+            }
+        }
+
+        public override void Dispose()
+        {
+            if (planeHandle != null)
+            {
+                for (int i = 0; i < planeHandle.Length; i++)
+                {
+                    planeHandle[i].Free();
+                }
+            }
+        }
+    }
+
+    // Encapsulates a GHandle for a single image plane.
+    // Supports releasing to an image pool after freeing GHandle (object itself reused only)
+    [Obsolete("Requres regular allocations of byte[]. May leak if used w/o pool. Use ImageBufferNativeGCHandleBytes with Texture2D.GetRawTextureData<byte>().CopyTo(b.PlaneBytes)) instead")]
     public class ImageBufferNativeGCHandleSinglePlane : ImageBufferNative, IDisposable
     {
         ImageBufferNativePool<ImageBufferNativeGCHandleSinglePlane> pool;

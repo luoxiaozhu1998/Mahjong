@@ -1,9 +1,9 @@
 mergeInto(LibraryManager.library, {
     
     PhotonVoice_JS_start_worker: function(encoderDataCallback, decoderDataCallback) {
-		console.log('[PV] PhotonVoice_JS_start_worker');
+        console.log('[PV] PhotonVoice_JS_start_worker');
         Module.PhotonVoice_JS_Global = {};
-		Module.PhotonVoice_JS_Global.encoderChannels = new Map(); // number of channels required to properly allocate Float32Array in PhotonVoice_JS_opus_encode_float()
+        Module.PhotonVoice_JS_Global.encoderChannels = new Map(); // number of channels required to properly allocate Float32Array in PhotonVoice_JS_opus_encode_float()
         Module.PhotonVoice_JS_Global.workerInitialized = false;
         Module.PhotonVoice_JS_Global.workerPreInitQueue = new Array();
         Module.PhotonVoice_JS_Global.opusWorker = new Worker("_opus_worker/opus_worker.js");
@@ -38,7 +38,7 @@ mergeInto(LibraryManager.library, {
 
     PhotonVoice_JS_opus_encoder_init: function(st, f, channels, application) {
         console.log('[PV] PhotonVoice_JS_opus_encoder_init', st, f, channels, application);
-		Module.PhotonVoice_JS_Global.encoderChannels.set(st, channels);
+        Module.PhotonVoice_JS_Global.encoderChannels.set(st, channels);
         const msg = {
                 op: 'create_encoder',
                 stream: st,
@@ -57,7 +57,7 @@ mergeInto(LibraryManager.library, {
 
     PhotonVoice_JS_opus_encoder_destroy: function(st) {
         console.log('[PV] PhotonVoice_JS_opus_encoder_destroy', st);
-		Module.PhotonVoice_JS_Global.encoderChannels.delete(st);
+        Module.PhotonVoice_JS_Global.encoderChannels.delete(st);
         const msg = {
                 op: 'destroy',
                 stream: st,
@@ -139,7 +139,7 @@ mergeInto(LibraryManager.library, {
             op: 'decode',
             stream: st,
             frame: new Int8Array(HEAPF32.buffer.slice(data, data + len)),
-			fec: fec,
+            fec: fec,
             eos: eos
         };
         Module.PhotonVoice_JS_Global.opusWorker.postMessage(msg);
@@ -151,7 +151,7 @@ mergeInto(LibraryManager.library, {
             op: 'decode_float',
             stream: st,
             frame: new Int8Array(HEAPF32.buffer.slice(data, data + len)),
-			fec: fec,
+            fec: fec,
             eos: eos
         };
         Module.PhotonVoice_JS_Global.opusWorker.postMessage(msg);

@@ -23,6 +23,7 @@ using Meta.Voice.Hub.Attributes;
 using Meta.Voice.Hub.Interfaces;
 using Meta.WitAi;
 using Oculus.Voice.Utility;
+using Oculus.Voice;
 using UnityEngine;
 
 namespace Meta.Voice
@@ -40,7 +41,7 @@ namespace Meta.Voice
 
         private void OnWindowGUI()
         {
-            WitEditorUI.LayoutKeyLabel(VoiceSDKStyles.Texts.AboutVoiceSdkVersionLabel, VoiceSDKVersion.VERSION);
+            WitEditorUI.LayoutKeyLabel(VoiceSDKStyles.Texts.AboutVoiceSdkVersionLabel, VoiceSDKConstants.SdkVersion);
             WitEditorUI.LayoutKeyLabel(VoiceSDKStyles.Texts.AboutWitSdkVersionLabel, WitConstants.SDK_VERSION);
             WitEditorUI.LayoutKeyLabel(VoiceSDKStyles.Texts.AboutWitApiVersionLabel, WitConstants.API_VERSION);
 

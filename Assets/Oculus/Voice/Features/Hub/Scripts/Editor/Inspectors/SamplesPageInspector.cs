@@ -32,6 +32,9 @@ namespace Meta.Voice.Hub.Inspectors
         public float OverrideWidth { get; set; } = -1;
         public float OverrideHeight { get; set; } = -1;
 
+        private Vector2 _scrollOffset;
+        private float _minTileMargin = 15f;
+
         private void OnEnable()
         {
             _samples.Clear();
@@ -57,8 +60,9 @@ namespace Meta.Voice.Hub.Inspectors
 
         public override void OnInspectorGUI()
         {
-            var windowWidth = (OverrideWidth > 0 ? OverrideWidth : EditorGUIUtility.currentViewWidth);
-            var columns = (int) (windowWidth / _tileSize);
+            _scrollOffset = GUILayout.BeginScrollView(_scrollOffset);
+            var windowWidth = (OverrideWidth > 0 ? OverrideWidth : EditorGUIUtility.currentViewWidth) - _minTileMargin;
+            var columns = (int) (windowWidth / (_tileSize + _minTileMargin));
             int col = 0;
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
@@ -87,6 +91,7 @@ namespace Meta.Voice.Hub.Inspectors
             {
                 base.OnInspectorGUI();
             }
+            GUILayout.EndScrollView();
         }
 
         public static void OpenSceneFromGUID(string scenePath)

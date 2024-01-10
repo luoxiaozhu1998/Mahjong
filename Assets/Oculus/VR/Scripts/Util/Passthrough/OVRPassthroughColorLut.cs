@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -23,13 +23,24 @@ using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
 
+/// <summary>
+/// Passthrough Color Look-Up Tables (LUTs).
+/// </summary>
+[HelpURL("https://developer.oculus.com/reference/unity/latest/class_o_v_r_passthrough_color_lut")]
 public class OVRPassthroughColorLut : System.IDisposable
 {
     private const int RecomendedBatchSize = 128;
 
     public uint Resolution { get; private set; }
     public ColorChannels Channels { get; private set; }
-    public bool IsInitialized { get; private set; }
+
+    [System.Obsolete("IsInitialized is obsoleted. Instead use IsValid.", false)]
+    public bool IsInitialized => IsValid;
+
+    /// <summary>
+    /// Checks if the LUT is usable. Can become invalid at runtime.
+    /// </summary>
+    public bool IsValid => _createState != CreateState.Invalid;
 
     internal ulong _colorLutHandle;
     private GCHandle _allocHandle;
@@ -37,6 +48,8 @@ public class OVRPassthroughColorLut : System.IDisposable
     private int _channelCount;
     private byte[] _colorBytes;
     private object _locker = new object();
+
+    private CreateState _createState = CreateState.Invalid;
 
     /// <summary>
     /// Initialize the color LUT data from a texture. Color channels are inferred from texture format.
@@ -158,11 +171,17 @@ public class OVRPassthroughColorLut : System.IDisposable
 
     public void Dispose()
     {
-        if (IsInitialized)
+        if (IsValid)
         {
-            Destroy();
+            OVRManager.OnPassthroughInitializedStateChange -= RefreshIfInitialized;
         }
 
+        Destroy();
+        FreeAllocHandle();
+    }
+
+    private void FreeAllocHandle()
+    {
         if (_allocHandle != null && _allocHandle.IsAllocated)
         {
             _allocHandle.Free();
@@ -219,10 +238,15 @@ public class OVRPassthroughColorLut : System.IDisposable
         var passthroughCapabilities = OVRManager.GetPassthroughCapabilities();
         if (passthroughCapabilities != null)
         {
+            if (passthroughCapabilities.MaxColorLutResolution == 0)
+            {
+                throw new System.Exception($"Passthrough Color LUTs are not supported.");
+            }
+
             if (Resolution > passthroughCapabilities.MaxColorLutResolution)
             {
                 throw new System.Exception(
-                    $"Color LUT resolution {Resolution} exceeds the maximum of {passthroughCapabilities.MaxColorLutResolution}");
+                    $"Color LUT resolution {Resolution} exceeds the maximum of {passthroughCapabilities.MaxColorLutResolution}.");
             }
         }
         else
@@ -234,7 +258,7 @@ public class OVRPassthroughColorLut : System.IDisposable
 
     private bool IsValidUpdateResolution(int lutSize, int elementByteSize)
     {
-        if (!IsInitialized)
+        if (!IsValid)
         {
             Debug.LogError("Can not update an uninitialized lut object.");
             return false;
@@ -347,9 +371,41 @@ public class OVRPassthroughColorLut : System.IDisposable
     private void Create(OVRPlugin.PassthroughColorLutData lutData)
     {
         _lutData = lutData;
-        IsInitialized = OVRPlugin.CreatePassthroughColorLut((OVRPlugin.PassthroughColorLutChannels)Channels,
+        if (OVRManager.IsInsightPassthroughInitialized())
+        {
+            InternalCreate();
+        }
+        else
+        {
+            _createState = CreateState.Pending;
+        }
+
+        if (IsValid)
+        {
+            OVRManager.OnPassthroughInitializedStateChange += RefreshIfInitialized;
+        }
+    }
+
+    private void RefreshIfInitialized(bool isInitialized)
+    {
+        if (isInitialized)
+        {
+            Recreate();
+        }
+    }
+
+    private void Recreate()
+    {
+        Destroy();
+        InternalCreate();
+    }
+
+    private void InternalCreate()
+    {
+        var result = OVRPlugin.CreatePassthroughColorLut((OVRPlugin.PassthroughColorLutChannels)Channels,
             Resolution, _lutData, out _colorLutHandle);
-        if (!IsInitialized)
+        _createState = result ? CreateState.Created : CreateState.Invalid;
+        if (!IsValid)
         {
             Debug.LogError("Failed to create Passthrough Color LUT.");
         }
@@ -432,14 +488,14 @@ public class OVRPassthroughColorLut : System.IDisposable
 
     private void Destroy()
     {
-        if (IsInitialized)
+        if (_createState == CreateState.Created)
         {
             lock (_locker)
             {
                 OVRPlugin.DestroyPassthroughColorLut(_colorLutHandle);
-                IsInitialized = false;
             }
         }
+        _createState = CreateState.Invalid;
     }
 
     public enum ColorChannels
@@ -603,5 +659,10 @@ public class OVRPassthroughColorLut : System.IDisposable
                 FlipY = flipY;
             }
         }
+    }
+
+    private enum CreateState
+    {
+        Invalid, Pending, Created
     }
 }

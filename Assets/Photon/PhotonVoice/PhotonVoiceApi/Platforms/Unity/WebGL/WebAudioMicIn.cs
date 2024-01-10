@@ -10,7 +10,7 @@ namespace Photon.Voice.Unity
         const string lib_name = "__Internal";
 
         [DllImport(lib_name, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        private static extern int PhotonVoice_WebAudioMicIn_Start(int handle, Action<int, int, int, int> createCallbackStatic, Action<int, IntPtr, int> dataCallbackStatic, int callIntervalMs);
+        private static extern int PhotonVoice_WebAudioMicIn_Start(int handle, string deviceId, Action<int, int, int, int> createCallbackStatic, Action<int, IntPtr, int> dataCallbackStatic);
 
         [DllImport(lib_name, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         private static extern void PhotonVoice_WebAudioMicIn_Stop(int hanle);
@@ -21,7 +21,7 @@ namespace Photon.Voice.Unity
         static Dictionary<int, WebAudioMicIn> handles = new Dictionary<int, WebAudioMicIn>();
         static int handleCnt;
 
-        [AOT.MonoPInvokeCallbackAttribute(typeof(Action))]
+        [MonoPInvokeCallbackAttribute(typeof(Action))]
         static void createCallbackStatic(int handle, int err, int samplingRate, int channels)
         {
             handles[handle].createCallback(err, samplingRate, channels);
@@ -41,7 +41,7 @@ namespace Photon.Voice.Unity
             }
         }
 
-        [AOT.MonoPInvokeCallbackAttribute(typeof(Action<int, IntPtr, int>))]
+        [MonoPInvokeCallbackAttribute(typeof(Action<int, IntPtr, int>))]
         static void dataCallbackStatic(int handle, IntPtr p, int countFloat)
         {
             handles[handle].dataCallback(p, countFloat);
@@ -67,7 +67,7 @@ namespace Photon.Voice.Unity
         // To make SamplingRate and Channels properties available right after the creation, WebAudioMicIn returns suggested parameters
         // instead of what WebAudio source actually produces. The audio stream is resampled.
         // Make sure that suggestedFrequency is equal to encoder frequency to avoid double reasampling.
-        public WebAudioMicIn(int suggestedFrequency, int suggestedChannels, ILogger logger)
+        public WebAudioMicIn(string deviceId, int suggestedFrequency, int suggestedChannels, ILogger logger)
         {
             this.SamplingRate = suggestedFrequency;
             // only mono is supported for now
@@ -76,7 +76,7 @@ namespace Photon.Voice.Unity
             handleCnt++;
             this.handle = handleCnt;
             handles[handle] = this;
-            PhotonVoice_WebAudioMicIn_Start(handle, createCallbackStatic, dataCallbackStatic, 30);
+            PhotonVoice_WebAudioMicIn_Start(handle, deviceId, createCallbackStatic, dataCallbackStatic);
         }
 
         private float[] bufSource;

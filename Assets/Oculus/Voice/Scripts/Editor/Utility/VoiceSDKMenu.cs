@@ -22,12 +22,9 @@ using Meta.Voice.VSDKHub;
 using UnityEngine;
 using UnityEditor;
 using Meta.WitAi.Windows;
-using Meta.WitAi.Configuration;
 using Meta.WitAi.Data.Entities;
 using Meta.WitAi.TTS;
 using Meta.WitAi.TTS.Preload;
-using Meta.WitAi.Data.Info;
-using Oculus.Voice.Windows;
 
 namespace Oculus.Voice.Utility
 {

@@ -1,6 +1,77 @@
 Photon Voice 2 Change Log
 
-v2.51 (February 02, 2022)
+v2.53 (September 06, 2023)
+   PUN2: v2.43 (PUN2.43) 
+   RT/lib: v4.1.7.1
+   PhotonVoiceApi: revision 7141
+   Unity: 2019.4.39 or higher
+   UPDATED: Photon3Unity3D.dll, Photon Realtime (LoadBalancing) and Chat APIs to v4.1.7.1
+   UPDATED: PUN to v2.43
+PUN:
+   CHANGED: 'following the Leader' logic extracted from PunVoiceClient into abstract VoiceFollowClient class
+   ADDED: the voice client goes offline for errors in OpAuthenticate and OpJoinRoom until the next successfull Leader connection
+   ADDED: ReconnectAndRejoin functionality: the voice room now has a PlayerTTL of 2 seconds; if the connection is lost, the client will attempt to get back into the room quickly
+   CHANGED: if Leader isn't in an online room, the voice client will disconnect and stay offline
+   BREAKING: there are other changes due to the rework that may affect the behavior
+Fusion:
+   BREAKING: FusionVoiceClient implemented via VoiceFollowClient, behavior is consistent with PUN now but can differ from the previous realization
+   CHANGED: FusionVoiceClient: if networkRunner.GameMode is Single, Voice client does not connect
+WebGL:
+   FIXED: WebGL Audio AudioWorkletProcessor canceled processing if the first process() call buffer had no data that might happen during initialization, the remote voice did not play in this case
+   ADDED: audio input device enumeration: WebAudioInEnumerator, returns the result asynchronously
+   ADDED: audio input device selection: WebAudioMicIn() accepts 'deviceId' parameter
+Core:
+   CHANGED: VoiceClient.ThreadingEnabled is always false for UNITY_WEBGL, setter is ignored
+   ADDED: IDeviceEnumerator.OnReady callback (asynchronous API, required by WebGL): both sync and async implementations call it when the device list is ready
+   CHANGED: all DeviceEnumeratorBase inheritors call OnReady when the list is updated
+DemoVoiceUI:
+   CHANGED: audio input enumeration switched to asynchronous API to support WebGL
+   CHANGED: ToneAudioReader is used for tone generator because ToneAudioPusher is not supported on WebGL
+
+v2.52 (May 23, 2023)
+   PUN2: v2.42 (PUN2.42) 
+   RT/lib: 4.1.6.24
+   PhotonVoiceApi: revision 6905
+   Unity: 2019.4.39 or higher
+   UPDATED: Photon3Unity3D.dll, Photon Realtime (LoadBalancing) and Chat APIs to v4.1.6.24
+   UPDATED: PUN to v2.42
+VoiceConnection:
+   ADDED: 'C++ API Compatibility Mode' checkbox in VoiceConnection editor inspector
+Recorder:
+   ADDED: TargetPlayers property: only players specified in this property receive the voice info event and stream data, remote players also receive the voice remove event when removed from the list
+   FIXED: SetAndroidNativeMicrophoneSettings() did not update anything
+   CHANGED: Recorder uses Photon microphone type for WebGLPlayer even if Unity microphone type set
+   CHANGED: Recorder uses AndroidAudioInParameters from Voice API directly instead of locally defined proxy struct NativeAndroidMicrophoneSettings
+   BREAKING: Android microphone settings field name and type changed, all settings will be reset to true in Editor
+   CHANGED: added public getters for Android microphone settings properties
+Speaker:
+   CHANGED: AudioOutDelayControl delay tolerance reduced (smaller drifts from the target delay)
+   CHANGED: Speaker.Lag returns audioOutput.Lag or 0 if audioOutput is null (was -1 if not playing)
+   FIXED: SpeakerFMOD editor inspector did not show SpeakerFMOD parameters: added SpeakerFMODEditor extending SpeakerEditor
+iOS:
+   FIXED: audio capture on iPhone 14: InputCallback is added and used for capture, RenderCallback still exists in the pipeline but does not do anything
+Android:
+   CHANGED: audio library: all permissions removed from the manifest, user must set permissions correctly in the application manifest
+WebGL:
+   CHANGED: Platform.CreateAudioInEnumerator() returns an instance of the new DeviceEnumeratorSingleDevice calss with the device named 'Default' instead of AudioInEnumeratorNotSupported for Unity WebGL platform
+   CHANGED: Unity.AudioInEnumerator and UnityMicrophone rely on Unity Microphone API in Editor even if the platform is WebGL
+Other:
+   CHANGED: Unity methods are made protected virtual in UnityVoiceClient, FusionVoiceClient, PunVoiceClient and Speaker to allow component inheritance
+   CHANGED: CustomEditor are marked as 'for child classes' in UnityVoiceClientEditor, FusionVoiceClientEditor, PunVoiceClientEditor to allow component inheritance
+   BREAKING: VoiceConnection transport creation moved from constructor to Awake(): VoiceConnection.Client can be referenced by other components not earlier than in Start()
+   CHANGED: code referencing VoiceConnection.Client moved from Awake() and OnEnabled() to Start() in PunVoiceClient, utility scripts and demos components
+   CHANGED: in the above components, code form OnDisable() moved to OnDestroy()
+   FIXED: OpusDecoder: IL2CPP-specific attribute is disabled for Unity prior to version 2021 in to avoid compilation error due to Unity bug (the affected method is experimental and unlikely to be used in older versions)
+   REMOVED: UnityVoiceClientEditor photon components versions section
+Demos:
+   CHANGED: demos use Unity.AudioInEnumerator() as a recommended way to enumerate Unity microphones instead of UnityMicrophone.devices
+   CHANGED: DemoVoicePun lists both Unity and Photon microphones in the device info
+   CHANGED: DelayProcessor attenuates original signal to avoid overload
+DemoVoiceUI:
+   ADDED: mic intesity bar + color when transmitting
+   ADDED: Android native microphone settings to demo ui
+
+v2.51 (February 02, 2023)
    PUN2: v2.41 (PUN2.41) 
    RT/lib:4.1.6.18f2
    PhotonVoiceApi: revision 6697

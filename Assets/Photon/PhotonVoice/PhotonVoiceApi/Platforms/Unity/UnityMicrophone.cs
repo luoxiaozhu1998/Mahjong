@@ -1,16 +1,19 @@
-﻿using System.Linq;
+﻿#if UNITY_WEBGL && !UNITY_EDITOR
+#define NO_MICROPHONE_API
+#endif
+
+using System.Linq;
 
 namespace Photon.Voice.Unity
 {
-#if UNITY_WEBGL
     using System;
-#endif
+
     using UnityEngine;
 
     /// <summary>A wrapper around UnityEngine.Microphone to be able to safely use Microphone and compile for WebGL.</summary>
     public static class UnityMicrophone
     {
-#if UNITY_WEBGL
+#if NO_MICROPHONE_API
         private const string webglIsnotSupported = "Unity Microphone not supported on WebGL";
         private static readonly string[] _devices = new string[0];
 #endif
@@ -19,7 +22,7 @@ namespace Photon.Voice.Unity
         {
             get
             {
-#if UNITY_WEBGL
+#if NO_MICROPHONE_API
                 return _devices;
 #else
                 return Microphone.devices;
@@ -29,7 +32,7 @@ namespace Photon.Voice.Unity
 
         public static void End(string deviceName)
         {
-#if UNITY_WEBGL
+#if NO_MICROPHONE_API
             throw new NotImplementedException(webglIsnotSupported);
 #else
             Microphone.End(deviceName);
@@ -38,7 +41,7 @@ namespace Photon.Voice.Unity
 
         public static void GetDeviceCaps(string deviceName, out int minFreq, out int maxFreq)
         {
-#if UNITY_WEBGL
+#if NO_MICROPHONE_API
             throw new NotImplementedException(webglIsnotSupported);
 #else
             Microphone.GetDeviceCaps(deviceName, out minFreq, out maxFreq);
@@ -47,7 +50,7 @@ namespace Photon.Voice.Unity
 
         public static int GetPosition(string deviceName)
         {
-#if UNITY_WEBGL
+#if NO_MICROPHONE_API
             throw new NotImplementedException(webglIsnotSupported);
 #else
             return Microphone.GetPosition(deviceName);
@@ -56,7 +59,7 @@ namespace Photon.Voice.Unity
 
         public static bool IsRecording(string deviceName)
         {
-#if UNITY_WEBGL
+#if NO_MICROPHONE_API
             return false;
 #else
             return Microphone.IsRecording(deviceName);
@@ -65,7 +68,7 @@ namespace Photon.Voice.Unity
 
         public static AudioClip Start(string deviceName, bool loop, int lengthSec, int frequency)
         {
-#if UNITY_WEBGL
+#if NO_MICROPHONE_API
             throw new NotImplementedException(webglIsnotSupported);
 #else
             return Microphone.Start(deviceName, loop, lengthSec, frequency);
@@ -74,7 +77,7 @@ namespace Photon.Voice.Unity
 
         public static string CheckDevice(Voice.ILogger logger, string logPref, string device, int suggestedFrequency, out int frequency)
         {
-#if UNITY_WEBGL
+#if NO_MICROPHONE_API
             logger.LogError(logPref + webglIsnotSupported);
             frequency = 0;
             return webglIsnotSupported;

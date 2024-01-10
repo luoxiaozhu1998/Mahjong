@@ -164,6 +164,8 @@ namespace Oculus.Platform
       RichPresence_GetDestinations                       = 0x586F2D14,
       RichPresence_GetNextDestinationArrayPage           = 0x67367F45,
       RichPresence_Set                                   = 0x3C147509,
+      UserAgeCategory_Get                                = 0x21CBE0C0,
+      UserAgeCategory_Report                             = 0x2E4DD8D6,
       UserDataStore_PrivateDeleteEntryByKey              = 0x5C896F3E,
       UserDataStore_PrivateGetEntries                    = 0x6C8A8228,
       UserDataStore_PrivateGetEntryByKey                 = 0x1C068319,
@@ -337,6 +339,7 @@ namespace Oculus.Platform
     public virtual string GetString() { return null; }
     public virtual SystemVoipState GetSystemVoipState() { return null; }
     public virtual User GetUser() { return null; }
+    public virtual UserAccountAgeCategory GetUserAccountAgeCategory() { return null; }
     public virtual UserCapabilityList GetUserCapabilityList() { return null; }
     public virtual UserDataStoreUpdateResponse GetUserDataStoreUpdateResponse() { return null; }
     public virtual UserList GetUserList() { return null; }
@@ -490,6 +493,7 @@ namespace Oculus.Platform
         case Message.MessageType.Notification_MarkAsRead:
         case Message.MessageType.RichPresence_Clear:
         case Message.MessageType.RichPresence_Set:
+        case Message.MessageType.UserAgeCategory_Report:
           message = new Message(messageHandle);
           break;
 
@@ -621,6 +625,10 @@ namespace Oculus.Platform
         case Message.MessageType.User_Get:
         case Message.MessageType.User_GetLoggedInUser:
           message = new MessageWithUser(messageHandle);
+          break;
+
+        case Message.MessageType.UserAgeCategory_Get:
+          message = new MessageWithUserAccountAgeCategory(messageHandle);
           break;
 
         case Message.MessageType.GroupPresence_GetInvitableUsers:
@@ -1406,6 +1414,18 @@ namespace Oculus.Platform
       var msg = CAPI.ovr_Message_GetNativeMessage(c_message);
       var obj = CAPI.ovr_Message_GetUser(msg);
       return new User(obj);
+    }
+
+  }
+  public class MessageWithUserAccountAgeCategory : Message<UserAccountAgeCategory>
+  {
+    public MessageWithUserAccountAgeCategory(IntPtr c_message) : base(c_message) { }
+    public override UserAccountAgeCategory GetUserAccountAgeCategory() { return Data; }
+    protected override UserAccountAgeCategory GetDataFromMessage(IntPtr c_message)
+    {
+      var msg = CAPI.ovr_Message_GetNativeMessage(c_message);
+      var obj = CAPI.ovr_Message_GetUserAccountAgeCategory(msg);
+      return new UserAccountAgeCategory(obj);
     }
 
   }

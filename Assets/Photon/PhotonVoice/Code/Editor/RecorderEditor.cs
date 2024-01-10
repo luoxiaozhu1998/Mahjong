@@ -2,6 +2,7 @@
 {
     using POpusCodec.Enums;
     using System;
+    using System.Linq;
     using Unity;
     using UnityEditor;
     using UnityEngine;
@@ -15,6 +16,8 @@
         private SerializedProperty voiceDetectionThresholdSp;
         private SerializedProperty voiceDetectionDelayMsSp;
         private SerializedProperty interestGroupSp;
+        private SerializedProperty useTargetPlayersSp;
+        private SerializedProperty targetPlayersSp;
         private SerializedProperty debugEchoModeSp;
         private SerializedProperty reliableModeSp;
         private SerializedProperty encryptSp;
@@ -47,6 +50,8 @@
             this.voiceDetectionThresholdSp = this.serializedObject.FindProperty("voiceDetectionThreshold");
             this.voiceDetectionDelayMsSp = this.serializedObject.FindProperty("voiceDetectionDelayMs");
             this.interestGroupSp = this.serializedObject.FindProperty("interestGroup");
+            this.useTargetPlayersSp = this.serializedObject.FindProperty("useTargetPlayers");
+            this.targetPlayersSp = this.serializedObject.FindProperty("targetPlayers");
             this.debugEchoModeSp = this.serializedObject.FindProperty("debugEchoMode");
             this.reliableModeSp = this.serializedObject.FindProperty("reliableMode");
             this.encryptSp = this.serializedObject.FindProperty("encrypt");
@@ -66,7 +71,7 @@
             this.editorAudioSessionPresetSp = this.serializedObject.FindProperty("editorAudioSessionPreset");
             this.audioSessionParametersSp = this.serializedObject.FindProperty("audioSessionParameters");
             //#elif UNITY_ANDROID
-            this.androidNativeMicrophoneSettingsSp = this.serializedObject.FindProperty("androidNativeMicrophoneSettings");
+            this.androidNativeMicrophoneSettingsSp = this.serializedObject.FindProperty("androidMicrophoneSettings");
             //#endif
         }
 
@@ -99,6 +104,17 @@
                 new GUIContent("Transmit Enabled", "If true, audio transmission is enabled."));
             EditorGUILayout.PropertyField(this.interestGroupSp,
                 new GUIContent("Interest Group", "Target interest group that will receive transmitted audio."));
+
+            EditorGUILayout.PropertyField(this.useTargetPlayersSp,
+                new GUIContent("Use Target Players", "Send to specified players only."));
+            if (this.useTargetPlayersSp.boolValue)
+            {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(this.targetPlayersSp,
+                    new GUIContent("Target Players", "Target players who will receive transmitted audio."));
+                EditorGUI.indentLevel--;
+            }
+
             EditorGUILayout.PropertyField(this.debugEchoModeSp,
                 new GUIContent("Debug Echo",
                     "If true, outgoing stream routed back to client via server same way as for remote client's streams."));
@@ -236,13 +252,14 @@
                 }
             }
 
-            if (Application.isPlaying)
+            if (Application.isPlaying && GUI.changed)
             {
                 // Update Recorder in play mode. The values not having immediate effect (are not read repeatedly and do not redstart Recorder) are commented out.
                 this.recorder.VoiceDetection = this.voiceDetectionSp.boolValue;
                 this.recorder.VoiceDetectionThreshold = this.voiceDetectionThresholdSp.floatValue;
                 this.recorder.VoiceDetectionDelayMs = this.voiceDetectionDelayMsSp.intValue;
                 this.recorder.InterestGroup = (byte)this.interestGroupSp.intValue;
+                this.recorder.TargetPlayers = this.useTargetPlayersSp.boolValue ? Enumerable.Range(0, this.targetPlayersSp.arraySize).Select(x => this.targetPlayersSp.GetArrayElementAtIndex(x).intValue).ToArray() : null;
                 this.recorder.DebugEchoMode = this.debugEchoModeSp.boolValue;
                 this.recorder.ReliableMode = this.reliableModeSp.boolValue;
                 this.recorder.Encrypt = this.encryptSp.boolValue;

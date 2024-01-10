@@ -1,4 +1,4 @@
-﻿#define STATS
+﻿//#define STATS
 using System;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -23,18 +23,19 @@ namespace Photon.Voice
         static internal int statDisposerDisposed;
         static internal int statPinned;
         static internal int statUnpinned;
-#else 
+#else
         static internal int statDisposerCreated = Int32.MaxValue;
         static internal int statDisposerDisposed = Int32.MaxValue;
         static internal int statPinned = Int32.MaxValue;
         static internal int statUnpinned = Int32.MaxValue;
 #endif
-        public FrameBuffer(byte[] array, int offset, int count, FrameFlags flags, IDisposable disposer)
+        public FrameBuffer(byte[] array, int offset, int count, FrameFlags flags, byte frameNum, IDisposable disposer)
         {
             this.array = array;
             this.offset = offset;
             this.count = count;
             this.Flags = flags;
+            this.FrameNum = frameNum;
             this.disposer = disposer;
             this.disposed = false;
             this.refCnt = 1;
@@ -50,12 +51,13 @@ namespace Photon.Voice
 #endif
         }
 
-        public FrameBuffer(byte[] array, FrameFlags flags)
+        public FrameBuffer(byte[] array, FrameFlags flags, byte frameNum)
         {
             this.array = array;
             this.offset = 0;
             this.count = array == null ? 0 : array.Length;
             this.Flags = flags;
+            this.FrameNum = frameNum;
             this.disposer = null;
             this.disposed = false;
             this.refCnt = 1;
@@ -71,13 +73,23 @@ namespace Photon.Voice
 #endif
         }
 
+        // creates a copy with modified offset, count and flags
+        public FrameBuffer(FrameBuffer from, int offset, int count, FrameFlags flags, byte frameNum)
+        {
+            this = from;
+            this.offset = offset;
+            this.count = count;
+            this.Flags = flags;
+            this.FrameNum = frameNum;
+        }
+
         // Pins underlying buffer and returns the pointer to it with offset.
         // Unpins in Dispose().
         public IntPtr Ptr
         {
             get
             {
-                if (!pinned)
+                if (!pinned && array != null)
                 {
                     gcHandle = GCHandle.Alloc(array, GCHandleType.Pinned);
                     ptr = IntPtr.Add(gcHandle.AddrOfPinnedObject(), offset);
@@ -90,7 +102,7 @@ namespace Photon.Voice
             }
         }
 
-        // Use Retain() to prevent the owner from disposing the buffer when it calls Release(). Since FrameBuffer is a struct, ref counter 
+        // Use Retain() to prevent the owner from disposing the buffer when it calls Release(). Since FrameBuffer is a struct, ref counter
         // is shared only between parameters in stack passed as ref, so ref counter is rather a flag, not a counter.
         // To preserve the buffer for future use:
         // void foo(ref FrameBuffer f1) {
@@ -142,5 +154,22 @@ namespace Photon.Voice
         public int Length { get { return count; } }
         public int Offset { get { return offset; } }
         public FrameFlags Flags { get; }
+        public byte FrameNum { get; }
+        public bool IsFEC => (Flags & FrameFlags.FEC) != 0;
+        public bool IsConfig => (Flags & FrameFlags.Config) != 0;
+        public bool IsKeyframe => (Flags & FrameFlags.KeyFrame) != 0;
+
+        public override string ToString()
+        {
+            if (array == null)
+            {
+                return "null";
+            }
+            else
+            {
+                var frag = Flags & FrameFlags.MaskFrag;
+                return "#" + FrameNum + " " + frag + (frag == FrameFlags.FragNotEnd ? " c#" + array[offset + count - 1] : "") + (IsFEC ? " FEC" : "") + " r#" + refCnt;
+            }
+        }
     }
 }

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0e3df96a2504a0085121315689deb30, type: 3}
   m_Name: Built In Timer - Sample
   m_EditorClassIdentifier: 
-  title: Built-in NLP - Timer Sample
+  title: Built-in NLP Timer Sample
   description: This demo showcases the use of the built in NLP apps. You get these
     when choosing a language instead of Custom App when creating your first wit config.
     These built ins support some common voice commands like "Set a timer for 5 minutes."

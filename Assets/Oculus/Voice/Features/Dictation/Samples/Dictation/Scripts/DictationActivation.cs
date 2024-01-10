@@ -10,7 +10,7 @@ using Meta.WitAi.Dictation;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace Oculus.Voice.Dictation.Samples
+namespace Meta.Voice.Samples.Dictation
 {
     public class DictationActivation : MonoBehaviour
     {

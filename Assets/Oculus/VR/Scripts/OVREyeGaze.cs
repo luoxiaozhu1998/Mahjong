@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -27,6 +27,7 @@ using UnityEngine;
 /// <remarks>
 /// See <see cref="OVRPlugin.EyeGazeState"/> structure for list of eye state parameters.
 /// </remarks>
+[HelpURL("https://developer.oculus.com/reference/unity/latest/class_o_v_r_eye_gaze")]
 public class OVREyeGaze : MonoBehaviour
 {
     /// <summary>

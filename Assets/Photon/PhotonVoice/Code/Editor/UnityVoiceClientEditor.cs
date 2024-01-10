@@ -7,7 +7,7 @@
     using Unity;
     using Realtime;
 
-    [CustomEditor(typeof(UnityVoiceClient))]
+    [CustomEditor(typeof(UnityVoiceClient), true)]
     public class UnityVoiceClientEditor : VoiceConnectionEditor
     {
         private SerializedProperty useVoiceAppSettingsSp;
@@ -49,13 +49,7 @@
         private SerializedProperty primaryRecorderSp;
         private SerializedProperty usePrimaryRecorderSp;
         private SerializedProperty speakerPrefabSp;
-
-        private const string notAvailable = "N/A?";
-        protected string photonLibraryVersion;
-        protected string photonVoiceVersion;
-        protected string punChangelogVersion;
-        protected string photonVoiceApiVersion;
-        protected bool versionFoldout;
+        private SerializedProperty cppCompatibilityModeSp;
 
         protected virtual void OnEnable()
         {
@@ -72,9 +66,7 @@
             }
             this.usePrimaryRecorderSp = this.serializedObject.FindProperty("usePrimaryRecorder");
             this.speakerPrefabSp = this.serializedObject.FindProperty("speakerPrefab");
-
-            PhotonVoiceEditorUtils.GetPhotonVoiceVersionsFromChangeLog(out this.photonVoiceVersion, out this.punChangelogVersion, out this.photonVoiceApiVersion);
-            this.photonLibraryVersion = System.Reflection.Assembly.GetAssembly(typeof(ExitGames.Client.Photon.PhotonPeer)).GetName().Version.ToString();
+            this.cppCompatibilityModeSp = this.serializedObject.FindProperty("cppCompatibilityMode");
         }
 
         public override void OnInspectorGUI()
@@ -82,7 +74,6 @@
             this.serializedObject.UpdateIfRequiredOrScript();
 
             EditorGUI.BeginChangeCheck();
-            this.ShowAssetVersionsFoldout();
             VoiceLogger.EditorVoiceLoggerOnInspectorGUI(this.connection.gameObject);
             if (!PhotonVoiceEditorUtils.IsInTheSceneInPlayMode(this.connection.gameObject))
             {
@@ -120,6 +111,7 @@
                 this.speakerPrefabSp.objectReferenceValue = EditorGUILayout.ObjectField(new GUIContent("Speaker Prefab",
                         "Prefab that contains Speaker component to be instantiated when receiving a new remote audio source info"), prefab,
                     typeof(GameObject), false) as GameObject;
+                EditorGUILayout.PropertyField(this.cppCompatibilityModeSp, new GUIContent("C++ API Compatibility Mode", "Use a protocol compatible with Photon Voice C++ API"));
             }
 
             if (EditorGUI.EndChangeCheck())
@@ -133,6 +125,21 @@
                 this.DisplayDebugInfo(this.connection.Client);
                 this.DisplayCachedVoiceInfo();
                 this.DisplayTrafficStats(this.connection.Client.LoadBalancingPeer);
+
+                if (connection.Client.State == ClientState.PeerCreated || connection.Client.State == ClientState.Disconnected)
+                {
+                    if (GUILayout.Button("Connect"))
+                    {
+                        connection.ConnectUsingSettings();
+                    }
+                }
+                if (connection.Client.State == ClientState.Joined)
+                {
+                    if (GUILayout.Button("Disconnect"))
+                    {
+                        connection.Client.Disconnect();
+                    }
+                }
             }
         }
 
@@ -425,33 +432,6 @@
 
         protected virtual void ShowHeader()
         {
-        }
-
-        protected virtual void ShowAssetVersions()
-        {
-            EditorGUILayout.LabelField(string.Format("Photon Voice: {0}", this.GetVersionString(this.photonVoiceVersion)));
-            EditorGUILayout.LabelField(string.Format("Photon Voice API: {0}", this.GetVersionString(this.photonVoiceApiVersion)));
-            EditorGUILayout.LabelField(string.Format("Photon Realtime and Unity Library: {0}", this.GetVersionString(this.photonLibraryVersion)));
-        }
-
-        private void ShowAssetVersionsFoldout()
-        {
-            EditorGUI.indentLevel++;
-            this.versionFoldout = EditorGUILayout.Foldout(this.versionFoldout, "Asset Version Info");
-            if (this.versionFoldout)
-            {
-                EditorGUI.indentLevel++;
-                EditorGUILayout.BeginVertical();
-                this.ShowAssetVersions();
-                EditorGUILayout.EndVertical();
-                EditorGUI.indentLevel--;
-            }
-            EditorGUI.indentLevel--;
-        }
-
-        protected string GetVersionString(string versionString)
-        {
-            return string.IsNullOrEmpty(versionString) ? notAvailable : versionString;
         }
 
         private string FormatSize(float bytes, string u = "B", string ti = "/s")

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using POpusCodec.Enums;
+using Photon.Voice;
 using System.Runtime.InteropServices;
 
 namespace POpusCodec
@@ -252,7 +253,7 @@ namespace POpusCodec
         }
 
         // async Encoder support
-        [AOT.MonoPInvokeCallbackAttribute(typeof(Action<IntPtr, IntPtr, int>))]
+        [MonoPInvokeCallbackAttribute(typeof(Action<IntPtr, IntPtr, int>))]
         static public void DataCallbackStatic(IntPtr handle, IntPtr p, int count)
         {
             if (handles.TryGetValue(handle, out var obj))

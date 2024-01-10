@@ -10,12 +10,15 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using Meta.WitAi.Json;
 using Meta.WitAi.Speech;
 using UnityEngine;
 using UnityEngine.Serialization;
+using Meta.Voice.Audio;
 using Meta.WitAi.TTS.Data;
 using Meta.WitAi.TTS.Integrations;
 using Meta.WitAi.TTS.Interfaces;
+using UnityEngine.Events;
 
 namespace Meta.WitAi.TTS.Utilities
 {
@@ -35,15 +38,6 @@ namespace Meta.WitAi.TTS.Utilities
         [Tooltip("Text that is added to the end of any Speech() text")]
         [TextArea] [FormerlySerializedAs("appendedText")]
         public string AppendedText;
-
-        [Header("Playback Settings")]
-        [Tooltip("Audio source to be used for text-to-speech playback")]
-        [SerializeField] [FormerlySerializedAs("_source")]
-        public AudioSource AudioSource;
-
-        [Tooltip("Duplicates audio source reference on awake instead of using it directly.")]
-        [SerializeField] private bool _cloneAudioSource = false;
-        public bool CloneAudioSource => _cloneAudioSource;
 
         [Header("Load Settings")]
         [Tooltip("Optional TTSService reference to be used for text-to-speech loading.  If missing, it will check the component.  If that is also missing then it will use the current singleton")]
@@ -70,6 +64,9 @@ namespace Meta.WitAi.TTS.Utilities
         [Tooltip("Custom wit specific voice settings used if the preset is null or empty")]
         [HideInInspector] [SerializeField] public TTSWitVoiceSettings customWitVoiceSettings;
 
+        // Override voice settings
+        private TTSVoiceSettings _overrideVoiceSettings;
+
         /// <summary>
         /// The voice settings to be used for this TTSSpeaker
         /// </summary>
@@ -77,6 +74,11 @@ namespace Meta.WitAi.TTS.Utilities
         {
             get
             {
+                // Use override if exists & runtime
+                if (Application.isPlaying && _overrideVoiceSettings != null)
+                {
+                    return _overrideVoiceSettings;
+                }
                 // Attempts to use custom voice settings
                 if (string.IsNullOrEmpty(presetVoiceID) && customWitVoiceSettings != null)
                 {
@@ -121,7 +123,7 @@ namespace Meta.WitAi.TTS.Utilities
             }
         }
         // Loading clip queue
-        public TTSClipData[] QueuedClips
+        public List<TTSClipData> QueuedClips
         {
             get
             {
@@ -130,7 +132,7 @@ namespace Meta.WitAi.TTS.Utilities
                 {
                     clips.Add(request.ClipData);
                 }
-                return clips.ToArray();
+                return clips;
             }
         }
 
@@ -159,48 +161,53 @@ namespace Meta.WitAi.TTS.Utilities
         private ISpeakerTextPreprocessor[] _textPreprocessors;
         private ISpeakerTextPostprocessor[] _textPostprocessors;
 
+        /// <summary>
+        /// The script used to perform audio playback of IAudioClipStreams.
+        /// 1. Gets IAudioPlayer component if applied to this speaker
+        /// 2. If no IAudioPlayer component is found, the TTSService's audio system
+        /// will be used to generate an audio player.
+        /// 3. If still not found, adds a UnityAudioPlayer.
+        /// </summary>
+        public IAudioPlayer AudioPlayer
+        {
+            get
+            {
+                if (_audioPlayer == null)
+                {
+                    _audioPlayer = gameObject.GetComponent<IAudioPlayer>();
+                    if (_audioPlayer == null)
+                    {
+                        _audioPlayer = TTSService?.AudioSystem?.GetAudioPlayer(gameObject);
+                        if (_audioPlayer == null)
+                        {
+                            _audioPlayer = gameObject.AddComponent<UnityAudioPlayer>();
+                        }
+                    }
+                }
+                return _audioPlayer;
+            }
+        }
+        private IAudioPlayer _audioPlayer;
+
+        // Unity audio source if used by the unity player
+        public AudioSource AudioSource
+        {
+            get
+            {
+                if (AudioPlayer is IAudioSourceProvider uap)
+                {
+                    return uap.AudioSource;
+                }
+                return null;
+            }
+        }
+
         #region LIFECYCLE
         // Automatically generate source if needed
-        protected virtual void Awake()
+        protected virtual void Start()
         {
-            // Find base audio source if possible
-            if (AudioSource == null)
-            {
-                AudioSource = gameObject.GetComponentInChildren<AudioSource>();
-            }
-
-            // Duplicate audio source
-            if (CloneAudioSource)
-            {
-                // Create new audio source
-                AudioSource instance = new GameObject($"{gameObject.name}_AudioOneShot").AddComponent<AudioSource>();
-                instance.PreloadCopyData();
-
-                // Move into this transform & default to 3D audio
-                if (AudioSource == null)
-                {
-                    instance.transform.SetParent(transform, false);
-                    instance.spread = 1f;
-                }
-
-                // Move into audio source & copy source values
-                else
-                {
-                    instance.transform.SetParent(AudioSource.transform, false);
-                    instance.Copy(AudioSource);
-                }
-
-                // Reset instance's transform
-                instance.transform.localPosition = Vector3.zero;
-                instance.transform.localRotation = Quaternion.identity;
-                instance.transform.localScale = Vector3.one;
-
-                // Apply
-                AudioSource = instance;
-            }
-
-            // Setup audio source settings
-            AudioSource.playOnAwake = false;
+            // Initialize audio
+            AudioPlayer.Init();
 
             // Get text processors
             RefreshProcessors();
@@ -266,22 +273,23 @@ namespace Meta.WitAi.TTS.Utilities
         protected virtual void HandleClipUpdate(TTSClipData clipData)
         {
             // Ignore if not speaking clip
-            if (!clipData.Equals(SpeakingClip) || AudioSource == null || !AudioSource.isPlaying)
+            if (!clipData.Equals(SpeakingClip))
             {
                 return;
             }
 
-            // Stop previous clip playback
-            int elapsedSamples = AudioSource.timeSamples;
-            AudioSource.Stop();
-
-            // Apply clip data
+            // Apply new clip data
             _speakingRequest.ClipData = clipData;
+            // Get current elapsed samples
+            int elapsedSamples = AudioPlayer.ElapsedSamples;
+            // Begin playback from elapsed sample
+            AudioPlayer.Play(_speakingRequest.ClipData.clipStream, elapsedSamples);
 
-            // Apply audio source
-            AudioSource.clip = SpeakingClip.clip;
-            AudioSource.timeSamples = elapsedSamples;
-            AudioSource.Play();
+            // Pause if desired
+            if (IsPaused)
+            {
+                AudioPlayer.Pause();
+            }
 
             // Clip updated callback
             OnPlaybackClipUpdated(_speakingRequest);
@@ -324,6 +332,57 @@ namespace Meta.WitAi.TTS.Utilities
                 }
             }
         }
+        // Check if clip request is active
+        protected bool IsClipRequestActive(TTSSpeakerRequestData requestData)
+        {
+            return IsClipRequestLoading(requestData) || IsClipRequestSpeaking(requestData);
+        }
+        // Check if clip request is active
+        protected bool IsClipRequestLoading(TTSSpeakerRequestData requestData)
+        {
+            return _queuedRequests.Contains(requestData);
+        }
+        // Check if clip request is active
+        protected bool IsClipRequestSpeaking(TTSSpeakerRequestData requestData)
+        {
+            return _speakingRequest.Equals(requestData);
+        }
+        // Waits for all requests to complete
+        protected IEnumerator WaitForCompletion(List<TTSSpeakerRequestData> requestData)
+        {
+            // All done
+            int count = requestData?.Count ?? 0;
+            if (count == 0)
+            {
+                yield break;
+            }
+
+            // Current active requests
+            int activeRequests = 0;
+            UnityAction<TTSSpeaker, TTSClipData> onComplete = (speaker, clip) => activeRequests--;
+
+            // Add event delegates
+            for (int r = 0; r < count; r++)
+            {
+                TTSSpeakerRequestData request = requestData[r];
+                if (!IsClipRequestActive(request))
+                {
+                    continue;
+                }
+                activeRequests++;
+                request.PlaybackEvents.OnComplete.AddListener(onComplete);
+            }
+
+            // Wait for active requests to be complete
+            yield return new WaitWhile(() => activeRequests > 0);
+
+            // Remove event delegates
+            for (int r = 0; r < count; r++)
+            {
+                TTSSpeakerRequestData request = requestData[r];
+                request.PlaybackEvents?.OnComplete.RemoveListener(onComplete);
+            }
+        }
         #endregion
 
         #region TEXT
@@ -332,7 +391,7 @@ namespace Meta.WitAi.TTS.Utilities
         /// </summary>
         /// <param name="textToSpeak">The base text to be spoken</param>
         /// <returns>Returns an array of split texts to be spoken</returns>
-        public virtual string[] GetFinalText(string textToSpeak)
+        public virtual List<string> GetFinalText(string textToSpeak)
         {
             // Get processors
             RefreshProcessors();
@@ -353,6 +412,8 @@ namespace Meta.WitAi.TTS.Utilities
             // Add prepend & appended text to each item
             for (int i = 0; i < phrases.Count; i++)
             {
+                if (string.IsNullOrEmpty(phrases[i].Trim())) continue;
+
                 string phrase = phrases[i];
                 phrase = $"{PrependedText}{phrase}{AppendedText}".Trim();
                 phrases[i] = phrase;
@@ -368,7 +429,7 @@ namespace Meta.WitAi.TTS.Utilities
             }
 
             // Return all text items
-            return phrases.ToArray();
+            return phrases;
         }
         /// <summary>
         /// Obtain final text list from format & text list
@@ -376,7 +437,7 @@ namespace Meta.WitAi.TTS.Utilities
         /// <param name="format">The format to be used</param>
         /// <param name="textsToSpeak">The array of strings to be inserted into the format</param>
         /// <returns>Returns a list of formatted texts</returns>
-        public virtual string[] GetFinalTextFormatted(string format, params string[] textsToSpeak)
+        public virtual List<string> GetFinalTextFormatted(string format, params string[] textsToSpeak)
         {
             return GetFinalText(GetFormattedText(format, textsToSpeak));
         }
@@ -453,9 +514,9 @@ namespace Meta.WitAi.TTS.Utilities
         public IEnumerator SpeakAsync(string textToSpeak, TTSDiskCacheSettings diskCacheSettings, TTSSpeakerClipEvents playbackEvents)
         {
             // Speak text
-            Speak(textToSpeak, diskCacheSettings, playbackEvents);
+            List<TTSSpeakerRequestData> requests = Speak(textToSpeak, diskCacheSettings, playbackEvents, false);
             // Wait while loading/speaking
-            yield return new WaitWhile(() => IsActive);
+            yield return WaitForCompletion(requests);
         }
 
         /// <summary>
@@ -546,12 +607,17 @@ namespace Meta.WitAi.TTS.Utilities
         public IEnumerator SpeakQueuedAsync(string[] textsToSpeak, TTSDiskCacheSettings diskCacheSettings, TTSSpeakerClipEvents playbackEvents)
         {
             // Speak each queued
+            List<TTSSpeakerRequestData> requestList = new List<TTSSpeakerRequestData>();
             foreach (var textToSpeak in textsToSpeak)
             {
-                SpeakQueued(textToSpeak, diskCacheSettings, playbackEvents);
+                List<TTSSpeakerRequestData> newRequests = Speak(textToSpeak, diskCacheSettings, playbackEvents, true);
+                if (newRequests != null && newRequests.Count > 0)
+                {
+                    requestList.AddRange(newRequests);
+                }
             }
             // Wait while loading/speaking
-            yield return new WaitWhile(() => IsActive);
+            yield return WaitForCompletion(requestList);
         }
 
         /// <summary>
@@ -593,22 +659,23 @@ namespace Meta.WitAi.TTS.Utilities
         /// <param name="diskCacheSettings">Specific tts load caching settings</param>
         /// <param name="playbackEvents">Events to be called for this specific tts playback request</param>
         /// <param name="addToQueue">Whether or not this phrase should be enqueued into the playback queue</param>
-        private void Speak(string textToSpeak, TTSDiskCacheSettings diskCacheSettings, TTSSpeakerClipEvents playbackEvents, bool addToQueue)
+        /// <returns>Speaker request data for request</returns>
+        private List<TTSSpeakerRequestData> Speak(string textToSpeak, TTSDiskCacheSettings diskCacheSettings, TTSSpeakerClipEvents playbackEvents, bool addToQueue)
         {
             // Ensure voice settings exist
             TTSVoiceSettings voiceSettings = VoiceSettings;
             if (voiceSettings == null)
             {
                 VLog.E($"No voice found with preset id: {presetVoiceID}");
-                return;
+                return null;
             }
 
             // Get final text phrases to be spoken
-            string[] phrases = GetFinalText(textToSpeak);
-            if (phrases == null || phrases.Length == 0)
+            List<string> phrases = GetFinalText(textToSpeak);
+            if (phrases == null || phrases.Count == 0)
             {
                 VLog.W($"All phrases removed\nSource Phrase: {textToSpeak}");
-                return;
+                return null;
             }
 
             // Cancel previous loading queue
@@ -620,9 +687,11 @@ namespace Meta.WitAi.TTS.Utilities
             }
 
             // Iterate voices
+            List<TTSSpeakerRequestData> results = new List<TTSSpeakerRequestData>();
             foreach (var phrase in phrases)
             {
-                HandleLoad(phrase, voiceSettings, diskCacheSettings, playbackEvents, addToQueue);
+                TTSSpeakerRequestData requestData = HandleLoad(phrase, voiceSettings, diskCacheSettings, playbackEvents, addToQueue);
+                results.Add(requestData);
 
                 // Add additional to queue
                 if (!addToQueue)
@@ -630,6 +699,7 @@ namespace Meta.WitAi.TTS.Utilities
                     addToQueue = true;
                 }
             }
+            return results;
         }
 
         /// <summary>
@@ -741,9 +811,318 @@ namespace Meta.WitAi.TTS.Utilities
         }
         #endregion
 
+        #region VOICE OVERRIDE
+        /// <summary>
+        /// Set a voice override for future requests
+        /// </summary>
+        /// <param name="overrideSettings">The settings to be applied to upcoming requests</param>
+        public void SetVoiceOverride(TTSVoiceSettings overrideVoiceSettings)
+        {
+            _overrideVoiceSettings = overrideVoiceSettings;
+        }
+
+        /// <summary>
+        /// Clears the current voice override
+        /// </summary>
+        public void ClearVoiceOverride() => SetVoiceOverride(null);
+
+        /// <summary>
+        /// Decode a response node into text to be spoken or a specific voice setting
+        /// Example Data:
+        /// {
+        ///    "q": "Text to be spoken"
+        ///    "voice": "Charlie
+        /// }
+        /// </summary>
+        /// <param name="responseNode">Parsed data that includes text to be spoken & voice settings</param>
+        /// <param name="textToSpeak">The text to be spoken output</param>
+        /// <param name="voiceSettings">The output for voice settings</param>
+        /// <returns>True if decode was successful</returns>
+        private bool DecodeResponse(WitResponseNode responseNode, out string textToSpeak, out TTSVoiceSettings voiceSettings)
+        {
+            // Wit settings
+            if (TTSWitVoiceSettings.CanDecode(responseNode))
+            {
+                TTSWitVoiceSettings witVoice = JsonConvert.DeserializeObject<TTSWitVoiceSettings>(responseNode);
+                if (witVoice != null)
+                {
+                    textToSpeak = responseNode[WitConstants.ENDPOINT_TTS_PARAM];
+                    voiceSettings = witVoice;
+                    voiceSettings.SettingsId = "OVERRIDE";
+                    return true;
+                }
+            }
+
+            // Default application
+            textToSpeak = null;
+            voiceSettings = null;
+            return false;
+        }
+
+        /// <summary>
+        /// Load a tts clip using the specified response node, disk cache settings & playback events.
+        /// Cancels all previous clips when loaded & then plays.
+        /// </summary>
+        /// <param name="textToSpeak">The text to be spoken</param>
+        /// <param name="overrideVoiceSettings">Custom voice settings to be used for this and upcoming requests</param>
+        /// <param name="diskCacheSettings">Specific tts load caching settings</param>
+        /// <param name="playbackEvents">Events to be called for this specific tts playback request</param>
+        public void Speak(string textToSpeak, TTSVoiceSettings overrideVoiceSettings, TTSDiskCacheSettings diskCacheSettings,
+            TTSSpeakerClipEvents playbackEvents)
+        {
+            // Apply voice override
+            SetVoiceOverride(overrideVoiceSettings);
+
+            // Speak
+            Speak(textToSpeak, diskCacheSettings, playbackEvents);
+        }
+
+        /// <summary>
+        /// Load a tts clip using the specified response node, disk cache settings & playback events.
+        /// Cancels all previous clips when loaded & then plays.
+        /// </summary>
+        /// <param name="responseNode">Parsed data that includes text to be spoken & voice settings</param>
+        /// <param name="diskCacheSettings">Specific tts load caching settings</param>
+        /// <param name="playbackEvents">Events to be called for this specific tts playback request</param>
+        /// <returns>True if responseNode is decoded successfully</returns>
+        public bool Speak(WitResponseNode responseNode, TTSDiskCacheSettings diskCacheSettings,
+            TTSSpeakerClipEvents playbackEvents)
+        {
+            // Decode text to speak & voice settings
+            if (!DecodeResponse(responseNode, out var textToSpeak, out var voiceSettings))
+            {
+                return false;
+            }
+            // Speak
+            Speak(textToSpeak, voiceSettings, diskCacheSettings, playbackEvents);
+            return true;
+        }
+
+        /// <summary>
+        /// Load a tts clip using the specified response node & disk cache settings
+        /// Cancels all previous clips when loaded & then plays.
+        /// </summary>
+        /// <param name="responseNode">Parsed data that includes text to be spoken & voice settings</param>
+        /// <param name="diskCacheSettings">Specific tts load caching settings</param>
+        /// <returns>True if responseNode is decoded successfully</returns>
+        public bool Speak(WitResponseNode responseNode, TTSDiskCacheSettings diskCacheSettings) =>
+            Speak(responseNode, diskCacheSettings, null);
+
+        /// <summary>
+        /// Load a tts clip using the specified response node & playback events
+        /// Cancels all previous clips when loaded & then plays.
+        /// </summary>
+        /// <param name="responseNode">Parsed data that includes text to be spoken & voice settings</param>
+        /// <param name="playbackEvents">Events to be called for this specific tts playback request</param>
+        /// <returns>True if responseNode is decoded successfully</returns>
+        public bool Speak(WitResponseNode responseNode, TTSSpeakerClipEvents playbackEvents) =>
+            Speak(responseNode, null, playbackEvents);
+
+        /// <summary>
+        /// Load a tts clip using the specified response node & playback events
+        /// Cancels all previous clips when loaded & then plays.
+        /// </summary>
+        /// <param name="responseNode">Parsed data that includes text to be spoken & voice settings</param>
+        /// <returns>True if responseNode is decoded successfully</returns>
+        public bool Speak(WitResponseNode responseNode) => Speak(responseNode, null, null);
+
+        /// <summary>
+        /// Load a tts clip using the specified text, disk cache settings & playback events and then waits
+        /// for the file to load & play.  Cancels all previous clips when loaded & then plays.
+        /// </summary>
+        /// <param name="textToSpeak">The text to be spoken</param>
+        /// <param name="overrideVoiceSettings">Custom voice settings to be used for this and upcoming requests</param>
+        /// <param name="diskCacheSettings">Specific tts load caching settings</param>
+        /// <param name="playbackEvents">Events to be called for this specific tts playback request</param>
+        public IEnumerator SpeakAsync(string textToSpeak, TTSVoiceSettings overrideVoiceSettings, TTSDiskCacheSettings diskCacheSettings, TTSSpeakerClipEvents playbackEvents)
+        {
+            // Set voice override
+            SetVoiceOverride(overrideVoiceSettings);
+
+            // Wait while loading/speaking
+            yield return SpeakAsync(textToSpeak, diskCacheSettings, playbackEvents);
+        }
+
+        /// <summary>
+        /// Load a tts clip using the specified text, disk cache settings & playback events and then waits
+        /// for the file to load & play.  Cancels all previous clips when loaded & then plays.
+        /// </summary>
+        /// <param name="responseNode">Parsed data that includes text to be spoken & voice settings</param>
+        /// <param name="diskCacheSettings">Specific tts load caching settings</param>
+        /// <param name="playbackEvents">Events to be called for this specific tts playback request</param>
+        public IEnumerator SpeakAsync(WitResponseNode responseNode, TTSDiskCacheSettings diskCacheSettings, TTSSpeakerClipEvents playbackEvents)
+        {
+            // Decode text to speak & voice settings
+            if (!DecodeResponse(responseNode, out var textToSpeak, out var voiceSettings))
+            {
+                yield break;
+            }
+
+            // Wait while loading/speaking
+            yield return SpeakAsync(textToSpeak, voiceSettings, diskCacheSettings, playbackEvents);
+        }
+
+        /// <summary>
+        /// Load a tts clip using the specified text & playback events and then waits
+        /// for the file to load & play.  Cancels all previous clips when loaded & then plays.
+        /// </summary>
+        /// <param name="responseNode">Parsed data that includes text to be spoken & voice settings</param>
+        /// <param name="playbackEvents">Events to be called for this specific tts playback request</param>
+        public IEnumerator SpeakAsync(WitResponseNode responseNode, TTSSpeakerClipEvents playbackEvents)
+        {
+            yield return SpeakAsync(responseNode, null, playbackEvents);
+        }
+
+        /// <summary>
+        /// Load a tts clip using the specified text & disk cache settings and then waits
+        /// for the file to load & play.  Cancels all previous clips when loaded & then plays.
+        /// </summary>
+        /// <param name="responseNode">Parsed data that includes text to be spoken & voice settings</param>
+        /// <param name="diskCacheSettings">Specific tts load caching settings</param>
+        public IEnumerator SpeakAsync(WitResponseNode responseNode, TTSDiskCacheSettings diskCacheSettings)
+        {
+            yield return SpeakAsync(responseNode, diskCacheSettings, null);
+        }
+
+        /// <summary>
+        /// Load a tts clip using the specified response node, disk cache settings & playback events.
+        /// Adds clip to playback queue and will speak once queue has completed all playback.
+        /// </summary>
+        /// <param name="textToSpeak">The text to be spoken</param>
+        /// <param name="overrideVoiceSettings">Custom voice settings to be used for this and upcoming requests</param>
+        /// <param name="diskCacheSettings">Specific tts load caching settings</param>
+        /// <param name="playbackEvents">Events to be called for this specific tts playback request</param>
+        public void SpeakQueued(string textToSpeak, TTSVoiceSettings overrideVoiceSettings, TTSDiskCacheSettings diskCacheSettings,
+            TTSSpeakerClipEvents playbackEvents)
+        {
+            // Apply voice override
+            SetVoiceOverride(overrideVoiceSettings);
+
+            // Speak
+            SpeakQueued(textToSpeak, diskCacheSettings, playbackEvents);
+        }
+
+        /// <summary>
+        /// Load a tts clip using the specified text, disk cache settings & playback events.
+        /// Adds clip to playback queue and will speak once queue has completed all playback.
+        /// </summary>
+        /// <param name="responseNode">Parsed data that includes text to be spoken & voice settings</param>
+        /// <param name="diskCacheSettings">Specific tts load caching settings</param>
+        /// <param name="playbackEvents">Events to be called for this specific tts playback request</param>
+        /// <returns>True if responseNode is decoded successfully</returns>
+        public bool SpeakQueued(WitResponseNode responseNode, TTSDiskCacheSettings diskCacheSettings,
+            TTSSpeakerClipEvents playbackEvents)
+        {
+            // Decode text to speak & voice settings
+            if (!DecodeResponse(responseNode, out var textToSpeak, out var voiceSettings))
+            {
+                return false;
+            }
+            // Speak queued
+            SpeakQueued(textToSpeak, voiceSettings, diskCacheSettings, playbackEvents);
+            return true;
+        }
+
+        /// <summary>
+        /// Load a tts clip using the specified text & playback events.  Adds clip to playback queue and will
+        /// speak once queue has completed all playback.
+        /// </summary>
+        /// <param name="responseNode">Parsed data that includes text to be spoken & voice settings</param>
+        /// <param name="playbackEvents">Events to be called for this specific tts playback request</param>
+        /// <returns>True if responseNode is decoded successfully</returns>
+        public bool SpeakQueued(WitResponseNode responseNode, TTSSpeakerClipEvents playbackEvents) =>
+            SpeakQueued(responseNode, null, playbackEvents);
+
+        /// <summary>
+        /// Load a tts clip using the specified text & disk cache settings events.  Adds clip
+        /// to playback queue and will speak once queue has completed all playback.
+        /// </summary>
+        /// <param name="responseNode">Parsed data that includes text to be spoken & voice settings</param>
+        /// <param name="diskCacheSettings">Specific tts load caching settings</param>
+        /// <returns>True if responseNode is decoded successfully</returns>
+        public bool SpeakQueued(WitResponseNode responseNode, TTSDiskCacheSettings diskCacheSettings) =>
+            SpeakQueued(responseNode, diskCacheSettings, null);
+
+        /// <summary>
+        /// Load a tts clip using the specified text.  Adds clip to playback queue and will speak
+        /// once queue has completed all playback.
+        /// </summary>
+        /// <param name="responseNode">Parsed data that includes text to be spoken & voice settings</param>
+        /// <returns>True if responseNode is decoded successfully</returns>
+        public bool SpeakQueued(WitResponseNode responseNode) =>
+            SpeakQueued(responseNode, null, null);
+
+        /// <summary>
+        /// Load a tts clip using the specified text phrases, disk cache settings & playback events and then
+        /// waits for the files to load & play.  Adds clip to playback queue and will speak once queue has
+        /// completed all playback.
+        /// </summary>
+        /// <param name="textsToSpeak">Multiple texts to be spoken</param>
+        /// <param name="diskCacheSettings">Specific tts load caching settings</param>
+        /// <param name="playbackEvents">Events to be called for this specific tts playback request</param>
+        public IEnumerator SpeakQueuedAsync(string[] textsToSpeak, TTSVoiceSettings overrideVoiceSettings, TTSDiskCacheSettings diskCacheSettings, TTSSpeakerClipEvents playbackEvents)
+        {
+            // Set override
+            SetVoiceOverride(overrideVoiceSettings);
+            // Wait while loading/speaking
+            yield return SpeakQueuedAsync(textsToSpeak, diskCacheSettings, playbackEvents);
+        }
+
+        /// <summary>
+        /// Load a tts clip using the specified text phrases, disk cache settings & playback events and then
+        /// waits for the files to load & play.  Adds clip to playback queue and will speak once queue has
+        /// completed all playback.
+        /// </summary>
+        /// <param name="responseNode">Parsed data that includes text to be spoken & voice settings</param>
+        /// <param name="diskCacheSettings">Specific tts load caching settings</param>
+        /// <param name="playbackEvents">Events to be called for this specific tts playback request</param>
+        public IEnumerator SpeakQueuedAsync(WitResponseNode responseNode, TTSDiskCacheSettings diskCacheSettings, TTSSpeakerClipEvents playbackEvents)
+        {
+            // Decode text to speak & voice settings
+            if (!DecodeResponse(responseNode, out var textToSpeak, out var voiceSettings))
+            {
+                yield break;
+            }
+            // Wait while loading/speaking
+            yield return SpeakQueuedAsync(new string[] {textToSpeak}, voiceSettings, diskCacheSettings, playbackEvents);
+        }
+
+        /// <summary>
+        /// Load a tts clip using the specified text phrases & playback events and then waits for the files to load &
+        /// play.  Adds clip to playback queue and will speak once queue has completed all playback.
+        /// </summary>
+        /// <param name="responseNode">Parsed data that includes text to be spoken & voice settings</param>
+        /// <param name="playbackEvents">Events to be called for this specific tts playback request</param>
+        public IEnumerator SpeakQueuedAsync(WitResponseNode responseNode, TTSSpeakerClipEvents playbackEvents)
+        {
+            yield return SpeakQueuedAsync(responseNode, null, playbackEvents);
+        }
+
+        /// <summary>
+        /// Load a tts clip using the specified text phrases & disk cache settings and then waits for the files to
+        /// load & play.  Adds clip to playback queue and will speak once queue has completed all playback.
+        /// </summary>
+        /// <param name="responseNode">Parsed data that includes text to be spoken & voice settings</param>
+        /// <param name="diskCacheSettings">Specific tts load caching settings</param>
+        public IEnumerator SpeakQueuedAsync(WitResponseNode responseNode, TTSDiskCacheSettings diskCacheSettings)
+        {
+            yield return SpeakQueuedAsync(responseNode, diskCacheSettings, null);
+        }
+
+        /// <summary>
+        /// Load a tts clip using the specified text phrases and then waits for the files to load & play.
+        /// Adds clip to playback queue and will speak once queue has completed all playback.
+        /// </summary>
+        /// <param name="responseNode">Parsed data that includes text to be spoken & voice settings</param>
+        public IEnumerator SpeakQueuedAsync(WitResponseNode responseNode)
+        {
+            yield return SpeakQueuedAsync(responseNode, null, null);
+        }
+        #endregion
+
         #region LOAD
         // Handles speaking depending on the state of the specified audio
-        private void HandleLoad(string textToSpeak, TTSVoiceSettings voiceSettings,
+        private TTSSpeakerRequestData HandleLoad(string textToSpeak, TTSVoiceSettings voiceSettings,
             TTSDiskCacheSettings diskCacheSettings, TTSSpeakerClipEvents playbackEvents,
             bool addToQueue)
         {
@@ -751,7 +1130,7 @@ namespace Meta.WitAi.TTS.Utilities
             TTSSpeakerRequestData requestData = new TTSSpeakerRequestData();
             requestData.StartTime = DateTime.Now;
             requestData.StopQueueOnLoad = !addToQueue;
-            requestData.PlaybackEvents = playbackEvents;
+            requestData.PlaybackEvents = playbackEvents ?? new TTSSpeakerClipEvents();
 
             // Perform load request (Always waits a frame to ensure callbacks occur first)
             string clipId = TTSService.GetClipID(textToSpeak, voiceSettings);
@@ -760,15 +1139,19 @@ namespace Meta.WitAi.TTS.Utilities
             // Ignore without clip
             if (requestData.ClipData == null)
             {
-                return;
+                return requestData;
             }
 
             // Enqueue
             _queuedRequests.Enqueue(requestData);
-            RefreshQueueEvents();
 
-            // Begin load callback
+            // Initialized, possibly started queue & load began
+            OnInit(requestData);
+            RefreshQueueEvents();
             OnLoadBegin(requestData);
+
+            // Return data
+            return requestData;
         }
         // Load complete
         private void HandleLoadComplete(TTSSpeakerRequestData requestData, string error)
@@ -780,13 +1163,13 @@ namespace Meta.WitAi.TTS.Utilities
             }
 
             // Check for other errors
-            if (string.IsNullOrEmpty(error))
+            if (string.IsNullOrEmpty(error) && !string.IsNullOrEmpty(requestData.ClipData.textToSpeak))
             {
                 if (requestData.ClipData == null)
                 {
                     error = "No TTSClipData found";
                 }
-                else if (requestData.ClipData.clip == null)
+                else if (requestData.ClipData.clipStream == null)
                 {
                     error = "No AudioClip found";
                 }
@@ -798,12 +1181,6 @@ namespace Meta.WitAi.TTS.Utilities
                 {
                     error = WitConstants.CANCEL_ERROR;
                 }
-            }
-
-            // Stop previously spoken clips
-            if (requestData.StopQueueOnLoad)
-            {
-                StopSpeaking();
             }
 
             // Load failed
@@ -822,8 +1199,16 @@ namespace Meta.WitAi.TTS.Utilities
                 OnPlaybackReady(requestData);
             }
 
+            // Stop previously spoken clip & play next
+            if (requestData.StopQueueOnLoad && IsSpeaking)
+            {
+                StopSpeaking();
+            }
             // Attempt to play next in queue
-            RefreshPlayback();
+            else
+            {
+                RefreshPlayback();
+            }
         }
         #endregion
 
@@ -837,7 +1222,7 @@ namespace Meta.WitAi.TTS.Utilities
         private void RefreshPlayback()
         {
             // Ignore if currently playing or nothing in uque
-            if (SpeakingClip != null ||  _queuedRequests == null || _queuedRequests.Count == 0)
+            if (SpeakingClip != null ||  _queuedRequests == null || _queuedRequests.Count == 0 || _audioPlayer == null)
             {
                 return;
             }
@@ -859,36 +1244,53 @@ namespace Meta.WitAi.TTS.Utilities
                 return;
             }
             // No audio source
-            if (AudioSource == null)
+            string errors = AudioPlayer.GetPlaybackErrors();
+            if (!string.IsNullOrEmpty(errors))
             {
-                HandleLoadComplete(requestData, "AudioSource not found");
-                return;
-            }
-            // Somehow clip unloaded
-            if (requestData.ClipData.clip == null)
-            {
-                HandleLoadComplete(requestData, "AudioClip no longer exists");
+                HandleLoadComplete(requestData, errors);
                 return;
             }
 
-            // Dequeue & apply
-            _speakingRequest = _queuedRequests.Dequeue();
-
-            // Started speaking
-            AudioSource.clip = SpeakingClip?.clip;
-            AudioSource.timeSamples = 0;
-            AudioSource.Play();
-
-            // Call playback start events
-            OnPlaybackStart(_speakingRequest);
-
-            // Wait for completion
-            if (_waitForCompletion != null)
+            // Resume prior to playback
+            if (requestData.StopQueueOnLoad && IsPaused)
             {
-                StopCoroutine(_waitForCompletion);
-                _waitForCompletion = null;
+                Resume();
             }
-            _waitForCompletion = StartCoroutine(WaitForPlaybackComplete());
+
+            if (!string.IsNullOrEmpty(requestData.ClipData.textToSpeak))
+            {
+                // Somehow clip unloaded
+                if (requestData.ClipData.clipStream == null)
+                {
+                    HandleLoadComplete(requestData, "AudioClipStream no longer exists");
+                    return;
+                }
+
+                // Dequeue & apply
+                _speakingRequest = _queuedRequests.Dequeue();
+
+                // Started speaking
+                AudioPlayer.Play(_speakingRequest.ClipData.clipStream, 0);
+
+                // Call playback start events
+                OnPlaybackStart(_speakingRequest);
+
+                // Wait for completion
+                if (_waitForCompletion != null)
+                {
+                    StopCoroutine(_waitForCompletion);
+                    _waitForCompletion = null;
+                }
+                _waitForCompletion = StartCoroutine(WaitForPlaybackComplete());
+            }
+            else
+            {
+                // If we're sending an empty string we're really just potentially queuing an event so we can trigger it
+                // between audio clips. Trigger start/stop events.
+                _speakingRequest = _queuedRequests.Dequeue();
+                OnPlaybackStart(_speakingRequest);
+                HandlePlaybackComplete(false);
+            }
         }
         // Wait for clip completion
         private IEnumerator WaitForPlaybackComplete()
@@ -898,7 +1300,26 @@ namespace Meta.WitAi.TTS.Utilities
             while (!IsPlaybackComplete(elapsedTime))
             {
                 yield return new WaitForEndOfFrame();
-                elapsedTime += Time.deltaTime;
+
+                // Fix audio source, paused/resumed externally
+                bool playerPaused = !AudioPlayer.IsPlaying;
+                if (IsPaused != playerPaused)
+                {
+                    if (IsPaused)
+                    {
+                        AudioPlayer.Pause();
+                    }
+                    else
+                    {
+                        AudioPlayer.Resume();
+                    }
+                }
+
+                // Only increment if playing
+                if (!IsPaused)
+                {
+                    elapsedTime += Time.deltaTime;
+                }
             }
 
             // Playback completed
@@ -907,7 +1328,7 @@ namespace Meta.WitAi.TTS.Utilities
         // Check for playback completion
         protected virtual bool IsPlaybackComplete(float elapsedTime)
         {
-            return SpeakingClip == null || SpeakingClip.clip == null || elapsedTime >= SpeakingClip.clip.length || (AudioSource != null && !AudioSource.isPlaying);
+            return elapsedTime >= AudioPlayer?.ClipStream.Length || (!AudioPlayer.IsPlaying && !IsPaused);
         }
         // Completed playback
         protected virtual void HandlePlaybackComplete(bool stopped)
@@ -925,10 +1346,7 @@ namespace Meta.WitAi.TTS.Utilities
             _speakingRequest = new TTSSpeakerRequestData();
 
             // Stop audio source playback
-            if (AudioSource != null && AudioSource.isPlaying)
-            {
-                AudioSource.Stop();
-            }
+            AudioPlayer.Stop();
 
             // Stopped
             if (stopped)
@@ -946,7 +1364,7 @@ namespace Meta.WitAi.TTS.Utilities
                 OnPlaybackCancelled(lastRequestData, "TTSClipData was unloaded");
             }
             // Clip destroyed
-            else if (lastRequestData.ClipData.clip == null)
+            else if (lastRequestData.ClipData.clipStream == null)
             {
                 OnPlaybackCancelled(lastRequestData, "AudioClip no longer exists");
             }
@@ -959,8 +1377,52 @@ namespace Meta.WitAi.TTS.Utilities
             // Refresh in queue check
             RefreshQueueEvents();
 
-            // Attempt to play next in queue
+            // Attempt to play next in queue if all playback was not just stopped
             RefreshPlayback();
+        }
+        #endregion
+
+        #region PAUSE
+        /// <summary>
+        /// Whether playback is currently paused or not
+        /// </summary>
+        public bool IsPaused { get; private set; }
+
+        /// <summary>
+        /// Pause any current or future loaded audio playback
+        /// </summary>
+        public void Pause() => SetPause(true);
+
+        /// <summary>
+        /// Resume playback for current and future audio clips
+        /// </summary>
+        public void Resume() => SetPause(false);
+
+        // Set's the current pause state
+        protected virtual void SetPause(bool toPaused)
+        {
+            // Ignore if same
+            if (IsPaused == toPaused)
+            {
+                return;
+            }
+
+            // Apply
+            IsPaused = toPaused;
+            Log($"Speak Audio {(IsPaused ? "Paused" : "Resumed")}");
+
+            // Adjust if speaking
+            if (IsSpeaking)
+            {
+                if (IsPaused)
+                {
+                    AudioPlayer.Pause();
+                }
+                else if (!IsPaused)
+                {
+                    AudioPlayer.Resume();
+                }
+            }
         }
         #endregion
 
@@ -1031,8 +1493,8 @@ namespace Meta.WitAi.TTS.Utilities
         {
             StringBuilder log = new StringBuilder();
             log.AppendLine(comment);
-            log.AppendLine($"Voice: {presetVoiceID}");
-            VLog.D(LogCategory, log);
+            log.AppendLine($"Voice: {VoiceSettings?.SettingsId}");
+            VLog.I(LogCategory, log);
         }
         // Perform start of playback queue
         protected virtual void OnPlaybackQueueBegin()
@@ -1050,15 +1512,30 @@ namespace Meta.WitAi.TTS.Utilities
 
         #region PLAYBACK EVENTS
         // Log comment with request
-        protected virtual void LogRequestData(string comment, TTSSpeakerRequestData requestData)
+        protected virtual void LogRequestData(string comment, TTSSpeakerRequestData requestData, bool warning = false)
         {
             StringBuilder log = new StringBuilder();
             log.AppendLine(comment);
             log.AppendLine($"Voice: {requestData.ClipData?.voiceSettings?.SettingsId}");
             log.AppendLine($"Cache: {requestData.ClipData?.diskCacheSettings?.DiskCacheLocation.ToString()}");
             log.AppendLine($"Text: {requestData.ClipData?.textToSpeak}");
+            log.AppendLine($"Audio Player Type: {(_audioPlayer == null ? "NULL" : _audioPlayer.GetType().ToString())}");
+            log.AppendLine($"Audio Clip Stream Type: {(requestData.ClipData?.clipStream == null ? "NULL" : requestData.ClipData?.clipStream.GetType().ToString())}");
             log.AppendLine($"Elapsed: {(DateTime.Now - requestData.StartTime).TotalMilliseconds:0.0}ms");
-            VLog.D(LogCategory, log);
+            if (warning)
+            {
+                VLog.W(LogCategory, log);
+            }
+            else
+            {
+                VLog.I(LogCategory, log);
+            }
+        }
+        // Initial callback as soon as the audio clip speak request is generated
+        protected virtual void OnInit(TTSSpeakerRequestData requestData)
+        {
+            Events?.OnInit?.Invoke(this, requestData.ClipData);
+            requestData.PlaybackEvents?.OnInit?.Invoke(this, requestData.ClipData);
         }
         // Perform load begin events
         protected virtual void OnLoadBegin(TTSSpeakerRequestData requestData)
@@ -1091,11 +1568,14 @@ namespace Meta.WitAi.TTS.Utilities
             // Speaker clip events
             Events?.OnLoadAbort?.Invoke(this, requestData.ClipData);
             requestData.PlaybackEvents?.OnLoadAbort?.Invoke(this, requestData.ClipData);
+
+            // Complete
+            OnComplete(requestData);
         }
         // Perform load failed events
         protected virtual void OnLoadFailed(TTSSpeakerRequestData requestData, string error)
         {
-            LogRequestData($"Load Failed\nError: {error}", requestData);
+            LogRequestData($"Load Failed\nError: {error}", requestData, true);
 
             // Deprecated speaker events
 #pragma warning disable CS0618
@@ -1106,6 +1586,9 @@ namespace Meta.WitAi.TTS.Utilities
             // Speaker clip events
             Events?.OnLoadFailed?.Invoke(this, requestData.ClipData, error);
             requestData.PlaybackEvents?.OnLoadFailed?.Invoke(this, requestData.ClipData, error);
+
+            // Complete
+            OnComplete(requestData);
         }
         // Perform load success events
         protected virtual void OnLoadSuccess(TTSSpeakerRequestData requestData)
@@ -1180,6 +1663,9 @@ namespace Meta.WitAi.TTS.Utilities
             // Speaker clip events
             Events?.OnPlaybackCancelled?.Invoke(this, requestData.ClipData, reason);
             requestData.PlaybackEvents?.OnPlaybackCancelled?.Invoke(this, requestData.ClipData, reason);
+
+            // Complete
+            OnComplete(requestData);
         }
         // Perform audio clip update during streaming playback
         protected virtual void OnPlaybackClipUpdated(TTSSpeakerRequestData requestData)
@@ -1210,6 +1696,15 @@ namespace Meta.WitAi.TTS.Utilities
             // Speaker clip events
             Events?.OnPlaybackComplete?.Invoke(this, requestData.ClipData);
             requestData.PlaybackEvents?.OnPlaybackComplete?.Invoke(this, requestData.ClipData);
+
+            // Complete
+            OnComplete(requestData);
+        }
+        // Final call for a 'Speak' request that is called following a load failure, load abort, playback cancellation or playback completion
+        protected virtual void OnComplete(TTSSpeakerRequestData requestData)
+        {
+            Events?.OnComplete?.Invoke(this, requestData.ClipData);
+            requestData.PlaybackEvents?.OnComplete?.Invoke(this, requestData.ClipData);
         }
         #endregion
     }

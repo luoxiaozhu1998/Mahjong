@@ -1,6 +1,7 @@
 mergeInto(LibraryManager.library, {
 
-    PhotonVoice_WebAudioMicIn_Start: function(handle, createCallback, dataCallback, callIntervalMs) {
+    PhotonVoice_WebAudioMicIn_Start: function(handle, deviceId, createCallback, dataCallback) {
+        const deviceIdStr = deviceId ? UTF8ToString(deviceId) : "";
         const workerFoo = function() {
             class MicCaptureProcessor extends AudioWorkletProcessor {
                 process(inputs, outputs, parameters) {
@@ -15,31 +16,37 @@ mergeInto(LibraryManager.library, {
 
             console.log('[PV] PhotonVoice_WebAudioMicIn_Start creates AudioContext and adds worklet');
             const audioContext = new AudioContext(); // we could set target sample rate here but FireFox does not support different sample rates for AudioContext and media stream
-	
-			// Safari: resuming mic's audio context ui handler (doesn't seem to help)
-/*			
-			let resumeMicAudioContext = function() {
-				if (audioContext.state == 'suspended' || audioContext.state == 'interrupted') {
-					console.log('[PV] PhotonVoice_WebAudioMicIn_Start resumeMicAudioContext resume', audioContext, audioContext.state);
-					audioContext.resume().then(() => {
-						console.log('[PV] PhotonVoice_WebAudioMicIn_Start resumeMicAudioContext resumed', audioContext, audioContext.state);
-					});
-				}
-			}			
-			window.addEventListener('mousedown', resumeMicAudioContext);
-			window.addEventListener('touchstart', resumeMicAudioContext);
+    
+            // Safari: resuming mic's audio context ui handler (doesn't seem to help)
+/*          
+            const resumeMicAudioContext = function() {
+                if (audioContext.state == 'suspended' || audioContext.state == 'interrupted') {
+                    console.log('[PV] PhotonVoice_WebAudioMicIn_Start resumeMicAudioContext resume', audioContext, audioContext.state);
+                    audioContext.resume().then(() => {
+                        console.log('[PV] PhotonVoice_WebAudioMicIn_Start resumeMicAudioContext resumed', audioContext, audioContext.state);
+                    });
+                }
+            }           
+            window.addEventListener('mousedown', resumeMicAudioContext);
+            window.addEventListener('touchstart', resumeMicAudioContext);
 */
             let ws = workerFoo.toString();
             ws = ws.substring(ws.indexOf("{") + 1, ws.lastIndexOf("}"));
             const blob = new Blob([ws], {type: "text/javascript"});
 
-            let url = window.URL.createObjectURL(blob);
+            const url = window.URL.createObjectURL(blob);
             audioContext.audioWorklet.addModule(url).then(
 
                 function(x) {
                     // waits for the user to grant mic permission
                     navigator.mediaDevices.getUserMedia({
-                            audio: true
+                        audio: deviceIdStr == "" ? 
+                            true :
+                            {
+                                deviceId: {
+                                    exact: deviceIdStr,
+                                },
+                            },
                         })
                         .then(function(stream) {
                             // mic permission granted
@@ -97,7 +104,7 @@ mergeInto(LibraryManager.library, {
     },
 
     PhotonVoice_WebAudioMicIn_Stop: function(handle) { 
-        let ctx = Module.PhotonVoice_WebAudioMicIn_Inputs && Module.PhotonVoice_WebAudioMicIn_Inputs.get(handle);
+        const ctx = Module.PhotonVoice_WebAudioMicIn_Inputs && Module.PhotonVoice_WebAudioMicIn_Inputs.get(handle);
         if (ctx) {
             console.log('[PV] PhotonVoice_WebAudioMicIn_Stop deletes handle ' + handle);
             ctx[0].close();

@@ -14,24 +14,44 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _shapeName: Fingers Stop Sign
   _thumbFeatureConfigs:
-    _value: []
+    _value:
+    - _mode: 0
+      _feature: 1
+      _state: 3
   _indexFeatureConfigs:
     _value:
     - _mode: 0
+      _feature: 1
+      _state: 3
+    - _mode: 1
       _feature: 0
-      _state: 0
+      _state: 2
   _middleFeatureConfigs:
     _value:
+    - _mode: 0
+      _feature: 1
+      _state: 3
     - _mode: 1
       _feature: 0
       _state: 2
   _ringFeatureConfigs:
     _value:
+    - _mode: 0
+      _feature: 1
+      _state: 3
     - _mode: 1
       _feature: 0
       _state: 2
   _pinkyFeatureConfigs:
     _value:
+    - _mode: 0
+      _feature: 1
+      _state: 3
     - _mode: 1
       _feature: 0
       _state: 2
+  _thumbFeatureStates: 
+  _indexFeatureStates: 
+  _middleFeatureStates: 
+  _ringFeatureStates: 
+  _pinkyFeatureStates: 

@@ -1845,6 +1845,36 @@ namespace Oculus.Platform
 
   }
 
+  public static partial class UserAgeCategory
+  {
+    /// Retrieve the user age category for the current user.
+    ///
+    public static Request<Models.UserAccountAgeCategory> Get()
+    {
+      if (Core.IsInitialized())
+      {
+        return new Request<Models.UserAccountAgeCategory>(CAPI.ovr_UserAgeCategory_Get());
+      }
+
+      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
+      return null;
+    }
+
+    /// Report the current user's age category to Meta.
+    ///
+    public static Request Report(AppAgeCategory age_category)
+    {
+      if (Core.IsInitialized())
+      {
+        return new Request(CAPI.ovr_UserAgeCategory_Report(age_category));
+      }
+
+      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
+      return null;
+    }
+
+  }
+
   public static partial class UserDataStore
   {
     /// Delete an entry by a key from a private user data store.

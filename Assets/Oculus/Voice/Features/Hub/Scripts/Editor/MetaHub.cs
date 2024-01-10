@@ -8,13 +8,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using System.Reflection;
 using Meta.Voice.Hub.Attributes;
 using Meta.Voice.Hub.Interfaces;
 using Meta.Voice.Hub.UIComponents;
 using Meta.Voice.Hub.Utilities;
+using Meta.Voice.TelemetryUtilities;
 using UnityEditor;
 using UnityEngine;
 
@@ -26,8 +26,6 @@ namespace Meta.Voice.Hub
         [SerializeField] private Texture2D _logoImage;
 
         private int _leftPanelWidth = 200;
-
-        private List<string> _contextFilter = new List<string>();
 
         private List<MetaHubContext> _contexts = new List<MetaHubContext>();
         private Dictionary<string, MetaHubContext> _contextMap = new Dictionary<string, MetaHubContext>();
@@ -58,8 +56,41 @@ namespace Meta.Voice.Hub
 
         public const string DEFAULT_CONTEXT = "";
 
-        public virtual List<string> ContextFilter => _contextFilter;
-        public string SelectedPage { get; set; } = "";
+        public virtual List<string> ContextFilter => new List<string>();
+
+        private string _selectedPageId;
+
+        public string SelectedPage
+        {
+            get
+            {
+                if (null == _selectedPageId)
+                {
+                    _selectedPageId = SessionState.GetString(SessionKeySelPage, null);
+                }
+
+                return _selectedPageId;
+            }
+            set
+            {
+                if (_selectedPageId != value)
+                {
+                    _selectedPageId = value;
+                    Telemetry.LogInstantEvent(Telemetry.TelemetryEventId.OpenUi,
+                        new Dictionary<Telemetry.AnnotationKey, string>()
+                        {
+                            { Telemetry.AnnotationKey.PageId, _selectedPageId }
+                        });
+
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        SessionState.SetString(SessionKeySelPage, value);
+                    }
+                }
+            }
+        }
+
+        private string SessionKeySelPage => GetType().Namespace + "." + GetType().Name + "::SelectedPage";
 
         private PageGroup _rootPageGroup;
 
@@ -141,16 +172,90 @@ namespace Meta.Voice.Hub
         private Vector2 _scroll;
         private Vector2 _leftScroll;
 
-        private void OnEnable()
+        private IMetaHubPage ActivePage
+        {
+            get => _selectedPage;
+            set
+            {
+                if (_selectedPage != value)
+                {
+                    if (null != _selectedPage)
+                    {
+                        DisableSelectedPage(_selectedPage);
+                    }
+                    _selectedPage = value;
+                    EnableSelectedPage(_selectedPage);
+                }
+            }
+        }
+
+        private void InvokeLifecyle(IMetaHubPage page, string lifecycleMethod)
+        {
+            if (null == page) return;
+
+            var method = page.GetType()
+                .GetMethod(lifecycleMethod, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+            method?.Invoke(page, new object[0]);
+        }
+
+
+        private void DisableSelectedPage(IMetaHubPage page)
+        {
+            InvokeLifecyle(page, "OnDisable");
+        }
+
+        private void EnableSelectedPage(IMetaHubPage page)
+        {
+            if (null == page) return;
+
+            var method = page.GetType()
+                .GetMethod("OnWindow", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+            method?.Invoke(page, new object[] {this});
+            InvokeLifecyle(page, "OnEnable");
+        }
+
+        private void OnSelectionChange()
+        {
+            InvokeLifecyle(ActivePage, "OnSelectionChange");
+        }
+
+        protected virtual void OnEnable()
         {
             UpdateContextFilter();
 
             minSize = new Vector2(400, 400);
         }
 
+        private void OnDisable()
+        {
+            if (null != _selectedPage)
+            {
+                ActivePage = null;
+            }
+        }
+
+        protected void AddChildContexts(List<string> filter)
+        {
+            var parents = new HashSet<string>();
+            foreach (var parent in filter)
+            {
+                parents.Add(parent);
+            }
+            var contexts = ContextFinder.FindAllContextAssets<MetaHubContext>();
+            foreach (var context in contexts)
+            {
+                if (!context) continue;
+                if (null == context.ParentContexts) continue;
+
+                foreach (var parentContext in context.ParentContexts)
+                {
+                    if(parents.Contains(parentContext)) filter.Add(context.Name);
+                }
+            }
+        }
+
         public void UpdateContextFilter()
         {
-
             if(null == _rootPageGroup) _rootPageGroup = new PageGroup(null, DrawPageEntry);
             _contexts = ContextFinder.FindAllContextAssets<MetaHubContext>();
             _contexts.Sort((a, b) => a.Priority.CompareTo(b.Priority));
@@ -218,9 +323,6 @@ namespace Meta.Voice.Hub
                     }
                     if(page is IPageInfo info) AddPage(new PageReference { page = page, info = info});
                     else AddPage(new PageReference { page = page, info = pageInfo});
-
-                    var method = page.GetType().GetMethod("OnEnable", BindingFlags.Default | BindingFlags.Public);
-                    method?.Invoke(page, new object[0]);
                 }
             }
 
@@ -234,7 +336,11 @@ namespace Meta.Voice.Hub
         private void AddPage(PageReference page)
         {
             if (string.IsNullOrEmpty(page.info.Context)) _rootPageGroup.AddPage(page);
-            else _pageGroupMap[_contextMap[page.info.Context]].AddPage(page);
+            else if (_contextMap.TryGetValue(page.info.Context, out var groupKey)
+                     && _pageGroupMap.TryGetValue(groupKey, out var group))
+            {
+                group.AddPage(page);
+            }
         }
 
         protected virtual void OnGUI()
@@ -293,9 +399,9 @@ namespace Meta.Voice.Hub
                 }
             }
 
-            if (ContextFilter.Count == 0 && (string.IsNullOrEmpty(_searchString) || pages.Count > 0))
+            if (ContextFilter.Count != 1 && (string.IsNullOrEmpty(_searchString) || pages.Count > 0))
             {
-                if (null != group.Context &&
+                if (group.Context != PrimaryContext && null != group.Context &&
                     (string.IsNullOrEmpty(_searchString) && group.PageCount > 0 || pages.Count > 0) &&
                     !string.IsNullOrEmpty(group.Context.Name) && group.Context.ShowPageGroupTitle)
                 {
@@ -349,11 +455,19 @@ namespace Meta.Voice.Hub
             optionStyle.normal.background = null;
             optionStyle.normal.textColor = _selectedPage == page.page ? Color.white : GUI.skin.label.normal.textColor;
 
-            if (null == _selectedPage)
+            if (string.IsNullOrEmpty(SelectedPage))
             {
                 // TODO: We will need to improve this logic.
-                if (!string.IsNullOrEmpty(SelectedPage) && page.PageId == SelectedPage) _selectedPage = page.page;
-                else if(string.IsNullOrEmpty(SelectedPage)) _selectedPage = page.page;
+                if (!string.IsNullOrEmpty(SelectedPage) && page.PageId == SelectedPage) ActivePage = page.page;
+                else if(string.IsNullOrEmpty(SelectedPage)) ActivePage = page.page;
+                SelectedPage = page.PageId;
+            }
+            else if (null == ActivePage)
+            {
+                if (page.PageId == SelectedPage)
+                {
+                    ActivePage = page.page;
+                }
             }
 
             EditorGUILayout.BeginHorizontal();
@@ -381,7 +495,8 @@ namespace Meta.Voice.Hub
 
                 if (Event.current.type == EventType.MouseDown && isHover)
                 {
-                    _selectedPage = page.page;
+                    ActivePage = page.page;
+                    SelectedPage = page.PageId;
                     Event.current.Use();
                 }
             }
@@ -403,7 +518,7 @@ namespace Meta.Voice.Hub
 
             if (_selectedPage is ScriptableObjectPage soPage)
             {
-                if(soPage.Editor is IOverrideSize size) {
+                if(soPage.Editor is IOverrideSize size && Event.current.type == EventType.Layout) {
                     size.OverrideWidth = EditorGUIUtility.currentViewWidth - _leftPanelWidth;
                 }
             }
@@ -415,13 +530,8 @@ namespace Meta.Voice.Hub
         public static T ShowWindow<T>(params string[] contexts) where T : MetaHub
         {
             var window = EditorWindow.GetWindow<T>();
-            window._selectedPage = null;
+            window.ActivePage = null;
             window.titleContent = new GUIContent("Meta Hub");
-            window.ContextFilter.Clear();
-            foreach (var context in contexts)
-            {
-                window.ContextFilter.Add(context);
-            }
             window.UpdateContextFilter();
             window.Show();
             return window;

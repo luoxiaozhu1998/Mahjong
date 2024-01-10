@@ -27,6 +27,7 @@ using ColorMapType = OVRPlugin.InsightPassthroughColorMapType;
 /// <summary>
 /// A layer used for passthrough.
 /// </summary>
+[HelpURL("https://developer.oculus.com/reference/unity/latest/class_o_v_r_passthrough_layer")]
 public class OVRPassthroughLayer : MonoBehaviour
 {
     #region Public Interface
@@ -162,12 +163,14 @@ public class OVRPassthroughLayer : MonoBehaviour
 
     /// <summary>
     /// Float that defines the passthrough texture opacity.
+    /// Value range from 0f to 1f.
     /// </summary>
     public float textureOpacity
     {
         get { return textureOpacity_; }
         set
         {
+            value = Mathf.Clamp01(value);
             if (value != textureOpacity_)
             {
                 textureOpacity_ = value;
@@ -227,12 +230,8 @@ public class OVRPassthroughLayer : MonoBehaviour
         styleDirty = true;
     }
 
-
     /// <summary>
     /// Applies a color LUT to the passthrough layer.
-    /// This is an experimental feature, please see
-    /// https://developer.oculus.com/experimental/experimental-overview/ for more information
-    /// and ensure that Experimental Features are enabled in OVRManager - Quest Features - Experimental.
     /// </summary>
     /// <param name="lut"></param>
     /// <param name="weight"> Value between 0 and 1 which defines the blend between the original Passthrough colors and
@@ -242,7 +241,7 @@ public class OVRPassthroughLayer : MonoBehaviour
     /// </param>
     public void SetColorLut(OVRPassthroughColorLut lut, float weight = 1)
     {
-        if (lut != null && lut.IsInitialized)
+        if (lut != null && lut.IsValid)
         {
             weight = ClampWeight(weight);
             colorMapType = ColorMapType.ColorLut;
@@ -252,14 +251,12 @@ public class OVRPassthroughLayer : MonoBehaviour
         }
         else
         {
-            Debug.LogError("Trying to set an uninitialized Color LUT for Passthrough");
+            Debug.LogError("Trying to set an invalid Color LUT for Passthrough");
         }
     }
 
     /// <summary>
     /// Applies the interpolation between two color LUTs to the passthrough layer.
-    /// This is an experimental feature, please see
-    /// https://developer.oculus.com/experimental/experimental-overview/ for more information.
     /// </summary>
     /// <param name="lutSource"></param>
     /// <param name="lutTarget"></param>
@@ -269,8 +266,8 @@ public class OVRPassthroughLayer : MonoBehaviour
     /// </param>
     public void SetColorLut(OVRPassthroughColorLut lutSource, OVRPassthroughColorLut lutTarget, float weight)
     {
-        if (lutSource != null && lutSource.IsInitialized
-                              && lutTarget != null && lutTarget.IsInitialized)
+        if (lutSource != null && lutSource.IsValid
+                              && lutTarget != null && lutTarget.IsValid)
         {
             weight = ClampWeight(weight);
             colorMapType = ColorMapType.InterpolatedColorLut;
@@ -280,7 +277,7 @@ public class OVRPassthroughLayer : MonoBehaviour
         }
         else
         {
-            Debug.LogError("Trying to set an uninitialized Color LUT for Passthrough");
+            Debug.LogError("Trying to set an invalid Color LUT for Passthrough");
         }
     }
 
@@ -766,7 +763,7 @@ public class OVRPassthroughLayer : MonoBehaviour
 
         passthroughOverlay.currentOverlayType = overlayType;
         passthroughOverlay.compositionDepth = compositionDepth;
-        passthroughOverlay.hidden = hidden;
+        passthroughOverlay.hidden = hidden || IsUserDefinedAndDoesNotContainSurfaceGeometry();
         passthroughOverlay.overridePerLayerColorScaleAndOffset = overridePerLayerColorScaleAndOffset;
         passthroughOverlay.colorScale = colorScale;
         passthroughOverlay.colorOffset = colorOffset;
@@ -789,6 +786,8 @@ public class OVRPassthroughLayer : MonoBehaviour
             passthroughOverlay.currentOverlayShape = overlayShape;
         }
 
+        var wasPassthroughOverlayEnabled = passthroughOverlay.enabled;
+
         // Disable the overlay when passthrough is disabled as a whole so the layer doesn't get submitted.
         // Both the desired (`isInsightPassthroughEnabled`) and the actual (IsInsightPassthroughInitialized()) PT
         // initialization state are taken into account s.t. the overlay gets disabled as soon as PT is flagged to be
@@ -796,6 +795,25 @@ public class OVRPassthroughLayer : MonoBehaviour
         passthroughOverlay.enabled = OVRManager.instance != null &&
                                      OVRManager.instance.isInsightPassthroughEnabled &&
                                      OVRManager.IsInsightPassthroughInitialized();
+
+        if (wasPassthroughOverlayEnabled != passthroughOverlay.enabled)
+        {
+            if (passthroughOverlay.enabled)
+            {
+                styleDirty = true;
+            }
+            else
+            {
+                DestroySurfaceGeometries(true);
+            }
+        }
+    }
+
+    private bool IsUserDefinedAndDoesNotContainSurfaceGeometry()
+    {
+        return projectionSurfaceType == ProjectionSurfaceType.UserDefined
+            && deferredSurfaceGameObjects.Count == 0
+            && surfaceGameObjects.Count == 0;
     }
 
     private static float ClampWeight(float weight)
@@ -855,6 +873,7 @@ public class OVRPassthroughLayer : MonoBehaviour
         new List<SerializedSurfaceGeometry>();
 
     [SerializeField]
+    [Range(0, 1)]
     internal float textureOpacity_ = 1;
 
     [SerializeField]
@@ -993,7 +1012,11 @@ public class OVRPassthroughLayer : MonoBehaviour
         // Surface geometries have been moved to the deferred additions queue in OnDisable() and will be re-added
         // in LateUpdate().
 
-        _stylesHandler.SetStyleHandler(_editorToColorMapType[colorMapEditorType]);
+        if (colorMapEditorType != ColorMapEditorType.Custom)
+        {
+            _stylesHandler.SetStyleHandler(_editorToColorMapType[colorMapEditorType]);
+        }
+
         if (HasControlsBasedColorMap())
         {
             // Compute initial color map from controls

@@ -22,7 +22,6 @@ using System;
 using System.Globalization;
 using Meta.Voice;
 using Meta.WitAi;
-using Meta.WitAi.Json;
 using Meta.WitAi.Configuration;
 using Meta.WitAi.Data.Configuration;
 using Meta.WitAi.Dictation;
@@ -72,8 +71,7 @@ namespace Oculus.Voice.Dictation
 
         public event Action OnInitialized;
 
-        // This version is auto-updated for a release build
-        public static string PACKAGE_VERSION => AppVoiceExperience.PACKAGE_VERSION;
+        private static string PACKAGE_VERSION => VoiceSDKConstants.SdkVersion;
 
 #if UNITY_ANDROID && !UNITY_EDITOR
         public bool HasPlatformIntegrations => usePlatformServices && _dictationServiceImpl is PlatformDictationImpl;
@@ -107,6 +105,11 @@ namespace Oculus.Voice.Dictation
 
         private void InitDictation()
         {
+            // Check voice sdk version
+            if (string.IsNullOrEmpty(PACKAGE_VERSION))
+            {
+                VLog.E("No SDK Version Set");
+            }
             // Clean up if we're switching to native C# wit impl
             if (!UsePlatformIntegrations)
             {

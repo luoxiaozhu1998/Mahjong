@@ -52,6 +52,11 @@ namespace Photon.Voice.MacOS
                     Error = "Exception in AudioInEnumerator.Refresh()";
                 }
             }
+
+            if (OnReady != null)
+            {
+                OnReady();
+            }
         }
 
         /// <summary>Disposes enumerator.
