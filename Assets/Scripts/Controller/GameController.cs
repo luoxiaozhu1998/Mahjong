@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,54 +9,38 @@ using Oculus.Interaction;
 using Oculus.Interaction.HandGrab;
 using Oculus.Interaction.Input;
 using Photon.Pun;
+using PlayFab;
+using PlayFab.ClientModels;
 using TMPro;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 using Random = System.Random;
 
 namespace Controller
 {
-    public class Card
-    {
-        private int number;
-
-        public int Number
-        {
-            get { return number; }
-            set { number = value; }
-        }
-
-        private int type;
-
-        public int Type
-        {
-            get { return type; }
-            set { type = value; }
-        }
-
-        public Card(int n, int t)
-        {
-            number = n;
-            type = t;
-        }
-    }
-
     /// <summary>
     /// 负责管理整个游戏的逻辑,单例
     /// </summary>
     public class GameController : MonoBehaviourPunCallbacks
     {
         public static GameController Instance { get; private set; }
-        public int playerCount;
-        public PlayerController myPlayerController;
+        private int _playerCount;
+        [HideInInspector] public PlayerController myPlayerController;
         public Dictionary<int, int> ReadyDict;
-        public bool canNext;
-        public int nowTurn;
-        public int nowTile;
-        public int tileViewID;
+        [HideInInspector] public int nowTurn;
+        [HideInInspector] public int nowTile;
+        [HideInInspector] public int tileViewID;
         private List<MahjongAttr> _mahjong;
-        private List<Transform> _playerButtons;
+        [SerializeField] private Transform[] playerCanvases;
+        [SerializeField] private Transform[] playerCardContainers;
+        [SerializeField] private Transform[] playerButtonContainers;
+        [SerializeField] private Transform[] playerResultPanels;
+
+        [Header("-------------麻将前面显示玩家积分的Text----------------"), SerializeField]
+        private TMP_Text[] playerScoreTexts;
+
         private bool _canPong;
         private bool _canKong;
         private bool _canWin;
@@ -75,7 +58,6 @@ namespace Controller
         private static Random rng = new();
         public GameObject nowMahjong;
         public AudioTrigger changeMahjongAudio;
-        private bool isWin;
 
         [SerializeField, Interface(typeof(IHand))]
         public MonoBehaviour _leftHand;
@@ -83,11 +65,16 @@ namespace Controller
         [SerializeField, Interface(typeof(IHand))]
         public MonoBehaviour _rightHand;
 
+        [FormerlySerializedAs("_transformer")]
         [SerializeField, Interface(typeof(ITrackingToWorldTransformer))]
         [Tooltip("Transformer is required so calculations can be done in Tracking space")]
         public UnityEngine.Object _transformer;
 
         public OVRCameraRig OvrCameraRig;
+        private int _playerDictCount;
+        [HideInInspector] public List<MahjongAttr> effectGoList = new();
+        // [SerializeField] private RecorderControllerSettingsPreset _recorderControllerSettingsPreset;
+        // private RecorderController _recorderController;
 
         /// <summary>
         /// 初始化
@@ -101,15 +88,30 @@ namespace Controller
 
             Instance = this;
             GameManager.Instance.InitWhenStart();
-            playerCount = PhotonNetwork.CurrentRoom.PlayerCount;
-            canNext = true;
+            _playerCount = PhotonNetwork.CurrentRoom.PlayerCount;
             ReadyDict = new Dictionary<int, int>();
             _mahjong = new List<MahjongAttr>();
-            _playerButtons = new List<Transform>();
-            isWin = false;
+            //playerButtons = new List<Transform>();
             StartGame();
             FindObjectOfType<OvrAvatarManager>().GetComponent<AvatarInputManager>().Init();
         }
+
+        // public override void OnEnable()
+        // {
+        //     base.OnEnable();
+        //     var controllerSettings = ScriptableObject.CreateInstance<RecorderControllerSettings>();
+        //     _recorderControllerSettingsPreset.ApplyTo(controllerSettings);
+        //     _recorderController = new RecorderController(controllerSettings);
+        //     RecorderOptions.VerboseMode = false;
+        //     _recorderController.PrepareRecording();
+        //     _recorderController.StartRecording();
+        //     StartCoroutine(nameof(StopRecording));
+        // }
+        //
+        // private void StopRecording()
+        // {
+        //     _recorderController.StopRecording();
+        // }
 
         public override void OnLeftRoom()
         {
@@ -122,23 +124,25 @@ namespace Controller
         public void StartGame()
         {
             GeneratePlayers();
-            if (PhotonNetwork.IsMasterClient)
-            {
-                if (CheckWin())
-                {
-                    isWin = true;
-                    photonView.RPC(nameof(CanH), RpcTarget.All, myPlayerController.playerID);
-                }
-            }
-
+            //房主检测是否天胡
+            var isWin = PhotonNetwork.IsMasterClient && CheckWin();
+            //所有玩家检测是否能杠
             foreach (var pair in myPlayerController.MyMahjong)
             {
                 if (pair.Value.Count == 4)
                 {
-                    photonView.RPC(isWin ? nameof(CanKAndH) : nameof(CanH), RpcTarget.All, myPlayerController.playerID);
+                    if (isWin)
+                    {
+                        photonView.RPC(nameof(CanKAndH), RpcTarget.All, myPlayerController.playerID);
+                        break;
+                    }
+
+                    photonView.RPC(nameof(CanK), RpcTarget.All, myPlayerController.playerID);
                     break;
                 }
             }
+
+            GetPlayerScore();
         }
 
         [PunRPC]
@@ -176,43 +180,48 @@ namespace Controller
             myPlayerController.MyMahjong =
                 GameManager.Instance.GenerateMahjongAtStart(myPlayerController.playerID - 1);
             SortMyMahjong(true, false);
-
-            for (var i = 1; i <= 4; i++)
-            {
-                _playerButtons.Add(GameObject.Find("Player" + i + "Button").transform);
-            }
-
-            var pongButton = _playerButtons[myPlayerController.playerID - 1].GetChild(0).GetChild(2)
-                .GetChild(1).GetChild(0).GetChild(0);
-            pongButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenUnselect
-                .AddListener(SolvePong);
-            var kongButton = _playerButtons[myPlayerController.playerID - 1].GetChild(1).GetChild(2)
-                .GetChild(1).GetChild(0).GetChild(0);
-            kongButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenUnselect
-                .AddListener(SolveKong);
-            var winButton = _playerButtons[myPlayerController.playerID - 1].GetChild(2).GetChild(2)
-                .GetChild(1).GetChild(0).GetChild(0);
-            winButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenUnselect
-                .AddListener(SolveWin);
-            var skipButton = _playerButtons[myPlayerController.playerID - 1].GetChild(3).GetChild(2)
-                .GetChild(1).GetChild(0).GetChild(0);
-            skipButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenUnselect
-                .AddListener(SolveSkip);
-            var leaveButton = _playerButtons[myPlayerController.playerID - 1].GetChild(6).GetChild(2).GetChild(1)
-                .GetChild(0).GetChild(0);
-            leaveButton.GetComponentInParent<InteractableUnityEventWrapper>().WhenUnselect
+            // for (var i = 1; i <= 4; i++)
+            // {
+            //     playerButtons.Add(GameObject.Find("Player" + i + "Button").transform);
+            // }
+            var pongButton = playerButtonContainers[myPlayerController.playerID - 1].GetChild(0).GetChild(0);
+            pongButton.GetComponent<InteractableUnityEventWrapper>().WhenUnselect.AddListener(SolvePong);
+            var kongButton = playerButtonContainers[myPlayerController.playerID - 1].GetChild(1).GetChild(0);
+            kongButton.GetComponent<InteractableUnityEventWrapper>().WhenUnselect.AddListener(SolveKong);
+            var winButton = playerButtonContainers[myPlayerController.playerID - 1].GetChild(2).GetChild(0);
+            winButton.GetComponent<InteractableUnityEventWrapper>().WhenUnselect.AddListener(SolveWin);
+            var skipButton = playerButtonContainers[myPlayerController.playerID - 1].GetChild(3).GetChild(0);
+            skipButton.GetComponent<InteractableUnityEventWrapper>().WhenUnselect.AddListener(SolveSkip);
+            var leaveButton = playerResultPanels[myPlayerController.playerID - 1].GetChild(2).GetChild(0);
+            leaveButton.GetComponent<InteractableUnityEventWrapper>().WhenUnselect
                 .AddListener(() => { PhotonNetwork.LeaveRoom(); });
-            foreach (var playerButton in _playerButtons)
-            {
-                for (var i = 0; i < 5; i++)
-                {
-                    playerButton.GetChild(i).gameObject.SetActive(false);
-                }
-
-                playerButton.GetChild(6).gameObject.SetActive(false);
-            }
-
+            // foreach (var playerButton in playerButtonContainers)
+            // {
+            //     for (var i = 0; i < 5; i++)
+            //     {
+            //         playerButton.GetChild(i).gameObject.SetActive(false);
+            //     }
+            //
+            //     playerButton.GetChild(6).gameObject.SetActive(false);
+            // }
             nowTurn = 1;
+        }
+
+        private void GetPlayerScore()
+        {
+            PlayFabClientAPI.GetUserData(new GetUserDataRequest(),
+                data =>
+                {
+                    photonView.RPC(nameof(UpdatePoint), RpcTarget.All, myPlayerController.playerID,
+                        int.Parse(data.Data["Score"].Value));
+                },
+                error => { Debug.Log(error.ErrorMessage); });
+        }
+
+        [PunRPC]
+        private void UpdatePoint(int id, int point)
+        {
+            playerScoreTexts[id - 1].text = $"分数：{point.ToString()}";
         }
 
         [PunRPC]
@@ -231,51 +240,162 @@ namespace Controller
                 go.transform.SetLocalPositionAndRotation(new Vector3(0.04f, 0.16f, 0f), Quaternion.Euler(-90f, 0f, 0f));
             }
 
-            _playerButtons[myPlayerController.playerID - 1].GetChild(5).GetComponentInChildren<TMP_Text>().text =
-                "Score:" + (id == myPlayerController.playerID ? 20 : 0);
-            var scoreCanvas = _playerButtons[myPlayerController.playerID - 1].GetChild(4).gameObject;
-            scoreCanvas.SetActive(true);
-            scoreCanvas.transform.GetChild(1).GetComponentInChildren<TMP_Text>().text =
+
+            OpenPlayerResultPanel();
+            // var scoreCanvas = playerCanvases[myPlayerController.playerID - 1].GetChild(4).gameObject;
+            // scoreCanvas.SetActive(true);
+            // scoreCanvas.transform.GetChild(1).GetComponentInChildren<TMP_Text>().text =
+            //     id == myPlayerController.playerID ? "您赢了！" : "您输了！";
+            playerResultPanels[myPlayerController.playerID - 1].GetChild(0).GetChild(0).GetComponent<TMP_Text>().text =
                 id == myPlayerController.playerID ? "您赢了！" : "您输了！";
-            foreach (var item in PhotonNetwork.CurrentRoom.Players)
+            for (var i = 0; i < 4; i++)
             {
-                var go = Instantiate(playerPanelPrefab, playerPanelContainers[myPlayerController.playerID - 1]);
-                go.transform.GetChild(0).GetComponent<TMP_Text>().text = item.Value.NickName;
-                go.transform.GetChild(1).GetComponent<TMP_Text>().text =
-                    item.Value.NickName == userName ? "Score + 10" : "Score - 10";
+                if (i < PhotonNetwork.CurrentRoom.PlayerCount)
+                {
+                    playerResultPanels[myPlayerController.playerID - 1].GetChild(1).GetChild(i).gameObject
+                        .SetActive(true);
+                    playerResultPanels[myPlayerController.playerID - 1].GetChild(1).GetChild(i).GetChild(0)
+                        .GetComponent<TMP_Text>()
+                        .text = PhotonNetwork.CurrentRoom.Players[i + 1].NickName;
+                    playerResultPanels[myPlayerController.playerID - 1].GetChild(1).GetChild(i).GetChild(1)
+                        .GetComponent<TMP_Text>()
+                        .text = PhotonNetwork.CurrentRoom.Players[i + 1].NickName == userName ? "积分 + 50" : "积分 - 50";
+                }
+                else
+                {
+                    playerResultPanels[myPlayerController.playerID - 1].GetChild(1).GetChild(i).gameObject
+                        .SetActive(false);
+                }
             }
 
-            photonView.RPC(nameof(ResetButton), RpcTarget.All, true);
+            // foreach (var item in PhotonNetwork.CurrentRoom.Players)
+            // {
+            //     var go = Instantiate(playerPanelPrefab, playerPanelContainers[myPlayerController.playerID - 1]);
+            //     go.transform.GetChild(0).GetComponent<TMP_Text>().text = item.Value.NickName;
+            //     go.transform.GetChild(1).GetComponent<TMP_Text>().text =
+            //         item.Value.NickName == userName ? "Score + 50" : "Score - 50";
+            // }
+
+            int score;
+            PlayFabClientAPI.GetUserData(new GetUserDataRequest { }, data =>
+                {
+                    score = int.Parse(data.Data["Score"].Value);
+                    score = id == myPlayerController.playerID ? score + 50 : score - 50;
+                    PlayFabClientAPI.UpdateUserData(new UpdateUserDataRequest()
+                        {
+                            Data = new Dictionary<string, string>
+                            {
+                                {"Score", score.ToString()},
+                            }
+                        },
+                        _ => { GetPlayerScore(); },
+                        _ => { });
+                },
+                error => { Debug.Log(error.ErrorMessage); });
+        }
+
+        private void OpenPlayerResultPanel()
+        {
+            playerCanvases[myPlayerController.playerID - 1].gameObject.SetActive(true);
+            playerResultPanels[myPlayerController.playerID - 1].gameObject.SetActive(true);
+            playerButtonContainers[myPlayerController.playerID - 1].gameObject.SetActive(false);
+            playerCardContainers[myPlayerController.playerID - 1].gameObject.SetActive(false);
+        }
+
+        private void ClosePlayerResultPanel()
+        {
+            playerCanvases[myPlayerController.playerID - 1].gameObject.SetActive(false);
+        }
+
+        private void OpenPlayerButtonContainer()
+        {
+            playerCanvases[myPlayerController.playerID - 1].gameObject.SetActive(true);
+            playerResultPanels[myPlayerController.playerID - 1].gameObject.SetActive(false);
+            playerButtonContainers[myPlayerController.playerID - 1].gameObject.SetActive(true);
+            playerCardContainers[myPlayerController.playerID - 1].gameObject.SetActive(false);
+        }
+
+        private void ClosePlayerButtonContainer()
+        {
+            playerCanvases[myPlayerController.playerID - 1].gameObject.SetActive(false);
+            playerResultPanels[myPlayerController.playerID - 1].gameObject.SetActive(false);
+            playerButtonContainers[myPlayerController.playerID - 1].gameObject.SetActive(false);
+            playerCardContainers[myPlayerController.playerID - 1].gameObject.SetActive(false);
+        }
+
+        private void OpenPlayerCardContainer()
+        {
+            //通过PlayFab获取道具数量，显示在UI上
+            PlayFabClientAPI.GetUserData(new GetUserDataRequest(),
+                //在CallBack函数中打开UI，防止提前打开UI
+                data =>
+                {
+                    //找到两张牌的数量
+                    var xRayCardCount = int.Parse(data.Data["XRayCard"].Value);
+                    var cheatCardCount = int.Parse(data.Data["CheatCard"].Value);
+                    //打开所有的UI
+                    playerCanvases[myPlayerController.playerID - 1].gameObject.SetActive(true);
+                    playerResultPanels[myPlayerController.playerID - 1].gameObject.SetActive(false);
+                    playerButtonContainers[myPlayerController.playerID - 1].gameObject.SetActive(false);
+                    playerCardContainers[myPlayerController.playerID - 1].gameObject.SetActive(true);
+                    //更新数量
+                    var xRayCardGo = playerCardContainers[myPlayerController.playerID - 1].GetChild(0);
+                    xRayCardGo.GetComponentInChildren<TMP_Text>().text = $"透视道具\n当前拥有：{xRayCardCount}个";
+                    var cheatCardGo = playerCardContainers[myPlayerController.playerID - 1].GetChild(1);
+                    cheatCardGo.GetComponentInChildren<TMP_Text>().text = $"换牌道具\n当前拥有：{cheatCardCount}个";
+                },
+                error => { Debug.Log(error.ErrorMessage); });
+        }
+
+        private void ClosePlayerCardContainer()
+        {
+            playerCanvases[myPlayerController.playerID - 1].gameObject.SetActive(false);
+            playerResultPanels[myPlayerController.playerID - 1].gameObject.SetActive(false);
+            playerButtonContainers[myPlayerController.playerID - 1].gameObject.SetActive(false);
+            playerCardContainers[myPlayerController.playerID - 1].gameObject.SetActive(false);
         }
 
         private void SolveWin()
         {
-            isWin = true;
             photonView.RPC(nameof(SetPoint), RpcTarget.All, myPlayerController.playerID,
                 PhotonNetwork.LocalPlayer.NickName);
         }
 
+        /// <summary>
+        /// 因为可能有多个玩家同时可以处理牌，当一个玩家点击跳过，可操作玩家数--，当可操作玩家数等于0，才发牌
+        /// </summary>
         private void SolveSkip()
         {
             if (!_canKong && !_canPong && !_canWin) return;
-            photonView.RPC(nameof(NextTurn), RpcTarget.All, nowTurn, false);
+            photonView.RPC(nameof(DecreasePlayerDictCount), RpcTarget.MasterClient);
             _canKong = _canPong = _canWin = false;
-            photonView.RPC(nameof(ResetButton), RpcTarget.All, false);
+            //点击跳过，只是我跳过
+            ResetButton();
             EnableHandGrab();
         }
 
         [PunRPC]
-        private void ResetButton(bool flag = false)
+        private void DecreasePlayerDictCount()
         {
-            foreach (var playerButton in _playerButtons)
+            _playerDictCount--;
+            if (_playerDictCount == 0)
             {
-                for (var i = 0; i < 4; i++)
-                {
-                    playerButton.GetChild(i).gameObject.SetActive(false);
-                }
-
-                playerButton.GetChild(6).gameObject.SetActive(flag);
+                photonView.RPC(nameof(NextTurn), RpcTarget.All, nowTurn, false);
             }
+        }
+
+        [PunRPC]
+        private void ResetButton()
+        {
+            //隐藏碰
+            playerButtonContainers[myPlayerController.playerID - 1].GetChild(0).gameObject.SetActive(true);
+            //隐藏杠
+            playerButtonContainers[myPlayerController.playerID - 1].GetChild(1).gameObject.SetActive(true);
+            //隐藏胡
+            playerButtonContainers[myPlayerController.playerID - 1].GetChild(2).gameObject.SetActive(true);
+            //隐藏跳过
+            playerButtonContainers[myPlayerController.playerID - 1].GetChild(3).gameObject.SetActive(true);
+            ClosePlayerButtonContainer();
         }
 
         private void AddMahjongToHand(MahjongAttr attr)
@@ -304,17 +424,20 @@ namespace Controller
                 myPlayerController.MyMahjong[attr.ID] = new List<GameObject>();
             }
 
+            var canKong = false;
             if (myPlayerController.MyMahjong[attr.ID].Count == 3)
             {
                 DisableHandGrab();
-                photonView.RPC(CheckWin(attr.ID) ? nameof(CanKAndH) : nameof(CanK), RpcTarget.All,
-                    myPlayerController.playerID);
+                //可以杠
+                canKong = true;
             }
 
+            //自摸
             if (CheckWin(attr.ID))
             {
-                photonView.RPC(myPlayerController.MyMahjong[attr.ID].Count == 3 ? nameof(CanPAndH) : nameof(CanH),
-                    RpcTarget.All, myPlayerController.playerID);
+                //自摸的同时可以杠
+                //自摸的同时不能杠
+                photonView.RPC(canKong ? nameof(CanKAndH) : nameof(CanH), RpcTarget.All, myPlayerController.playerID);
             }
 
             myPlayerController.MyMahjong[attr.ID].Add(attr.gameObject);
@@ -350,7 +473,7 @@ namespace Controller
 
         private void SolveMahjong()
         {
-            var ID = _mahjong[0].ID;
+            var id = _mahjong[0].ID;
             _mahjong[0].GetComponent<Rigidbody>().Sleep();
             AddMahjongToHand(_mahjong[0]);
             var idx = 1;
@@ -368,8 +491,8 @@ namespace Controller
                 }
             }
 
-            myPlayerController.mahjongMap[myPlayerController.MyMahjong[ID].Count - 1].Remove(ID);
-            myPlayerController.mahjongMap[myPlayerController.MyMahjong[ID].Count].Add(ID);
+            myPlayerController.mahjongMap[myPlayerController.MyMahjong[id].Count - 1].Remove(id);
+            myPlayerController.mahjongMap[myPlayerController.MyMahjong[id].Count].Add(id);
         }
 
         /// <summary>
@@ -420,16 +543,24 @@ namespace Controller
         /// </summary>
         private void Update()
         {
-            if (OVRInput.GetActiveController() == OVRInput.Controller.Touch && OVRInput.Get(OVRInput.Button.One))
+            //按下有手柄的A等于做出旋转手势
+            if (OVRInput.GetActiveController() == OVRInput.Controller.Touch && OVRInput.GetDown(OVRInput.Button.One))
             {
                 SortMyMahjong(true, false);
+            }
+
+            //按下右手柄的B等于做出打开菜单的手势
+            if (OVRInput.GetActiveController() == OVRInput.Controller.Touch && OVRInput.GetDown(OVRInput.Button.Two))
+            {
+                OpenOrClosePlayerCanvas();
             }
 
             if (!PhotonNetwork.IsMasterClient) return;
             //所有玩家在某人打出牌之后向主客户端汇报自己的状态（能否碰/杠/胡牌）
             //当字典的count等于玩家count，主客户端开始处理，否则锁死所有客户端
-            if (ReadyDict.Count != playerCount) return;
-            var flag = false;
+            if (ReadyDict.Count != _playerCount) return;
+            //记录有多少玩家可以处理牌
+
             foreach (var item in ReadyDict)
             {
                 switch (item.Value)
@@ -440,50 +571,39 @@ namespace Controller
                     //给他处理
                     //可以碰牌
                     case 1:
-                        photonView.RPC(nameof(CanP), RpcTarget.All,
-                            item.Key);
+                        photonView.RPC(nameof(CanP), RpcTarget.All, item.Key);
                         break;
                     //可以杠牌
                     case 2:
-                        photonView.RPC(nameof(CanK), RpcTarget.All,
-                            item.Key);
+                        photonView.RPC(nameof(CanK), RpcTarget.All, item.Key);
                         break;
                     //可以胡牌
                     case 3:
-                        photonView.RPC(nameof(CanH), RpcTarget.All,
-                            item.Key);
+                        photonView.RPC(nameof(CanH), RpcTarget.All, item.Key);
                         break;
                     case 4:
-                        photonView.RPC(nameof(CanPAndK),
-                            RpcTarget.All,
-                            item.Key);
+                        photonView.RPC(nameof(CanPAndK), RpcTarget.All, item.Key);
                         break;
                     //碰且赢
                     case 5:
-                        photonView.RPC(nameof(CanPAndH),
-                            RpcTarget.All,
-                            item.Key);
+                        photonView.RPC(nameof(CanPAndH), RpcTarget.All, item.Key);
                         break;
                     case 6:
-                        photonView.RPC(nameof(CanKAndH),
-                            RpcTarget.All,
-                            item.Key);
+                        photonView.RPC(nameof(CanKAndH), RpcTarget.All, item.Key);
                         break;
                     case 7:
-                        photonView.RPC(nameof(CanPAndKAndH),
-                            RpcTarget.All,
-                            item.Key);
+                        photonView.RPC(nameof(CanPAndKAndH), RpcTarget.All, item.Key);
                         break;
                 }
 
                 //只要有一个人可以处理牌，就不应该继续发牌
-                flag = true;
+                _playerDictCount++;
             }
 
             // 清空字典，准备下一回合
             ReadyDict.Clear();
             // 只要有一个人可以处理牌，就不应该继续发牌
-            if (flag) return;
+            if (_playerDictCount > 0) return;
             // 牌打完了，荒庄
             if (GameManager.Instance.GetMahjongList().Count == 0)
             {
@@ -522,9 +642,13 @@ namespace Controller
         [PunRPC]
         private void CanP(int id)
         {
-            _playerButtons[id - 1].GetChild(0).gameObject.SetActive(true);
-            _playerButtons[id - 1].GetChild(3).gameObject.SetActive(true);
             if (myPlayerController.playerID != id) return;
+            OpenPlayerButtonContainer();
+            playerButtonContainers[myPlayerController.playerID - 1].GetChild(0).gameObject.SetActive(true);
+            playerButtonContainers[myPlayerController.playerID - 1].GetChild(3).gameObject.SetActive(true);
+            // playerButtonContainers[id - 1].GetChild(0).gameObject.SetActive(true);
+            // playerButtonContainers[id - 1].GetChild(3).gameObject.SetActive(true);
+            //if (myPlayerController.playerID != id) return;
             _canPong = true;
             DisableHandGrab();
         }
@@ -532,9 +656,13 @@ namespace Controller
         [PunRPC]
         private void CanK(int id)
         {
-            _playerButtons[id - 1].GetChild(1).gameObject.SetActive(true);
-            _playerButtons[id - 1].GetChild(3).gameObject.SetActive(true);
             if (myPlayerController.playerID != id) return;
+            OpenPlayerButtonContainer();
+            playerButtonContainers[myPlayerController.playerID - 1].GetChild(1).gameObject.SetActive(true);
+            playerButtonContainers[myPlayerController.playerID - 1].GetChild(3).gameObject.SetActive(true);
+            // playerButtonContainers[id - 1].GetChild(1).gameObject.SetActive(true);
+            // playerButtonContainers[id - 1].GetChild(3).gameObject.SetActive(true);
+            //if (myPlayerController.playerID != id) return;
             _canKong = true;
             DisableHandGrab();
         }
@@ -542,19 +670,28 @@ namespace Controller
         [PunRPC]
         private void CanH(int id)
         {
-            _playerButtons[id - 1].GetChild(2).gameObject.SetActive(true);
-            _playerButtons[id - 1].GetChild(3).gameObject.SetActive(true);
             if (myPlayerController.playerID != id) return;
+            OpenPlayerButtonContainer();
+            playerButtonContainers[myPlayerController.playerID - 1].GetChild(2).gameObject.SetActive(true);
+            playerButtonContainers[myPlayerController.playerID - 1].GetChild(3).gameObject.SetActive(true);
+            // playerButtonContainers[id - 1].GetChild(2).gameObject.SetActive(true);
+            // playerButtonContainers[id - 1].GetChild(3).gameObject.SetActive(true);
+            // if (myPlayerController.playerID != id) return;
             _canWin = true;
         }
 
         [PunRPC]
         private void CanPAndK(int id)
         {
-            _playerButtons[id - 1].GetChild(0).gameObject.SetActive(true);
-            _playerButtons[id - 1].GetChild(1).gameObject.SetActive(true);
-            _playerButtons[id - 1].GetChild(3).gameObject.SetActive(true);
             if (myPlayerController.playerID != id) return;
+            OpenPlayerButtonContainer();
+            playerButtonContainers[myPlayerController.playerID - 1].GetChild(0).gameObject.SetActive(true);
+            playerButtonContainers[myPlayerController.playerID - 1].GetChild(1).gameObject.SetActive(true);
+            playerButtonContainers[myPlayerController.playerID - 1].GetChild(3).gameObject.SetActive(true);
+            // playerButtonContainers[id - 1].GetChild(0).gameObject.SetActive(true);
+            // playerButtonContainers[id - 1].GetChild(1).gameObject.SetActive(true);
+            // playerButtonContainers[id - 1].GetChild(3).gameObject.SetActive(true);
+            // if (myPlayerController.playerID != id) return;
             _canPong = true;
             _canKong = true;
             DisableHandGrab();
@@ -563,10 +700,15 @@ namespace Controller
         [PunRPC]
         private void CanPAndH(int id)
         {
-            _playerButtons[id - 1].GetChild(0).gameObject.SetActive(true);
-            _playerButtons[id - 1].GetChild(2).gameObject.SetActive(true);
-            _playerButtons[id - 1].GetChild(3).gameObject.SetActive(true);
             if (myPlayerController.playerID != id) return;
+            OpenPlayerButtonContainer();
+            playerButtonContainers[myPlayerController.playerID - 1].GetChild(0).gameObject.SetActive(true);
+            playerButtonContainers[myPlayerController.playerID - 1].GetChild(2).gameObject.SetActive(true);
+            playerButtonContainers[myPlayerController.playerID - 1].GetChild(3).gameObject.SetActive(true);
+            // playerButtonContainers[id - 1].GetChild(0).gameObject.SetActive(true);
+            // playerButtonContainers[id - 1].GetChild(2).gameObject.SetActive(true);
+            // playerButtonContainers[id - 1].GetChild(3).gameObject.SetActive(true);
+            // if (myPlayerController.playerID != id) return;
             _canPong = true;
             _canWin = true;
             DisableHandGrab();
@@ -575,38 +717,63 @@ namespace Controller
         [PunRPC]
         private void CanKAndH(int id)
         {
-            _playerButtons[id - 1].GetChild(1).gameObject.SetActive(true);
-            _playerButtons[id - 1].GetChild(2).gameObject.SetActive(true);
-            _playerButtons[id - 1].GetChild(3).gameObject.SetActive(true);
             if (myPlayerController.playerID != id) return;
+            OpenPlayerButtonContainer();
+            playerButtonContainers[myPlayerController.playerID - 1].GetChild(1).gameObject.SetActive(true);
+            playerButtonContainers[myPlayerController.playerID - 1].GetChild(2).gameObject.SetActive(true);
+            playerButtonContainers[myPlayerController.playerID - 1].GetChild(3).gameObject.SetActive(true);
+            // playerButtonContainers[id - 1].GetChild(1).gameObject.SetActive(true);
+            // playerButtonContainers[id - 1].GetChild(2).gameObject.SetActive(true);
+            // playerButtonContainers[id - 1].GetChild(3).gameObject.SetActive(true);
+            // if (myPlayerController.playerID != id) return;
             _canKong = true;
             _canWin = true;
             DisableHandGrab();
         }
 
+        /// <summary>
+        /// 可以碰，杠，胡
+        /// </summary>
+        /// <param name="id">可以碰杠胡的玩家的id</param>
         [PunRPC]
         private void CanPAndKAndH(int id)
         {
-            _playerButtons[id - 1].GetChild(0).gameObject.SetActive(true);
-            _playerButtons[id - 1].GetChild(1).gameObject.SetActive(true);
-            _playerButtons[id - 1].GetChild(2).gameObject.SetActive(true);
-            _playerButtons[id - 1].GetChild(3).gameObject.SetActive(true);
             if (myPlayerController.playerID != id) return;
+            OpenPlayerButtonContainer();
+            playerButtonContainers[myPlayerController.playerID - 1].GetChild(0).gameObject.SetActive(true);
+            playerButtonContainers[myPlayerController.playerID - 1].GetChild(1).gameObject.SetActive(true);
+            playerButtonContainers[myPlayerController.playerID - 1].GetChild(2).gameObject.SetActive(true);
+            playerButtonContainers[myPlayerController.playerID - 1].GetChild(3).gameObject.SetActive(true);
+            // playerButtonContainers[id - 1].GetChild(0).gameObject.SetActive(true);
+            // playerButtonContainers[id - 1].GetChild(1).gameObject.SetActive(true);
+            // playerButtonContainers[id - 1].GetChild(2).gameObject.SetActive(true);
+            // playerButtonContainers[id - 1].GetChild(3).gameObject.SetActive(true);
+            // if (myPlayerController.playerID != id) return;
             _canKong = true;
             _canKong = true;
             _canWin = true;
             DisableHandGrab();
         }
 
+        /// <summary>
+        /// 没有人胡牌，所有人显示流局
+        /// </summary>
         [PunRPC]
         public void NoOneWin()
         {
-            var scoreCanvas = _playerButtons[myPlayerController.playerID - 1].GetChild(4).gameObject;
-            scoreCanvas.SetActive(true);
-            scoreCanvas.transform.GetChild(1).GetComponentInChildren<TMP_Text>().text = "流局";
-            photonView.RPC(nameof(ResetButton), RpcTarget.All, true);
+            // var scoreCanvas = playerButtonContainers[myPlayerController.playerID - 1].GetChild(4).gameObject;
+            // scoreCanvas.SetActive(true);
+            OpenPlayerResultPanel();
+            //scoreCanvas.transform.GetChild(1).GetComponentInChildren<TMP_Text>().text = "流局";
+            playerResultPanels[myPlayerController.playerID - 1].GetChild(0).GetChild(0).GetComponent<TMP_Text>().text =
+                "流局";
         }
 
+        /// <summary>
+        /// 排列手中麻将
+        /// </summary>
+        /// <param name="random">是否随机排列</param>
+        /// <param name="disableCollider">排列的时候是否把所有牌的碰撞器禁用</param>
         public void SortMyMahjong(bool random, bool disableCollider)
         {
             var num = 1;
@@ -709,9 +876,19 @@ namespace Controller
             // }
         }
 
+        /// <summary>
+        /// 做出旋转手势，触发随机排列麻将
+        /// </summary>
         public void SortPose()
         {
             SortMyMahjong(true, false);
+        }
+
+        // 有人碰/杠的时候，直接清零
+        [PunRPC]
+        private void ResetPlayerDictCount()
+        {
+            _playerDictCount = 0;
         }
 
         /// <summary>
@@ -724,10 +901,11 @@ namespace Controller
             //点击之后立马不能碰牌
             _canPong = false;
             //向所有人RPC，当前轮次轮到我了，并且不需要发牌
+            photonView.RPC(nameof(ResetPlayerDictCount), RpcTarget.MasterClient);
             photonView.RPC(nameof(NextTurn), RpcTarget.All,
                 myPlayerController.playerID, false);
             //向所有人RPC，隐藏所有按钮
-            photonView.RPC(nameof(ResetButton), RpcTarget.All, false);
+            photonView.RPC(nameof(ResetButton), RpcTarget.All);
             //遍历自己的所有与被碰的牌相同的牌
             foreach (var go in myPlayerController.MyMahjong[nowTile])
             {
@@ -775,7 +953,7 @@ namespace Controller
             _canKong = false;
 
             //隐藏button
-            photonView.RPC(nameof(ResetButton), RpcTarget.All, false);
+            photonView.RPC(nameof(ResetButton), RpcTarget.All);
             foreach (var pair in myPlayerController.MyMahjong)
             {
                 if (pair.Value.Count == 4)
@@ -823,6 +1001,7 @@ namespace Controller
                     }
 
                     SortMyMahjong(false, false);
+                    photonView.RPC(nameof(ResetPlayerDictCount), RpcTarget.MasterClient);
                     //拿到出牌权，看情况发牌
                     photonView.RPC(nameof(NextTurn), RpcTarget.All,
                         myPlayerController.playerID, true);
@@ -933,164 +1112,11 @@ namespace Controller
             return ans;
         }
 
-
-        public static bool isHu(List<Card> cards)
-        {
-            int countCards = cards.Count;
-            //判斷是否是七小對
-            if (countCards == 14)
-            {
-                int count = 0;
-                for (int i = 0; i < countCards; i += 2)
-                {
-                    if (cards[i].Number == cards[i + 1].Number)
-                    {
-                        count++;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                if (count == 7)
-                {
-                    return true;
-                }
-            }
-
-            int[][] handcards = new int[4][]
-            {
-                new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-            };
-            for (int i = 0; i < countCards; i++)
-            {
-                //type爲0,1,2,3則爲萬條筒字。   [type = 0,1,2,3 ,  0]代表每種牌型的總數量
-                switch (cards[i].Type)
-                {
-                    case 0:
-                        handcards[0][cards[i].Number]++;
-                        handcards[0][0]++;
-                        break;
-                    case 1:
-                        handcards[1][cards[i].Number]++;
-                        handcards[1][0]++;
-                        break;
-                    case 2:
-                        handcards[2][cards[i].Number]++;
-                        handcards[2][0]++;
-                        break;
-                    case 3:
-                        handcards[3][cards[i].Number]++;
-                        handcards[3][0]++;
-                        break;
-                }
-            }
-
-            bool isJiang = false; //判斷是否有對子
-            int jiangNumber = -1;
-            for (int i = 0; i < handcards.GetLength(0); i++)
-            {
-                if (handcards[i][0] % 3 == 2)
-                {
-                    if (isJiang)
-                    {
-                        return false;
-                    }
-
-                    isJiang = true;
-                    jiangNumber = i;
-                }
-                //因爲對應四種牌型只能有一種且僅包含一個對子
-            }
-
-            //先求沒有將牌的情況判斷其是不是都是由刻子或者砍組成
-            for (int i = 0; i < handcards.GetLength(0); i++)
-            {
-                if (i != jiangNumber)
-                {
-                    if (!(IsKanOrShun(handcards[i], i == 3)))
-                    {
-                        return false;
-                    }
-                }
-            }
-
-            bool success = false;
-            //有將牌的情況下
-            for (int i = 1; i <= 9; i++)
-            {
-                if (handcards[jiangNumber][i] >= 2)
-                {
-                    handcards[jiangNumber][i] -= 2;
-                    handcards[jiangNumber][0] -= 2;
-                    if (IsKanOrShun(handcards[jiangNumber], jiangNumber == 3))
-                    {
-                        success = true;
-                        break;
-                    }
-
-                    handcards[jiangNumber][i] += 2;
-                    handcards[jiangNumber][0] += 2;
-                }
-            }
-
-            return success;
-        }
-
-        //判斷是否滿足牌組爲順子或砍組成
-        public static bool IsKanOrShun(int[] arr, bool isZi)
-        {
-            if (arr[0] == 0)
-            {
-                return true;
-            }
-
-            int index = -1;
-            for (int i = 1; i < arr.Length; i++)
-            {
-                if (arr[i] > 0)
-                {
-                    index = i;
-                    break;
-                }
-            }
-
-            bool result;
-            //是否滿足全是砍
-            if (arr[index] >= 3)
-            {
-                arr[index] -= 3;
-                arr[0] -= 3;
-                result = IsKanOrShun(arr, isZi);
-                arr[index] += 3;
-                arr[0] += 3;
-                return result;
-            }
-
-            //是否滿足爲順子
-            if (!isZi)
-            {
-                if (index < 8 && arr[index + 1] >= 1 && arr[index + 2] >= 1)
-                {
-                    arr[index] -= 1;
-                    arr[index + 1] -= 1;
-                    arr[index + 2] -= 1;
-                    arr[0] -= 3;
-                    result = IsKanOrShun(arr, isZi);
-                    arr[index] += 1;
-                    arr[index + 1] += 1;
-                    arr[index + 2] += 1;
-                    arr[0] += 3;
-                    return result;
-                }
-            }
-
-            return false;
-        }
-
-
+        /// <summary>
+        /// 检测能否胡牌，id不传递的时候表示当前有14张，一般是检测自摸或者庄家开局检测能否胡牌
+        /// </summary>
+        /// <param name="id">待检测的牌id</param>
+        /// <returns></returns>
         private bool CheckWin(int id = 0)
         {
             // List<Card> cards = new List<Card>();
@@ -1169,31 +1195,69 @@ namespace Controller
             return (cnt2 + cnt3 + cnt4 == 5 && cnt2 == 1) || cnt2 == 7;
         }
 
+        /// <summary>
+        /// 开启眼动追踪，实现透视效果
+        /// </summary>
         public void ShowEyeGaze()
         {
-            GazeInteractor.enabled = true;
-            StartCoroutine(nameof(HideEyeGaze));
+            if (!GazeInteractor.enabled)
+            {
+                PlayFabClientAPI.GetUserData(new GetUserDataRequest(),
+                    //在CallBack函数中打开UI，防止提前打开UI
+                    data =>
+                    {
+                        //找到X射线卡牌的数量
+                        var xRayCardCount = int.Parse(data.Data["XRayCard"].Value);
+                        if (xRayCardCount > 0)
+                        {
+                            //更新数量
+                            xRayCardCount--;
+                            //更新显示
+                            var xRayCardGo = playerCardContainers[myPlayerController.playerID - 1].GetChild(0);
+                            xRayCardGo.GetComponentInChildren<TMP_Text>().text = $"透视道具\n当前拥有：{xRayCardCount}个";
+                            //开启射线
+                            GazeInteractor.enabled = true;
+                            //20秒后关闭射线
+                            StartCoroutine(nameof(HideEyeGaze));
+                            PlayFabClientAPI.UpdateUserData(new UpdateUserDataRequest
+                            {
+                                Data = new Dictionary<string, string>
+                                {
+                                    {"XRayCard", xRayCardCount.ToString()}
+                                }
+                            }, _ => { }, _ => { });
+                        }
+                    },
+                    error => { Debug.Log(error.ErrorMessage); });
+            }
         }
 
         private IEnumerator HideEyeGaze()
         {
             yield return new WaitForSeconds(20f);
             GazeInteractor.enabled = false;
+            foreach (var mahjong in effectGoList)
+            {
+                mahjong.OnEyeHoverExit();
+            }
+
+            effectGoList.Clear();
         }
+
 
         public int count;
 
-
+        /// <summary>
+        /// 搓牌之后寻找能胡的牌，并换牌
+        /// </summary>
         public void ChangeMahjong()
         {
             count++;
             if (count >= 3 && nowMahjong != null)
             {
                 count = 0;
-
                 var id = nowMahjong.GetComponent<MahjongAttr>().ID;
                 myPlayerController.mahjongMap[myPlayerController.MyMahjong[id].Count].Remove(id);
-
                 myPlayerController.MyMahjong[id].Remove(nowMahjong);
                 // if (myPlayerController.MyMahjong[id].Count == 0)
                 // {
@@ -1230,6 +1294,21 @@ namespace Controller
 
                     myPlayerController.MyMahjong[id].Add(nowMahjong);
                 }
+            }
+        }
+
+        /// <summary>
+        /// 做出剪刀手势，打开或者菜单
+        /// </summary>
+        public void OpenOrClosePlayerCanvas()
+        {
+            if (!playerCanvases[myPlayerController.playerID - 1].gameObject.activeSelf)
+            {
+                OpenPlayerCardContainer();
+            }
+            else
+            {
+                ClosePlayerCardContainer();
             }
         }
     }

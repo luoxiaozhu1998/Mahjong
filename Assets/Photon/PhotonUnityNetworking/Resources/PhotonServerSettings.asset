@@ -64,6 +64,9 @@ MonoBehaviour:
   - SetList
   - SetPoint
   - SetState
+  - DecreasePlayerDictCount
+  - ResetPlayerDictCount
+  - UpdatePoint
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

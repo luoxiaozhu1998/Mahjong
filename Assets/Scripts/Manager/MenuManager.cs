@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using Photon.Pun;
 using UnityEngine;
 
 namespace Manager
@@ -8,8 +7,6 @@ namespace Manager
     public class MenuManager
     {
         private readonly Dictionary<string, GameObject> _menus = new();
-
-
         public void OpenMenu(string menuName)
         {
             if (_menus[menuName] == null) return;

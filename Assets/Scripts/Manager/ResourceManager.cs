@@ -249,7 +249,7 @@ namespace Manager
                     new Mahjong(10, "mahjong_tile_" + 10));
             }
 
-            //1个2条
+            //2个2条
             _mahjongList.Add(
                 new Mahjong(11, "mahjong_tile_" + 11));
             _mahjongList.Add(
@@ -310,6 +310,11 @@ namespace Manager
                 _mahjongList.Add(
                     new Mahjong(21, "mahjong_tile_" + 21));
             }
+            // for (var j = 0; j < 4; j++)
+            // {
+            //     _mahjongList.Add(
+            //         new Mahjong(21, "mahjong_tile_" + 21));
+            // }
 
             for (var j = 0; j < Constants.MaxPlayer; j++)
             {
@@ -334,6 +339,11 @@ namespace Manager
                 _mahjongList.Add(
                     new Mahjong(25, "mahjong_tile_" + 25));
             }
+            // for (var j = 0; j < Constants.MaxPlayer - 2; j++)
+            // {
+            //     _mahjongList.Add(
+            //         new Mahjong(25, "mahjong_tile_" + 25));
+            // }
 
             for (var j = 0; j < Constants.MaxPlayer; j++)
             {
@@ -369,7 +379,7 @@ namespace Manager
                 _mahjongList.Insert(0, new Mahjong(1, "mahjong_tile_" + 1));
             }
 
-            //前面放三个2条
+            //前面放2个2条
             for (var j = 1; j <= 2; j++)
             {
                 _mahjongList.Insert(0, new Mahjong(11, "mahjong_tile_" + 11));
@@ -401,6 +411,7 @@ namespace Manager
             // _mahjongList.Insert(0, new Mahjong(9, "mahjong_tile_" + 9));
             _mahjongList.Insert(0, new Mahjong(21, "mahjong_tile_" + 21));
             _mahjongList.Insert(0, new Mahjong(25, "mahjong_tile_" + 25));
+            //_mahjongList.Insert(0, new Mahjong(25, "mahjong_tile_" + 25));
             _mahjongList = _mahjongList.ToList();
         }
 
@@ -440,7 +451,8 @@ namespace Manager
         /// <returns></returns>
         public GameObject GeneratePlayer(int id)
         {
-            object[] objects = {Convert.ToInt64(GameManager.Instance.GetUserId()), PhotonNetwork.LocalPlayer.NickName};
+            object[] objects =
+                {Convert.ToInt64(GameManager.Instance.GetUserId()), PhotonNetwork.LocalPlayer.NickName};
             var rig = Object.FindObjectOfType<OVRCameraRig>().transform;
             rig.position = _playerInitPositions[id];
             rig.rotation = Quaternion.Euler(_playerInitRotations[id]);

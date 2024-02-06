@@ -74,10 +74,9 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
     public bool flag = false;
     private Vector3 _originalPos;
     private GameObject _effectGo;
-    private GameObject _eyeInteractGo;
+    private GameObject _bubbleGo;
     private Transform _transform;
     private MeshRenderer _meshRenderer;
-    public int Type => ID / 9;
 
     private void Awake()
     {
@@ -270,17 +269,17 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
     /// <param name="other"></param>
     private void OnTriggerEnter(Collider other)
     {
-        if (inOthersHand && other.gameObject.CompareTag("Hand") && _eyeInteractGo == null)
+        if (inOthersHand && other.gameObject.CompareTag("Hand") && _bubbleGo == null)
         {
-            _eyeInteractGo = Instantiate(GameController.Instance.bubbleEffect, transform.position, quaternion.identity);
+            _bubbleGo = Instantiate(GameController.Instance.bubbleEffect, transform.position, quaternion.identity);
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (_eyeInteractGo != null)
+        if (_bubbleGo != null)
         {
-            Destroy(_eyeInteractGo);
+            Destroy(_bubbleGo.gameObject);
         }
     }
 
@@ -362,19 +361,37 @@ public class MahjongAttr : MonoBehaviourPunCallbacks
 
     public void OnEyeHoverEnter()
     {
-        var materials = _meshRenderer.materials;
-        materials[0] = GameController.Instance.transparentMaterials[0];
-        materials[1] = GameController.Instance.transparentMaterials[1];
-        _meshRenderer.materials = materials;
-        _effectGo = Instantiate(GameController.Instance.effectPrefab, _transform.position, _transform.rotation);
+        if (inOthersHand)
+        {
+            var materials = _meshRenderer.materials;
+            materials[0] = GameController.Instance.transparentMaterials[0];
+            materials[1] = GameController.Instance.transparentMaterials[1];
+            _meshRenderer.materials = materials;
+            _effectGo = Instantiate(GameController.Instance.effectPrefab, _transform.position, _transform.rotation);
+            GameController.Instance.effectGoList.Add(this);
+        }
     }
 
     public void OnEyeHoverExit()
     {
-        var materials = _meshRenderer.materials;
-        materials[0] = GameController.Instance.normalMaterials[0];
-        materials[1] = GameController.Instance.normalMaterials[1];
-        _meshRenderer.materials = materials;
-        Destroy(_effectGo);
+        if (inOthersHand && _effectGo != null)
+        {
+            var materials = _meshRenderer.materials;
+            materials[0] = GameController.Instance.normalMaterials[0];
+            materials[1] = GameController.Instance.normalMaterials[1];
+            _meshRenderer.materials = materials;
+            Destroy(_effectGo);
+            GameController.Instance.effectGoList.Remove(this);
+        }
     }
+
+    // public void DestroyEffectGameObject()
+    // {
+    //     if (_effectGo == null) return;
+    //     var materials = _meshRenderer.materials;
+    //     materials[0] = GameController.Instance.normalMaterials[0];
+    //     materials[1] = GameController.Instance.normalMaterials[1];
+    //     _meshRenderer.materials = materials;
+    //     Destroy(_effectGo);
+    // }
 }
