@@ -67,6 +67,9 @@ MonoBehaviour:
   - DecreasePlayerDictCount
   - ResetPlayerDictCount
   - UpdatePoint
+  - ChangeNameRPC
+  - OpenOrCloseUI
+  - OpenPlayerResultPanel
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

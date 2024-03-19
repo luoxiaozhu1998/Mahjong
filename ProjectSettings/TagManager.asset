@@ -10,6 +10,7 @@ TagManager:
   - SamplesInfoPanel
   - Desk
   - Ground
+  - Button
   layers:
   - Default
   - TransparentFX
@@ -19,10 +20,10 @@ TagManager:
   - UI
   - Mahjong
   - Avatar
-  - 
-  - 
-  - 
-  - 
+  - Button
+  - Grabbing
+  - Grabbable
+  - HandPlayer
   - 
   - 
   - 

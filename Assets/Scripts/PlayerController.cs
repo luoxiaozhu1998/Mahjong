@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Photon.Pun;
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : MonoBehaviourPunCallbacks
 {
     //存储当前玩家的所有麻将
     public SortedDictionary<int, List<GameObject>> MyMahjong;
@@ -23,5 +23,22 @@ public class PlayerController : MonoBehaviour
             {3, new List<int>()},
             {4, new List<int>()}
         };
+    }
+
+    public void SetName(int id, string playerName)
+    {
+        photonView.RPC(nameof(ChangeNameRPC), RpcTarget.Others, photonView.ViewID, playerName, id);
+    }
+
+    [PunRPC]
+    private void ChangeNameRPC(int viewID, string playerName, int id)
+    {
+        foreach (var playerController in FindObjectsOfType<PlayerController>())
+        {
+            if (playerController.GetComponent<PhotonView>().ViewID != viewID) continue;
+            playerController.gameObject.name = playerName;
+            playerID = id;
+            break;
+        }
     }
 }
